@@ -4,6 +4,10 @@ import sys
 import parser
 
 
+class QueryChainExecutionError(Exception):
+    pass
+
+
 def _load_tables_from_directory(directory):
     for file in os.listdir(directory):
         # TODO load tables from files in the given directory
@@ -11,8 +15,6 @@ def _load_tables_from_directory(directory):
 
 
 def _execute_query_file(file_path):
-    # TODO execute query files
-
     click.echo(f"TODO: Execute query at: {file_path}")
     try:
         with open(file_path, 'r') as query_file:
@@ -22,7 +24,6 @@ def _execute_query_file(file_path):
                 click.echo("Missing semicolon at the end of query file")
             else:
                 _execute_query(queries)
-
     except FileNotFoundError:
         click.echo(f"Invalid Path, no query file found")
     except IsADirectoryError:
@@ -84,7 +85,7 @@ def _execute_query(user_in):
             result = parser.parse_query(query)
             if result.has_error():
                 click.echo(result.error)
-                # TODO perhaps stop query execution here
+                break
             else:
                 click.echo(result.ast)
 
@@ -106,7 +107,6 @@ def _main_loop():
             _execute_command(user_in)
         else:
             if user_in[-1] != ';':
-                # Maybe add newlines between inputs, depending on the provided query parser
                 user_in = _multi_line_loop(user_in)
             _execute_query(user_in)
 
@@ -122,4 +122,3 @@ def main(data_directory, query_file):
         _execute_query_file(query_file)
         sys.exit(0)
     _main_loop()
-    return 0
