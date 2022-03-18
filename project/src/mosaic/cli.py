@@ -1,6 +1,7 @@
 import click
 import os
 import sys
+import parser
 
 
 def _load_tables_from_directory(directory):
@@ -50,8 +51,27 @@ def _execute_command(user_in):
         click.echo("Unknown command entered. See \\help for a list of available commands.")
 
 
+def _print_table(table_name):
+    # TODO implement
+    # TODO handle table name not found
+    click.echo(f"Printing table: {table_name}")
+
+
 def _execute_query(user_in):
-    print("query: " + user_in)
+    # string split produces empty string at the end, hence [:-1]
+    for query in user_in.split(";")[:-1]:
+        # strip to allow chaining of multiple queries in a line
+        query = query.strip()
+        if query[0] == "#":
+            # TODO handle table name not found
+            _print_table(query[1:])
+        else:
+            result = parser.parse_query(query)
+            if result.has_error():
+                click.echo(result.error)
+                # TODO perhaps stop query execution here
+            else:
+                click.echo(result.ast)
 
 
 def _multi_line_loop(user_in):
