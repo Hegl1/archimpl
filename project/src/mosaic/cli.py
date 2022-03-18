@@ -12,8 +12,21 @@ def _load_tables_from_directory(directory):
 
 def _execute_query_file(file_path):
     # TODO execute query files
-    # TODO handle invalid file paths
+
     click.echo(f"TODO: Execute query at: {file_path}")
+    try:
+        with open(file_path, 'r') as query_file:
+            queries = query_file.read().strip()
+            queries.replace("\n", "")
+            if queries[-1] != ';':
+                click.echo("Missing semicolon at the end of query file")
+            else:
+                _execute_query(queries)
+
+    except FileNotFoundError:
+        click.echo(f"Invalid Path, no query file found")
+    except IsADirectoryError:
+        click.echo(f"Path is a directory, not a query file")
 
 
 def _quit_application():
@@ -39,7 +52,9 @@ def _execute_query_file_from_command(user_in):
 
 
 def _execute_command(user_in):
-    if user_in == "\\help":
+    if user_in[-1] == ';':
+        click.echo("Do not use \";\" at the end of commands!")
+    elif user_in == "\\help":
         _print_command_help()
     elif user_in == "\\quit":
         _quit_application()
@@ -83,9 +98,11 @@ def _multi_line_loop(user_in):
 
 def _main_loop():
     while True:
-        click.echo(">>> ",nl=False)
+        click.echo(">>> ", nl=False)
         user_in = input()
-        if user_in[0] == "\\":
+        if user_in == '':
+            continue
+        elif user_in[0] == "\\":
             _execute_command(user_in)
         else:
             if user_in[-1] != ';':
@@ -95,8 +112,10 @@ def _main_loop():
 
 
 @click.command()
-@click.option("--data-directory", default="./", type=click.Path(exists=True),help="Directory which contains all tables to load at startup")
-@click.option("--query-file", default=None, type=click.Path(exists=True),help="Path to an optional query file to execute")
+@click.option("--data-directory", default="./", type=click.Path(exists=True),
+              help="Directory which contains all tables to load at startup")
+@click.option("--query-file", default=None, type=click.Path(exists=True),
+              help="Path to an optional query file to execute")
 def main(data_directory, query_file):
     _load_tables_from_directory(data_directory)
     if query_file is not None:
@@ -104,4 +123,3 @@ def main(data_directory, query_file):
         sys.exit(0)
     _main_loop()
     return 0
-
