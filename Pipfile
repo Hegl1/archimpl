@@ -20,7 +20,6 @@ pylint = "==2.12.2"
 pytest = "==7.0.1"
 pytest-cov = "==3.0.0"
 pytest-runner = "==5.3.1"
-pytype = "==2020.2.6"
 tox = "==3.24.5"
 twine = "==3.8.0"
 watchdog = "==2.1.6"
@@ -28,7 +27,7 @@ wheel = "==0.37.1"
 yapf = "==0.32.0"
 
 [packages]
-mosaic = {path = "src", editable = true}
+mosaic = {path = "project", editable = true}
 click = "==8.0.1"
 colorama = "==0.4.4"
 parsimonious = "==0.8.1"

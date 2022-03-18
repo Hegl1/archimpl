@@ -44,7 +44,6 @@ setup(
     },
     install_requires=requirements,
     license='BSD license',
-    long_description=readme,
     include_package_data=True,
     keywords='mosaic',
     name='mosaic',

@@ -10,7 +10,8 @@
 See [docs/team.md](docs/team.md) for more information on the team and its organization.
 
 ## Code
-The root for the source-code is located in the `src/` folder.
+All artifacts of the projects are located in the `/project` folder.
+The code files can be found at `/project/src/mosaic/`.
 
 See [docs/code.md](docs/code.md) for information on the code and how to compile, run and test it.
 
@@ -18,7 +19,7 @@ See [docs/code.md](docs/code.md) for information on the code and how to compile,
 The tasks are located in the `tasks/` folder.
 
 ## Licenses
-- Code (`/src`) - MIT License
+- Code (`/project`) - MIT License
 - Tasks (`/tasks`) - Creative Commons Attribution 4.0 International
 
 ## Commiting
