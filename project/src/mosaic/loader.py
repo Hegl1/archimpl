@@ -3,7 +3,7 @@ def load_file(path):
     This function extracts a table from a specific file format.
     The function returns a tuple that contains 2 tuple lists.
     The first tuple list represents the schema of the table:
-    [(tablename1, datatype1),(tablename2, datatype2) ... ]
+    [(column_name1, datatype1),(column_name2, datatype2) ... ]
     The second tuple list represents the datarows of the table:
     [(row1_field1,row1_field2,...),(row2_field1,row2_field2,...)...]
     """
