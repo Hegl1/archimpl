@@ -25,6 +25,8 @@ We have no fixed responsibilities yet.
       It will be merged back into the milestone branch upon completion.
 - Small hotfixes can be committed directly to the main/corresponding branch, where large ones need their own branch.
 
+![workflow image](./workflow.png)
+
 ### Branch naming conventions
 - Task branches: `task-<number>`
 - Milestone branches: `milestone-<number>`
