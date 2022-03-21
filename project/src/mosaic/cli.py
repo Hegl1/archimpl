@@ -93,7 +93,7 @@ def _execute_query(user_in):
 def _multi_line_loop(user_in):
     while user_in[-1] != ';':
         click.echo(">   ", nl=False)
-        user_in += input()
+        user_in += " " + input()
     return user_in
 
 
