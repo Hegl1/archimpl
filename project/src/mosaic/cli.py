@@ -1,10 +1,11 @@
 import click
 import os
 import sys
+import traceback
 import parser
 
 
-class QueryChainExecutionError(Exception):
+class CliErrorMessageException(Exception):
     pass
 
 
@@ -15,19 +16,18 @@ def _load_tables_from_directory(directory):
 
 
 def _execute_query_file(file_path):
-    click.echo(f"TODO: Execute query at: {file_path}")
     try:
         with open(file_path, 'r') as query_file:
             queries = query_file.read().strip()
             queries.replace("\n", "")
             if queries[-1] != ';':
-                click.echo("Missing semicolon at the end of query file")
+                raise CliErrorMessageException("Missing semicolon at the end of query file")
             else:
                 _execute_query(queries)
     except FileNotFoundError:
-        click.echo(f"Invalid Path, no query file found")
+        raise CliErrorMessageException("Invalid Path, no query file found")
     except IsADirectoryError:
-        click.echo(f"Path is a directory, not a query file")
+        raise CliErrorMessageException("Path is a directory, not a query file")
 
 
 def _quit_application():
@@ -47,14 +47,14 @@ def _print_command_help():
 def _execute_query_file_from_command(user_in):
     split_string = user_in.split(" ")
     if len(split_string) != 2:
-        click.echo("Wrong usage of \\execute. See \\help for further detail")
+        raise CliErrorMessageException("Wrong usage of \\execute. See \\help for further detail")
     else:
         _execute_query_file(split_string[1])
 
 
 def _execute_command(user_in):
     if user_in[-1] == ';':
-        click.echo("Do not use \";\" at the end of commands!")
+        raise CliErrorMessageException("Do not use \";\" at the end of commands!")
     elif user_in == "\\help":
         _print_command_help()
     elif user_in == "\\quit":
@@ -64,7 +64,7 @@ def _execute_command(user_in):
     elif "\\execute" in user_in:
         _execute_query_file_from_command(user_in)
     else:
-        click.echo("Unknown command entered. See \\help for a list of available commands.")
+        raise CliErrorMessageException("Unknown command entered. See \\help for a list of available commands.")
 
 
 def _print_table(table_name):
@@ -84,8 +84,7 @@ def _execute_query(user_in):
         else:
             result = parser.parse_query(query)
             if result.has_error():
-                click.echo(result.error)
-                break
+                raise CliErrorMessageException(result.error)
             else:
                 click.echo(result.ast)
 
@@ -99,16 +98,23 @@ def _multi_line_loop(user_in):
 
 def _main_loop():
     while True:
-        click.echo(">>> ", nl=False)
-        user_in = input()
-        if user_in == '':
-            continue
-        elif user_in[0] == "\\":
-            _execute_command(user_in)
-        else:
-            if user_in[-1] != ';':
-                user_in = _multi_line_loop(user_in)
-            _execute_query(user_in)
+        try:
+            click.echo(">>> ", nl=False)
+            user_in = input()
+            if user_in == '':
+                continue
+            elif user_in[0] == "\\":
+                _execute_command(user_in)
+            else:
+                if user_in[-1] != ';':
+                    user_in = _multi_line_loop(user_in)
+                _execute_query(user_in)
+        except CliErrorMessageException as e:
+            click.secho(str(e), fg='red')
+        except Exception:
+            # handle not expected exceptions by printing the stacktrace and continue
+            tb = traceback.format_exc()
+            click.secho(tb, fg='red')
 
 
 @click.command()
@@ -119,6 +125,9 @@ def _main_loop():
 def main(data_directory, query_file):
     _load_tables_from_directory(data_directory)
     if query_file is not None:
-        _execute_query_file(query_file)
+        try:
+            _execute_query_file(query_file)
+        except CliErrorMessageException as e:
+            click.secho(str(e), fg='red')
         sys.exit(0)
     _main_loop()
