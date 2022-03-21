@@ -61,7 +61,7 @@ def _execute_command(user_in):
         _quit_application()
     elif user_in == "\\clear":
         click.clear()
-    elif "\\execute" in user_in:
+    elif user_in.startswith("\\execute"):
         _execute_query_file_from_command(user_in)
     else:
         raise CliErrorMessageException("Unknown command entered. See \\help for a list of available commands.")
@@ -74,11 +74,12 @@ def _print_table(table_name):
 
 
 def _execute_query(user_in):
-    # string split produces empty string at the end, hence [:-1]
-    for query in user_in.split(";")[:-1]:
+    for query in user_in.split(";"):
         # strip to allow chaining of multiple queries in a line
         query = query.strip()
-        if query[0] == "#":
+        if len(query) == 0:
+            pass
+        elif query[0] == "#":
             # TODO handle table name not found
             _print_table(query[1:])
         else:
