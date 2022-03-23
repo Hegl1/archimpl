@@ -2,7 +2,7 @@
 
 ## Team members
 - Gründlinger Diana
-- Huber Marcel
+- Huber Marcel (Team leader)
 - Klotz Thomas
 - Targa Aaron
 - Thalmann Matthias
