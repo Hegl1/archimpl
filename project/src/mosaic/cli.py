@@ -19,7 +19,7 @@ def _execute_query_file(file_path):
     try:
         with open(file_path, 'r') as query_file:
             queries = query_file.read().strip()
-            queries.replace("\n", "")
+            queries.replace("\n", " ")
             if queries[-1] != ';':
                 raise CliErrorMessageException("Missing semicolon at the end of query file")
             else:
@@ -119,7 +119,7 @@ def _main_loop():
 
 
 @click.command()
-@click.option("--data-directory", default="./", type=click.Path(exists=True),
+@click.option("--data-directory", required=True, type=click.Path(exists=True),
               help="Directory which contains all tables to load at startup")
 @click.option("--query-file", default=None, type=click.Path(exists=True),
               help="Path to an optional query file to execute")
