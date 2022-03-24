@@ -1,4 +1,5 @@
 import os
+import tabulate
 
 
 class Table:
@@ -8,6 +9,10 @@ class Table:
         self.schema_names = schema_names
         self.schema_types = schema_types
         self.records = data
+
+    def __str__(self):
+        return tabulate.tabulate([d.values() for d in self.records], self.schema_names, tablefmt="pretty",
+                                 stralign="left")
 
 
 class TableNotFoundException(Exception):
@@ -58,7 +63,13 @@ def load_from_file(path):
             column_data = lines[j].rstrip('\n').split(';')
             data = dict()
             for k in range(len(column_data)):
-                data[schema_names[k]] = column_data[k]
+
+                if schema_types[k] == 'int':
+                    data[schema_names[k]] = int(column_data[k])
+                elif schema_types[k] == 'float':
+                    data[schema_names[k]] = float(column_data[k])
+                else:
+                    data[schema_names[k]] = column_data[k]
             data_list.append(data)
 
     _tables[table_name] = Table(table_name, schema_names, schema_types, data_list)
@@ -80,8 +91,10 @@ def retrieve(table_name):
     """
 
     if table_name == "#tables":
-        table_names = list(_tables.keys()) + ["#tables"] + ["#column"]
-        return Table(table_name, ["tables.table_names"], ["varchar"], table_names)
+        table_names = [{"#tables.table_name": item} for item in list(_tables.keys())] + [
+            {"#tables.table_name": "#tables"}] + [
+                          {"#tables.table_name": "#columns"}]
+        return Table(table_name, ["tables.table_name"], ["varchar"], table_names)
     elif table_name == "#columns":
         return _retrieve_column_table()
     else:
@@ -140,3 +153,7 @@ def _retrieve_column_table():
     return Table("#columns",
                  ["#columns.table_name", "#columns.column_name", "#columns.ordinal_position", "#columns.data_type"],
                  ["varchar", "varchar", "int", "varchar"], column_data)
+
+
+def table_exists(name):
+    return name in _tables or name == '#tables' or name == '#columns'
