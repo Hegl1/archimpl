@@ -18,7 +18,8 @@ _tables = dict()
 
 
 def load_from_file(path):
-    """Loads a table from a file.
+    """
+    Loads a table from a file.
     This function extracts a table from a specific file format and saves a specific tabel into the tables dict.
     """
 
@@ -64,12 +65,20 @@ def load_from_file(path):
 
 
 def load_tables_from_directory(path):
+    """
+    This function calls the load_from_file function for every file (which represent a tables) in path
+    """
+
     for file in os.listdir(path):
         if file.endswith(".table"):
             load_from_file(os.path.join(path, file))
 
 
 def retrieve(table_name):
+    """
+    This function returns a table specified by the table_name
+    """
+
     if table_name == "#tables":
         table_names = list(_tables.keys()) + ["#tables"] + ["#column"]
         return Table(table_name, ["tables.table_names"], ["varchar"], table_names)
@@ -83,6 +92,10 @@ def retrieve(table_name):
 
 
 def _retrieve_column_table():
+    """
+    This private function returns the #column table if needed
+    """
+
     column_data = list()
     for table_name in _tables:
         column_names = _tables[table_name].schema_names
