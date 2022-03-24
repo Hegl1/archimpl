@@ -1,5 +1,4 @@
 import click
-import os
 import sys
 import traceback
 import parser
@@ -121,6 +120,6 @@ def main(data_directory, query_file):
         try:
             _execute_query_file(query_file)
         except CliErrorMessageException as e:
-            click.secho(str(e), fg='red')
+            click.secho("Error: " + str(e), fg='red')
         sys.exit(0)
     _main_loop()
