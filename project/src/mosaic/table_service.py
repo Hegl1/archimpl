@@ -140,3 +140,7 @@ def _retrieve_column_table():
     return Table("#columns",
                  ["#columns.table_name", "#columns.column_name", "#columns.ordinal_position", "#columns.data_type"],
                  ["varchar", "varchar", "int", "varchar"], column_data)
+
+
+def table_exists(name):
+    return name in _tables or name == '#tables' or name == '#columns'

@@ -3,16 +3,11 @@ import os
 import sys
 import traceback
 import parser
+import table_service
 
 
 class CliErrorMessageException(Exception):
     pass
-
-
-def _load_tables_from_directory(directory):
-    for file in os.listdir(directory):
-        # TODO load tables from files in the given directory
-        click.echo(file)
 
 
 def _execute_query_file(file_path):
@@ -55,22 +50,16 @@ def _execute_query_file_from_command(user_in):
 def _execute_command(user_in):
     if user_in[-1] == ';':
         raise CliErrorMessageException("Do not use \";\" at the end of commands!")
-    elif user_in == "\\help":
+    elif user_in == "\\help" or user_in == "\\h":
         _print_command_help()
-    elif user_in == "\\quit":
+    elif user_in == "\\quit" or user_in == "\\q":
         _quit_application()
-    elif user_in == "\\clear":
+    elif user_in == "\\clear" or user_in == "\\c":
         click.clear()
-    elif user_in.startswith("\\execute"):
+    elif user_in.startswith("\\execute ") or user_in.startswith("\\e "):
         _execute_query_file_from_command(user_in)
     else:
         raise CliErrorMessageException("Unknown command entered. See \\help for a list of available commands.")
-
-
-def _print_table(table_name):
-    # TODO implement
-    # TODO handle table name not found
-    click.echo(f"Printing table: {table_name}")
 
 
 def _execute_query(user_in):
@@ -79,9 +68,12 @@ def _execute_query(user_in):
         query = query.strip()
         if len(query) == 0:
             pass
-        elif query[0] == "#":
-            # TODO handle table name not found
-            _print_table(query[1:])
+        elif query.find(" ") == -1:
+            # if there is a one word query
+            try:
+                click.echo(table_service.retrieve(query))
+            except table_service.TableNotFoundException:
+                raise CliErrorMessageException("Table name not found")
         else:
             result = parser.parse_query(query)
             if result.has_error():
@@ -111,7 +103,7 @@ def _main_loop():
                     user_in = _multi_line_loop(user_in)
                 _execute_query(user_in)
         except CliErrorMessageException as e:
-            click.secho(str(e), fg='red')
+            click.secho("Error: " + str(e), fg='red')
         except Exception:
             # handle not expected exceptions by printing the stacktrace and continue
             tb = traceback.format_exc()
@@ -124,7 +116,7 @@ def _main_loop():
 @click.option("--query-file", default=None, type=click.Path(exists=True),
               help="Path to an optional query file to execute")
 def main(data_directory, query_file):
-    _load_tables_from_directory(data_directory)
+    table_service.load_tables_from_directory(data_directory)
     if query_file is not None:
         try:
             _execute_query_file(query_file)
