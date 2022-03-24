@@ -1,27 +1,12 @@
 import click
 import sys
 import traceback
-import parser
 import table_service
+import query_executor
 
 
 class CliErrorMessageException(Exception):
     pass
-
-
-def _execute_query_file(file_path):
-    try:
-        with open(file_path, 'r') as query_file:
-            queries = query_file.read().strip()
-            queries.replace("\n", " ")
-            if queries[-1] != ';':
-                raise CliErrorMessageException("Missing semicolon at the end of query file")
-            else:
-                _execute_query(queries)
-    except FileNotFoundError:
-        raise CliErrorMessageException("Invalid Path, no query file found")
-    except IsADirectoryError:
-        raise CliErrorMessageException("Path is a directory, not a query file")
 
 
 def _quit_application():
@@ -43,7 +28,7 @@ def _execute_query_file_from_command(user_in):
     if len(split_string) != 2:
         raise CliErrorMessageException("Wrong usage of \\execute. See \\help for further detail")
     else:
-        _execute_query_file(split_string[1])
+        query_executor.execute_query_file(split_string[1])
 
 
 def _execute_command(user_in):
@@ -59,26 +44,6 @@ def _execute_command(user_in):
         _execute_query_file_from_command(user_in)
     else:
         raise CliErrorMessageException("Unknown command entered. See \\help for a list of available commands.")
-
-
-def _execute_query(user_in):
-    for query in user_in.split(";"):
-        # strip to allow chaining of multiple queries in a line
-        query = query.strip()
-        if len(query) == 0:
-            pass
-        elif query.find(" ") == -1:
-            # if there is a one word query
-            try:
-                click.echo(table_service.retrieve(query))
-            except table_service.TableNotFoundException:
-                raise CliErrorMessageException("Table name not found")
-        else:
-            result = parser.parse_query(query)
-            if result.has_error():
-                raise CliErrorMessageException(result.error)
-            else:
-                click.echo(result.ast)
 
 
 def _multi_line_loop(user_in):
@@ -100,7 +65,7 @@ def _main_loop():
             else:
                 if user_in[-1] != ';':
                     user_in = _multi_line_loop(user_in)
-                _execute_query(user_in)
+                query_executor.execute_query(user_in)
         except CliErrorMessageException as e:
             click.secho("Error: " + str(e), fg='red')
         except Exception:
@@ -118,7 +83,7 @@ def main(data_directory, query_file):
     table_service.load_tables_from_directory(data_directory)
     if query_file is not None:
         try:
-            _execute_query_file(query_file)
+            query_executor.execute_query_file(query_file)
         except CliErrorMessageException as e:
             click.secho("Error: " + str(e), fg='red')
         sys.exit(0)
