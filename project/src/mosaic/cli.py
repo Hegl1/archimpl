@@ -24,6 +24,10 @@ def _print_command_help():
 
 
 def _execute_query_file_from_command(user_in):
+    """
+    Function that parses the \\execute <file_name> command and calls the regular execute function with the resulting
+    file name
+    """
     split_string = user_in.split(" ")
     if len(split_string) != 2:
         raise CliErrorMessageException("Wrong usage of \\execute. See \\help for further detail")
@@ -32,6 +36,9 @@ def _execute_query_file_from_command(user_in):
 
 
 def _execute_command(user_in):
+    """
+    Function that executes a command entered by the user.
+    """
     if user_in[-1] == ';':
         raise CliErrorMessageException("Do not use \";\" at the end of commands!")
     elif user_in == "\\help" or user_in == "\\h":
@@ -47,6 +54,10 @@ def _execute_command(user_in):
 
 
 def _multi_line_loop(user_in):
+    """
+    Helper function to allow for multiline input.
+    Concatenates every new input line with the previous input and returns it.
+    """
     while user_in[-1] != ';':
         click.echo(">   ", nl=False)
         user_in += " " + input()
@@ -54,6 +65,10 @@ def _multi_line_loop(user_in):
 
 
 def _main_loop():
+    """
+    Function that represents the main interaction with the user.
+    Distinguishes between queries and commands and also handles wrong input.
+    """
     while True:
         try:
             click.echo(">>> ", nl=False)
@@ -80,6 +95,9 @@ def _main_loop():
 @click.option("--query-file", default=None, type=click.Path(exists=True),
               help="Path to an optional query file to execute")
 def main(data_directory, query_file):
+    """
+    Function that executes on program startup. Loads initial data and optionally executes a query file.
+    """
     table_service.load_tables_from_directory(data_directory)
     if query_file is not None:
         try:

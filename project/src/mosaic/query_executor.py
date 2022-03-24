@@ -5,6 +5,9 @@ import cli
 
 
 def execute_query(user_in):
+    """
+    Function that executes queries. Multiple queries per line are also possible.
+    """
     for query in user_in.split(";"):
         # strip to allow chaining of multiple queries in a line
         query = query.strip()
@@ -25,6 +28,9 @@ def execute_query(user_in):
 
 
 def execute_query_file(file_path):
+    """
+    Function that executes queries found in a .mql file.
+    """
     try:
         with open(file_path, 'r') as query_file:
             queries = query_file.read().strip()
