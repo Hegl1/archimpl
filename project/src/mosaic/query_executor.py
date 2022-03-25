@@ -1,7 +1,7 @@
 import click
 import parser
-import table_service
-import cli
+from mosaic import table_service
+from mosaic import cli
 
 
 def execute_query(user_in):

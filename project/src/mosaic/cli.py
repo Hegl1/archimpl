@@ -1,8 +1,8 @@
 import click
 import sys
 import traceback
-import table_service
-import query_executor
+from mosaic import table_service
+from mosaic import query_executor
 
 
 class CliErrorMessageException(Exception):

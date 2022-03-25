@@ -1,4 +1,4 @@
-import cli
+from mosaic import cli
 import sys
 
 
