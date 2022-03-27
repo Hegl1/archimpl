@@ -98,11 +98,21 @@ def main(data_directory, query_file):
     """
     Function that executes on program startup. Loads initial data and optionally executes a query file.
     """
-    table_service.load_tables_from_directory(data_directory)
+    try:
+        not_loaded = table_service.load_tables_from_directory(data_directory)
+        if len(not_loaded) > 0:
+            click.secho("Error: Following files could not be loaded: ", fg="red")
+            for file in not_loaded:
+                click.secho(f"\t{file}", fg="red")
+        click.echo(f"Data loaded from \"{data_directory}\"\n")
+    except table_service.NoTableLoadedException:
+        click.secho("Error: No table file could be loaded.", fg="red")
+        sys.exit(1)
     if query_file is not None:
         try:
             query_executor.execute_query_file(query_file)
         except CliErrorMessageException as e:
             click.secho("Error: " + str(e), fg='red')
         sys.exit(0)
+    click.secho("Welcome to Mosaic!\n", fg="green")
     _main_loop()
