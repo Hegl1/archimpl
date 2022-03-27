@@ -11,7 +11,7 @@ class Table:
         self.records = data
 
     def __str__(self):
-        return tabulate.tabulate([d.values() for d in self.records], self.schema_names, tablefmt="pretty",
+        return tabulate.tabulate([d.values() for d in self.records], self.schema_names, tablefmt="psql",
                                  stralign="left")
 
 
@@ -82,7 +82,7 @@ def load_tables_from_directory(path):
 
     for file in os.listdir(path):
         if file.endswith(".table"):
-            load_from_file(os.path.join(path, file))
+            load_from_file(os.path.join(path, file).replace("\\", "/"))
 
 
 def retrieve(table_name):

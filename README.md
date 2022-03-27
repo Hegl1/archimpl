@@ -22,7 +22,7 @@ The tasks are located in the `tasks/` folder.
 - Code (`/project`) - MIT License
 - Tasks (`/tasks`) - Creative Commons Attribution 4.0 International
 
-## Commiting
+## Committing
 
 When committing to this repository please use the following naming schema:
 
