@@ -19,6 +19,10 @@ class TableNotFoundException(Exception):
     pass
 
 
+class NoTableLoadedException(Exception):
+    pass
+
+
 _tables = dict()
 
 
@@ -78,11 +82,26 @@ def load_from_file(path):
 def load_tables_from_directory(path):
     """
     This function calls the load_from_file function for every file (which represent a tables) in path
+    Returns a list of files that could not be loaded
     """
-
+    not_loaded_files = []
+    loaded_files = []
     for file in os.listdir(path):
         if file.endswith(".table"):
-            load_from_file(os.path.join(path, file).replace("\\", "/"))
+            try:
+                load_from_file(os.path.join(path, file).replace("\\", "/"))
+                loaded_files.append(file)
+            except Exception:
+                not_loaded_files.append(file)
+        else:
+            not_loaded_files.append(file)
+
+    if len(loaded_files) == 0:
+        # Throw exepction
+        raise NoTableLoadedException
+
+    return not_loaded_files
+
 
 
 def retrieve(table_name):
