@@ -138,7 +138,6 @@ def load_tables_from_directory(path):
     return not_loaded_files
 
 
-
 def retrieve(table_name):
     """
     This function returns a table specified by the table_name
