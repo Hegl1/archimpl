@@ -1,8 +1,28 @@
 import os
 import tabulate
+from enum import Enum
+
+
+class SchemaType(Enum):
+    """
+    Enum class that represents the available Datatypes in our Database.
+    """
+
+    INT = "int"
+    FLOAT = "float"
+    VARCHAR = "varchar"
 
 
 class Table:
+    """
+    Class that represents one table in our Database.
+    This class has the following properties:
+    table_name: str - the name of the table
+    schema_names: [str] - the names of the columns. Position in the list matters
+    schema_types: [SchemaType] - the type of the corresponding column
+    data: [{str: int|float|str}] - list that represents a row of the table.
+        each list entry is a dict with column name as key and corresponding entry as value.
+    """
 
     def __init__(self, table_name, schema_names, schema_types, data):
         self.table_name = table_name
@@ -23,7 +43,22 @@ class NoTableLoadedException(Exception):
     pass
 
 
+class WrongSchemaTypeException(Exception):
+    pass
+
+
 _tables = dict()
+
+
+def _convert_schema_type_string(type_string):
+    if type_string == 'int':
+        return SchemaType.INT
+    elif type_string == 'float':
+        return SchemaType.FLOAT
+    elif type_string == 'varchar':
+        return SchemaType.VARCHAR
+    else:
+        raise WrongSchemaTypeException
 
 
 def load_from_file(path):
@@ -54,7 +89,7 @@ def load_from_file(path):
         for j in range(i + 1, schema_end):
             schema = lines[j].rstrip('\n').replace(" ", "").split(':')
             schema_names.append(table_name + "." + schema[0])
-            schema_types.append(schema[1])
+            schema_types.append(_convert_schema_type_string(schema[1]))
 
         i = schema_end
 
@@ -68,9 +103,9 @@ def load_from_file(path):
             data = dict()
             for k in range(len(column_data)):
 
-                if schema_types[k] == 'int':
+                if schema_types[k] == SchemaType.INT:
                     data[schema_names[k]] = int(column_data[k])
-                elif schema_types[k] == 'float':
+                elif schema_types[k] == SchemaType.FLOAT:
                     data[schema_names[k]] = float(column_data[k])
                 else:
                     data[schema_names[k]] = column_data[k]
@@ -136,7 +171,7 @@ def _retrieve_column_table():
             column_data.append({"#colums.table_name": table_name,
                                 "#columns.column_name": column_name,
                                 "#columns.ordinal_position": ordinal_position,
-                                "#columns.data_type": _tables[table_name].schema_types[ordinal_position]
+                                "#columns.data_type": _tables[table_name].schema_types[ordinal_position].value
                                 })
 
     column_data.append({"#colums.table_name": "#table",
