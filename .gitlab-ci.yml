@@ -1,0 +1,12 @@
+---
+stages:
+  - test
+
+test:
+  image: python:3.10-bullseye
+  stage: test
+  script:
+    - pip install pipenv
+    - pipenv install && pipenv install --dev
+    - cd project
+    - pipenv run make test
