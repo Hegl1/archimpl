@@ -1,5 +1,5 @@
 import click
-import parser
+from mosaic import parser
 from mosaic import table_service
 from mosaic import cli
 
