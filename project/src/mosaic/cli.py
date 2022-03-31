@@ -6,6 +6,7 @@ from mosaic import table_service
 from mosaic import query_executor
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 
 
 class CliErrorMessageException(Exception):
@@ -72,7 +73,7 @@ def _main_loop():
     Distinguishes between queries and commands and also handles wrong input.
     """
     command_history = FileHistory(os.path.expanduser("~/archimpl_history"))
-    session = PromptSession(history=command_history)
+    session = PromptSession(history=command_history, auto_suggest=AutoSuggestFromHistory())
     while True:
         try:
             user_in = session.prompt(">>> ")
