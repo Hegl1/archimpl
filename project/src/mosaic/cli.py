@@ -93,14 +93,9 @@ def _main_loop():
             click.secho(tb, fg='red')
 
 
-@click.command()
-@click.option("--data-directory", required=True, type=click.Path(exists=True),
-              help="Directory which contains all tables to load at startup")
-@click.option("--query-file", default=None, type=click.Path(exists=True),
-              help="Path to an optional query file to execute")
-def main(data_directory, query_file):
+def _load_initial_data(data_directory):
     """
-    Function that executes on program startup. Loads initial data and optionally executes a query file.
+    Function that loads the initial data at cli startup based on the provided data directory.
     """
     try:
         not_loaded = table_service.load_tables_from_directory(data_directory)
@@ -112,11 +107,30 @@ def main(data_directory, query_file):
     except table_service.NoTableLoadedException:
         click.secho("Error: No table file could be loaded.", fg="red")
         sys.exit(1)
+
+
+def _execute_initial_query_file(query_file_path):
+    """
+    Function that is used to load and execute a query file upon program startup.
+    """
+    try:
+        query_executor.execute_query_file(query_file_path)
+    except CliErrorMessageException as e:
+        click.secho("Error: " + str(e), fg='red')
+    sys.exit(0)
+
+
+@click.command()
+@click.option("--data-directory", required=True, type=click.Path(exists=True),
+              help="Directory which contains all tables to load at startup")
+@click.option("--query-file", default=None, type=click.Path(exists=True),
+              help="Path to an optional query file to execute")
+def main(data_directory, query_file):
+    """
+    Function that executes on program startup. Loads initial data and optionally executes a query file.
+    """
+    _load_initial_data(data_directory)
     if query_file is not None:
-        try:
-            query_executor.execute_query_file(query_file)
-        except CliErrorMessageException as e:
-            click.secho("Error: " + str(e), fg='red')
-        sys.exit(0)
+        _execute_initial_query_file(query_file)
     click.secho("Welcome to Mosaic!\n", fg="green")
     _main_loop()
