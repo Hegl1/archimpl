@@ -1,8 +1,11 @@
 import click
 import sys
 import traceback
+import os
 from mosaic import table_service
 from mosaic import query_executor
+from prompt_toolkit import PromptSession
+from prompt_toolkit.history import FileHistory
 
 
 class CliErrorMessageException(Exception):
@@ -53,14 +56,13 @@ def _execute_command(user_in):
         raise CliErrorMessageException("Unknown command entered. See \\help for a list of available commands.")
 
 
-def _multi_line_loop(user_in):
+def _multi_line_loop(user_in, prompt_session):
     """
     Helper function to allow for multiline input.
     Concatenates every new input line with the previous input and returns it.
     """
-    while user_in[-1] != ';':
-        click.echo(">   ", nl=False)
-        user_in += " " + input()
+    while not user_in.endswith(';'):
+        user_in += " " + prompt_session.prompt(">   ")
     return user_in
 
 
@@ -69,17 +71,18 @@ def _main_loop():
     Function that represents the main interaction with the user.
     Distinguishes between queries and commands and also handles wrong input.
     """
+    command_history = FileHistory(os.path.expanduser("~/archimpl_history"))
+    session = PromptSession(history=command_history)
     while True:
         try:
-            click.echo(">>> ", nl=False)
-            user_in = input()
+            user_in = session.prompt(">>> ")
             if user_in == '':
                 continue
-            elif user_in[0] == "\\":
+            elif user_in.startswith("\\"):
                 _execute_command(user_in)
             else:
-                if user_in[-1] != ';':
-                    user_in = _multi_line_loop(user_in)
+                if not user_in.endswith(";"):
+                    user_in = _multi_line_loop(user_in, session)
                 query_executor.execute_query(user_in)
         except CliErrorMessageException as e:
             click.secho("Error: " + str(e), fg='red')
