@@ -102,7 +102,7 @@ def _load_initial_data(data_directory):
         if len(not_loaded) > 0:
             click.secho("Error: Following files could not be loaded: ", fg="red")
             for file in not_loaded:
-                click.secho(f"\t{file}", fg="red")
+                click.secho(f"\t{file[0]} ({file[1]})", fg="red")
         click.echo(f"Data loaded from \"{data_directory}\"\n")
     except table_service.NoTableLoadedException:
         click.secho("Error: No table file could be loaded.", fg="red")

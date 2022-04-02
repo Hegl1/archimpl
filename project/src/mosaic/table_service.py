@@ -47,6 +47,10 @@ class WrongSchemaTypeException(Exception):
     pass
 
 
+class TableParsingException(Exception):
+    pass
+
+
 _tables = dict()
 
 
@@ -78,6 +82,9 @@ def load_from_file(path):
 
         # get first and last line of schema
         while lines[i] != "[Schema]\n":
+            if len(lines) == i + 1:
+                raise TableParsingException("No schema section found")
+
             i += 1
 
         schema_end = i
@@ -87,28 +94,49 @@ def load_from_file(path):
 
         # retrieve schema_names and schema_types in lists
         for j in range(i + 1, schema_end):
-            schema = lines[j].rstrip('\n').replace(" ", "").split(':')
+            line = lines[j].rstrip('\n')
+            schema = [s.strip() for s in line.split(':')]
+
+            if len(schema) != 2:
+                raise TableParsingException(f"Too many parts in line {j+1}")
+            if " " in schema[0]:
+                raise TableParsingException(f"Column name can not contain spaces in line {j+1}")
+
             schema_names.append(table_name + "." + schema[0])
-            schema_types.append(_convert_schema_type_string(schema[1]))
+
+            try:
+                schema_types.append(_convert_schema_type_string(schema[1]))
+            except WrongSchemaTypeException:
+                raise TableParsingException(f"Unknown type in line {j+1}: \"{schema[1]}\"")
 
         i = schema_end
 
         # get first line of data
         while lines[i] != "[Data]\n":
+            if len(lines) == i + 1:
+                raise TableParsingException("No data section found")
             i += 1
 
         # retrieve data and convert into tuple list
         for j in range(i + 1, len(lines)):
             column_data = lines[j].rstrip('\n').split(';')
-            data = dict()
-            for k in range(len(column_data)):
 
-                if schema_types[k] == SchemaType.INT:
-                    data[schema_names[k]] = int(column_data[k])
-                elif schema_types[k] == SchemaType.FLOAT:
-                    data[schema_names[k]] = float(column_data[k])
-                else:
-                    data[schema_names[k]] = column_data[k]
+            if len(column_data) != len(schema_types):
+                raise TableParsingException(f"Wrong amount of columns in line {j+1}")
+
+            data = dict()
+
+            try:
+                for k in range(len(column_data)):
+                    if schema_types[k] == SchemaType.INT:
+                        data[schema_names[k]] = int(column_data[k])
+                    elif schema_types[k] == SchemaType.FLOAT:
+                        data[schema_names[k]] = float(column_data[k])
+                    else:
+                        data[schema_names[k]] = column_data[k]
+            except Exception:
+                raise TableParsingException(f"Parsing error in line {j+1} near \"{column_data[k]}\"")
+
             data_list.append(data)
 
     _tables[table_name] = Table(table_name, schema_names, schema_types, data_list)
@@ -117,7 +145,7 @@ def load_from_file(path):
 def load_tables_from_directory(path):
     """
     This function calls the load_from_file function for every file (which represent a tables) in path
-    Returns a list of files that could not be loaded
+    Returns a list of tuples for files that could not be loaded (file_name, error_information)
     """
     not_loaded_files = []
     loaded_files = []
@@ -126,13 +154,13 @@ def load_tables_from_directory(path):
             try:
                 load_from_file(os.path.join(path, file).replace("\\", "/"))
                 loaded_files.append(file)
-            except Exception:
-                not_loaded_files.append(file)
+            except Exception as ex:
+                not_loaded_files.append((file, str(ex)))
         else:
-            not_loaded_files.append(file)
+            not_loaded_files.append((file, "Not a .table file"))
 
     if len(loaded_files) == 0:
-        # Throw exepction
+        # Throw exception
         raise NoTableLoadedException
 
     return not_loaded_files
