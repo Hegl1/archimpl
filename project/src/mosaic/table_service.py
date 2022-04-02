@@ -65,79 +65,78 @@ def _convert_schema_type_string(type_string):
         raise WrongSchemaTypeException
 
 
+def _read_schema_section(table_name, schema_start, schema_lines):
+    schema_names = []
+    schema_types = []
+    for i, line in enumerate(schema_lines):
+        line = line.rstrip('\n')
+        schema = [s.strip() for s in line.split(':')]
+
+        if len(schema) != 2:
+            raise TableParsingException(f"Too many parts in line {i + 2 + schema_start}")
+        if " " in schema[0]:
+            raise TableParsingException(f"Column name can not contain spaces in line {i + 2 + schema_start}")
+
+        schema_names.append(table_name + "." + schema[0])
+
+        try:
+            schema_types.append(_convert_schema_type_string(schema[1]))
+        except WrongSchemaTypeException:
+            raise TableParsingException(f"Unknown type in line {i + 2 + schema_start}: \"{schema[1]}\"")
+
+    return schema_names, schema_types
+
+def _read_data_section(schema_names, schema_types, data_start, data_lines):
+    data_list = []
+    for i, line in enumerate(data_lines):
+        fields = line.rstrip('\n').split(';')
+        if len(fields) != len(schema_types):
+            raise TableParsingException(f"Wrong number of columns in line {i + 2 + data_start}")
+
+        data = dict()
+        try:
+            for k, field in enumerate(fields):
+                if schema_types[k] == SchemaType.INT:
+                    data[schema_names[k]] = int(field)
+                elif schema_types[k] == SchemaType.FLOAT:
+                    data[schema_names[k]] = float(field)
+                else:
+                    data[schema_names[k]] = field
+        except Exception:
+            raise TableParsingException(f"Parsing error in line {i + 2 + data_start} near \"{field}\"")
+
+        data_list.append(data)
+
+    return data_list
+
+
 def load_from_file(path):
     """
     Loads a table from a file.
     This function extracts a table from a specific file format and saves a specific table into the tables dict.
     """
-
     table_name = path.split('/')[-1].split('.')[0]
-    data_list = list()
-    schema_names = []
-    schema_types = []
 
     with open(path, "r") as f:
         lines = f.readlines()
-        i = 0
 
-        # get first and last line of schema
-        while lines[i] != "[Schema]\n":
-            if len(lines) == i + 1:
-                raise TableParsingException("No schema section found")
-
-            i += 1
-
-        schema_end = i
-
+        # find schema and data sections
+        try:
+            schema_start = lines.index('[Schema]\n')
+        except ValueError:
+            raise TableParsingException("No schema section found")
+        schema_end = schema_start
         while lines[schema_end] != "\n":
             schema_end += 1
 
-        # retrieve schema_names and schema_types in lists
-        for j in range(i + 1, schema_end):
-            line = lines[j].rstrip('\n')
-            schema = [s.strip() for s in line.split(':')]
+        try:
+            data_start = lines.index('[Data]\n')
+        except ValueError:
+            raise TableParsingException("No data section found")
 
-            if len(schema) != 2:
-                raise TableParsingException(f"Too many parts in line {j+1}")
-            if " " in schema[0]:
-                raise TableParsingException(f"Column name can not contain spaces in line {j+1}")
-
-            schema_names.append(table_name + "." + schema[0])
-
-            try:
-                schema_types.append(_convert_schema_type_string(schema[1]))
-            except WrongSchemaTypeException:
-                raise TableParsingException(f"Unknown type in line {j+1}: \"{schema[1]}\"")
-
-        i = schema_end
-
-        # get first line of data
-        while lines[i] != "[Data]\n":
-            if len(lines) == i + 1:
-                raise TableParsingException("No data section found")
-            i += 1
-
-        # retrieve data and convert into tuple list
-        for j in range(i + 1, len(lines)):
-            column_data = lines[j].rstrip('\n').split(';')
-
-            if len(column_data) != len(schema_types):
-                raise TableParsingException(f"Wrong amount of columns in line {j+1}")
-
-            data = dict()
-
-            try:
-                for k in range(len(column_data)):
-                    if schema_types[k] == SchemaType.INT:
-                        data[schema_names[k]] = int(column_data[k])
-                    elif schema_types[k] == SchemaType.FLOAT:
-                        data[schema_names[k]] = float(column_data[k])
-                    else:
-                        data[schema_names[k]] = column_data[k]
-            except Exception:
-                raise TableParsingException(f"Parsing error in line {j+1} near \"{column_data[k]}\"")
-
-            data_list.append(data)
+        # read content
+        schema_names, schema_types = _read_schema_section(table_name, schema_start, lines[schema_start + 1:schema_end])
+        data_list = _read_data_section(schema_names, schema_types, data_start, lines[data_start + 1:])
 
     _tables[table_name] = Table(table_name, schema_names, schema_types, data_list)
 

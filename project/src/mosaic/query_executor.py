@@ -11,9 +11,9 @@ def execute_query(user_in):
     for query in user_in.split(";"):
         # strip to allow chaining of multiple queries in a line
         query = query.strip()
-        if len(query) == 0:
+        if not query:
             pass
-        elif query.find(" ") == -1:
+        elif " " not in query:
             # if there is a one word query
             try:
                 click.echo(table_service.retrieve(query))
@@ -35,7 +35,7 @@ def execute_query_file(file_path):
         with open(file_path, 'r') as query_file:
             queries = query_file.read().strip()
             queries.replace("\n", " ")
-            if queries[-1] != ';':
+            if not queries.endswith(';'):
                 raise cli.CliErrorMessageException("Missing semicolon at the end of query file")
             else:
                 execute_query(queries)
