@@ -23,7 +23,7 @@ def test_load_from_file():
 def test_load_tables_from_directory():
     assert len(table_service._tables) == 0
     not_loaded = table_service.load_tables_from_directory("./tests/testdata/")
-    assert len(table_service._tables) == 1
+    assert len(table_service._tables) == 3  # incl. #tables and #columns
     assert len(not_loaded) == 1
     with pytest.raises(table_service.NoTableLoadedException):
         table_service.load_tables_from_directory("./")

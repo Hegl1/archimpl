@@ -43,7 +43,7 @@ def _execute_command(user_in):
     """
     Function that executes a command entered by the user.
     """
-    if user_in[-1] == ';':
+    if user_in.endswith(';'):
         raise CliErrorMessageException("Do not use \";\" at the end of commands!")
     elif user_in == "\\help" or user_in == "\\h":
         _print_command_help()
@@ -103,7 +103,6 @@ def _load_initial_data(data_directory):
             click.secho("Error: Following files could not be loaded: ", fg="red")
             for file in not_loaded:
                 click.secho(f"\t{file[0]} ({file[1]})", fg="red")
-        click.echo(f"Data loaded from \"{data_directory}\"\n")
     except table_service.NoTableLoadedException:
         click.secho("Error: No table file could be loaded.", fg="red")
         sys.exit(1)
@@ -132,5 +131,6 @@ def main(data_directory, query_file):
     _load_initial_data(data_directory)
     if query_file is not None:
         _execute_initial_query_file(query_file)
+    click.echo(f"Data loaded from \"{data_directory}\"\n")
     click.secho("Welcome to Mosaic!\n", fg="green")
     _main_loop()

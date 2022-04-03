@@ -65,86 +65,85 @@ def _convert_schema_type_string(type_string):
         raise WrongSchemaTypeException
 
 
+def _read_schema_section(table_name, schema_start, schema_lines):
+    schema_names = []
+    schema_types = []
+    for i, line in enumerate(schema_lines):
+        line = line.rstrip('\n')
+        schema = [s.strip() for s in line.split(':')]
+
+        if len(schema) != 2:
+            raise TableParsingException(f"Too many parts in line {i + 2 + schema_start}")
+        if " " in schema[0]:
+            raise TableParsingException(f"Column name can not contain spaces in line {i + 2 + schema_start}")
+
+        schema_names.append(table_name + "." + schema[0])
+
+        try:
+            schema_types.append(_convert_schema_type_string(schema[1]))
+        except WrongSchemaTypeException:
+            raise TableParsingException(f"Unknown type in line {i + 2 + schema_start}: \"{schema[1]}\"")
+
+    return schema_names, schema_types
+
+def _read_data_section(schema_names, schema_types, data_start, data_lines):
+    data_list = []
+    for i, line in enumerate(data_lines):
+        fields = line.rstrip('\n').split(';')
+        if len(fields) != len(schema_types):
+            raise TableParsingException(f"Wrong number of columns in line {i + 2 + data_start}")
+
+        data = dict()
+        try:
+            for k, field in enumerate(fields):
+                if schema_types[k] == SchemaType.INT:
+                    data[schema_names[k]] = int(field)
+                elif schema_types[k] == SchemaType.FLOAT:
+                    data[schema_names[k]] = float(field)
+                else:
+                    data[schema_names[k]] = field
+        except Exception:
+            raise TableParsingException(f"Parsing error in line {i + 2 + data_start} near \"{field}\"")
+
+        data_list.append(data)
+
+    return data_list
+
+
 def load_from_file(path):
     """
     Loads a table from a file.
-    This function extracts a table from a specific file format and saves a specific tabel into the tables dict.
+    This function extracts a table from a specific file format and saves a specific table into the tables dict.
     """
-
     table_name = path.split('/')[-1].split('.')[0]
-    data_list = list()
-    schema_names = []
-    schema_types = []
 
     with open(path, "r") as f:
         lines = f.readlines()
-        i = 0
 
-        # get first and last line of schema
-        while lines[i] != "[Schema]\n":
-            if len(lines) == i + 1:
-                raise TableParsingException("No schema section found")
-
-            i += 1
-
-        schema_end = i
-
+        # find schema and data sections
+        try:
+            schema_start = lines.index('[Schema]\n')
+        except ValueError:
+            raise TableParsingException("No schema section found")
+        schema_end = schema_start
         while lines[schema_end] != "\n":
             schema_end += 1
 
-        # retrieve schema_names and schema_types in lists
-        for j in range(i + 1, schema_end):
-            line = lines[j].rstrip('\n')
-            schema = [s.strip() for s in line.split(':')]
+        try:
+            data_start = lines.index('[Data]\n')
+        except ValueError:
+            raise TableParsingException("No data section found")
 
-            if len(schema) != 2:
-                raise TableParsingException(f"Too many parts in line {j+1}")
-            if " " in schema[0]:
-                raise TableParsingException(f"Column name can not contain spaces in line {j+1}")
-
-            schema_names.append(table_name + "." + schema[0])
-
-            try:
-                schema_types.append(_convert_schema_type_string(schema[1]))
-            except WrongSchemaTypeException:
-                raise TableParsingException(f"Unknown type in line {j+1}: \"{schema[1]}\"")
-
-        i = schema_end
-
-        # get first line of data
-        while lines[i] != "[Data]\n":
-            if len(lines) == i + 1:
-                raise TableParsingException("No data section found")
-            i += 1
-
-        # retrieve data and convert into tuple list
-        for j in range(i + 1, len(lines)):
-            column_data = lines[j].rstrip('\n').split(';')
-
-            if len(column_data) != len(schema_types):
-                raise TableParsingException(f"Wrong amount of columns in line {j+1}")
-
-            data = dict()
-
-            try:
-                for k in range(len(column_data)):
-                    if schema_types[k] == SchemaType.INT:
-                        data[schema_names[k]] = int(column_data[k])
-                    elif schema_types[k] == SchemaType.FLOAT:
-                        data[schema_names[k]] = float(column_data[k])
-                    else:
-                        data[schema_names[k]] = column_data[k]
-            except Exception:
-                raise TableParsingException(f"Parsing error in line {j+1} near \"{column_data[k]}\"")
-
-            data_list.append(data)
+        # read content
+        schema_names, schema_types = _read_schema_section(table_name, schema_start, lines[schema_start + 1:schema_end])
+        data_list = _read_data_section(schema_names, schema_types, data_start, lines[data_start + 1:])
 
     _tables[table_name] = Table(table_name, schema_names, schema_types, data_list)
 
 
 def load_tables_from_directory(path):
     """
-    This function calls the load_from_file function for every file (which represent a tables) in path
+    This function calls the load_from_file function for every file (which represent a table) in path
     Returns a list of tuples for files that could not be loaded (file_name, error_information)
     """
     not_loaded_files = []
@@ -162,78 +161,60 @@ def load_tables_from_directory(path):
     if len(loaded_files) == 0:
         # Throw exception
         raise NoTableLoadedException
-
+    else:
+        _create_tables_table()
+        _create_columns_table()
+        # do not change function call order here. this yields a result exactly as required in MS1
     return not_loaded_files
+
+
+def _create_tables_table():
+    table_name = "#tables"
+    table_names = [{"#tables.table_name": item} for item in list(_tables.keys())] + [
+        {"#tables.table_name": "#tables"}] + [{"#tables.table_name": "#columns"}]
+    _tables[table_name] = Table(table_name, [table_name + ".table_name"], [_convert_schema_type_string("varchar")],
+                                table_names)
+
+
+def _create_columns_table():
+    columns_table_name = "#columns"
+    columns_schema_names = [columns_table_name + ".table_name",
+                            columns_table_name + ".column_name",
+                            columns_table_name + ".ordinal_position",
+                            columns_table_name + ".data_type"]
+    columns_schema_types = [_convert_schema_type_string("varchar"),
+                            _convert_schema_type_string("varchar"),
+                            _convert_schema_type_string("int"),
+                            _convert_schema_type_string("varchar")]
+    columns_data = list()
+
+    # add entries for all tables currently in database
+    for table_name in _tables:
+        column_names = _tables[table_name].schema_names
+        for i, column_name in enumerate(column_names):
+            columns_data.append({columns_schema_names[0]: table_name,
+                                 columns_schema_names[1]: column_name,
+                                 columns_schema_names[2]: i,
+                                 columns_schema_names[3]: _tables[table_name].schema_types[i].value})
+
+    # add entries for the #columns table columns
+    for i, columns_schema_name in enumerate(columns_schema_names):
+        columns_data.append({columns_schema_names[0]: columns_table_name,
+                             columns_schema_names[1]: columns_schema_name,
+                             columns_schema_names[2]: i,
+                             columns_schema_names[3]: columns_schema_types[i].value})
+
+    _tables[columns_table_name] = Table(columns_table_name, columns_schema_names, columns_schema_types, columns_data)
 
 
 def retrieve(table_name):
     """
     This function returns a table specified by the table_name
     """
-
-    if table_name == "#tables":
-        table_names = [{"#tables.table_name": item} for item in list(_tables.keys())] + [
-            {"#tables.table_name": "#tables"}] + [
-                          {"#tables.table_name": "#columns"}]
-        return Table(table_name, ["tables.table_name"], ["varchar"], table_names)
-    elif table_name == "#columns":
-        return _retrieve_column_table()
-    else:
-        try:
-            return _tables[table_name]
-        except KeyError:
-            raise TableNotFoundException
-
-
-def _retrieve_column_table():
-    """
-    This private function returns the #column table if needed
-    """
-
-    column_data = list()
-    for table_name in _tables:
-        column_names = _tables[table_name].schema_names
-        for column_name in column_names:
-            ordinal_position = column_names.index(column_name)
-            column_data.append({"#colums.table_name": table_name,
-                                "#columns.column_name": column_name,
-                                "#columns.ordinal_position": ordinal_position,
-                                "#columns.data_type": _tables[table_name].schema_types[ordinal_position].value
-                                })
-
-    column_data.append({"#colums.table_name": "#table",
-                        "#columns.column_name": "#tables.table_name",
-                        "#columns.ordinal_position": 0,
-                        "#columns.data_type": "varchar"
-                        })
-
-    column_data.append({"#colums.table_name": "#columns",
-                        "#columns.column_name": "#columns.table_name",
-                        "#columns.ordinal_position": 0,
-                        "#columns.data_type": "varchar"
-                        })
-
-    column_data.append({"#colums.table_name": "#columns",
-                        "#columns.column_name": "#columns.column_name",
-                        "#columns.ordinal_position": 1,
-                        "#columns.data_type": "varchar"
-                        })
-
-    column_data.append({"#colums.table_name": "#columns",
-                        "#columns.column_name": "#columns.ordinal_position",
-                        "#columns.ordinal_position": 2,
-                        "#columns.data_type": "int"
-                        })
-
-    column_data.append({"#colums.table_name": "#columns",
-                        "#columns.column_name": "#columns.data_type",
-                        "#columns.ordinal_position": 3,
-                        "#columns.data_type": "varchar"
-                        })
-
-    return Table("#columns",
-                 ["#columns.table_name", "#columns.column_name", "#columns.ordinal_position", "#columns.data_type"],
-                 ["varchar", "varchar", "int", "varchar"], column_data)
+    try:
+        return _tables[table_name]
+    except KeyError:
+        raise TableNotFoundException
 
 
 def table_exists(name):
