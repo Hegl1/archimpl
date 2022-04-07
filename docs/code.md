@@ -6,7 +6,7 @@ With the installed python module `python3 -m pipenv install ; python3 -m pipenv 
 
 ## Execution
 For execution of the programm you need to use the created enviroment by running `pipenv shell` or with the python module `python3 -m pipenv shell`. 
-To start the programm you then can use the [main.py file](/project/src/mosaic/main.py) by calling `python3 main.py` from the `/project/src/mosaic/` directory.
+To start the programm you then can use the [main.py file](/project/src/mosaic/main.py) by calling `python3 src/mosaic/main.py --data-directory data/kemper` from the `/project` directory.
 
 ## Testing
 All the test files can be found at `/project/tests/`.

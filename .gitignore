@@ -147,3 +147,7 @@ Pipfile.lock
 
 # Local History for Visual Studio Code
 .history/
+
+# Pycharm
+.idea/*
+.DS_Store
