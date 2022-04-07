@@ -20,8 +20,8 @@ class Table:
     table_name: str - the name of the table
     schema_names: [str] - the names of the columns. Position in the list matters
     schema_types: [SchemaType] - the type of the corresponding column
-    data: [{str: int|float|str}] - list that represents a row of the table.
-        each list entry is a dict with column name as key and corresponding entry as value.
+    data: [[float | int | str]]] - list that represents tables data.
+        Each entry of the list represents a row in the table.
     """
 
     def __init__(self, table_name, schema_names, schema_types, data):
@@ -31,7 +31,7 @@ class Table:
         self.records = data
 
     def __str__(self):
-        return tabulate.tabulate([d.values() for d in self.records], self.schema_names, tablefmt="psql",
+        return tabulate.tabulate(self.records, self.schema_names, tablefmt="psql",
                                  stralign="left")
 
 
@@ -86,6 +86,7 @@ def _read_schema_section(table_name, schema_start, schema_lines):
 
     return schema_names, schema_types
 
+
 def _read_data_section(schema_names, schema_types, data_start, data_lines):
     data_list = []
     for i, line in enumerate(data_lines):
@@ -93,15 +94,15 @@ def _read_data_section(schema_names, schema_types, data_start, data_lines):
         if len(fields) != len(schema_types):
             raise TableParsingException(f"Wrong number of columns in line {i + 2 + data_start}")
 
-        data = dict()
+        data = list(range(len(fields)))
         try:
             for k, field in enumerate(fields):
                 if schema_types[k] == SchemaType.INT:
-                    data[schema_names[k]] = int(field)
+                    data[k] = int(field)
                 elif schema_types[k] == SchemaType.FLOAT:
-                    data[schema_names[k]] = float(field)
+                    data[k] = float(field)
                 else:
-                    data[schema_names[k]] = field
+                    data[k] = field
         except Exception:
             raise TableParsingException(f"Parsing error in line {i + 2 + data_start} near \"{field}\"")
 
@@ -170,8 +171,7 @@ def load_tables_from_directory(path):
 
 def _create_tables_table():
     table_name = "#tables"
-    table_names = [{"#tables.table_name": item} for item in list(_tables.keys())] + [
-        {"#tables.table_name": "#tables"}] + [{"#tables.table_name": "#columns"}]
+    table_names = [[item] for item in list(_tables.keys())] + [["#tables"]] + [["#columns"]]
     _tables[table_name] = Table(table_name, [table_name + ".table_name"], [_convert_schema_type_string("varchar")],
                                 table_names)
 
@@ -192,17 +192,12 @@ def _create_columns_table():
     for table_name in _tables:
         column_names = _tables[table_name].schema_names
         for i, column_name in enumerate(column_names):
-            columns_data.append({columns_schema_names[0]: table_name,
-                                 columns_schema_names[1]: column_name,
-                                 columns_schema_names[2]: i,
-                                 columns_schema_names[3]: _tables[table_name].schema_types[i].value})
+            columns_data.append([table_name, column_name, i, _tables[table_name].schema_types[i].value])
 
     # add entries for the #columns table columns
     for i, columns_schema_name in enumerate(columns_schema_names):
-        columns_data.append({columns_schema_names[0]: columns_table_name,
-                             columns_schema_names[1]: columns_schema_name,
-                             columns_schema_names[2]: i,
-                             columns_schema_names[3]: columns_schema_types[i].value})
+        columns_data.append([columns_table_name, columns_schema_name,
+                             i, columns_schema_types[i].value])
 
     _tables[columns_table_name] = Table(columns_table_name, columns_schema_names, columns_schema_types, columns_data)
 
