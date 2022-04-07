@@ -5,6 +5,13 @@ stages:
 test:
   image: python:3.10-bullseye
   stage: test
+  only:
+    - main
+    - /^milestone-\d$/
+    - merge_requests
+  except:
+    variables:
+      - $CI_COMMIT_MESSAGE =~ /\[skip[ _-]tests?\]/i
   script:
     - pip install pipenv
     - pipenv install && pipenv install --dev
