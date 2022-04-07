@@ -36,7 +36,13 @@ def _execute_query_file_from_command(user_in):
     if len(split_string) != 2:
         raise CliErrorMessageException("Wrong usage of \\execute. See \\help for further detail")
     else:
-        query_executor.execute_query_file(split_string[1])
+        results = query_executor.execute_query_file(split_string[1])
+        _print_results(results)
+
+
+def _print_results(results):
+    for result in results:
+        click.echo(result)
 
 
 def _execute_command(user_in):
@@ -84,7 +90,9 @@ def _main_loop():
             else:
                 if not user_in.endswith(";"):
                     user_in = _multi_line_loop(user_in, session)
-                query_executor.execute_query(user_in)
+
+                results = query_executor.execute_query(user_in)
+                _print_results(results)
         except CliErrorMessageException as e:
             click.secho("Error: " + str(e), fg='red')
         except Exception:
@@ -113,7 +121,8 @@ def _execute_initial_query_file(query_file_path):
     Function that is used to load and execute a query file upon program startup.
     """
     try:
-        query_executor.execute_query_file(query_file_path)
+        results = query_executor.execute_query_file(query_file_path)
+        _print_results(results)
     except CliErrorMessageException as e:
         click.secho("Error: " + str(e), fg='red')
     sys.exit(0)
