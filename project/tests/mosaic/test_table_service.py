@@ -17,7 +17,7 @@ def test_load_from_file():
     assert table.schema_names == ["studenten.MatrNr", "studenten.Name", "studenten.Semester"]
     assert table.schema_types == [table_service.SchemaType.INT, table_service.SchemaType.VARCHAR,
                                   table_service.SchemaType.INT]
-    assert table.records[0]["studenten.MatrNr"] == 24002
+    assert table[0, "studenten.MatrNr"] == 24002
 
 
 def test_load_tables_from_directory():

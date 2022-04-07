@@ -34,6 +34,26 @@ class Table:
         return tabulate.tabulate(self.records, self.schema_names, tablefmt="psql",
                                  stralign="left")
 
+    def __getitem__(self, item):
+        try:
+            if isinstance(item, int):
+                return self.records[item]
+
+            row_index, column_name = item
+            column_index = self.schema_names.index(column_name)
+            if not isinstance(row_index, slice):
+                return self.records[row_index][column_index]
+            else:
+                return [row[column_index] for row in self.records[row_index]]
+        except IndexError:
+            raise TableIndexException(f'No row with given index in table "{self.table_name}"')
+        except ValueError:
+            raise TableIndexException(f'No column with name "{column_name}" in table "{self.table_name}"')
+
+
+class TableIndexException(Exception):
+    pass
+
 
 class TableNotFoundException(Exception):
     pass
