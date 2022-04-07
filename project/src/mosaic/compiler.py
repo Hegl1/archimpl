@@ -349,6 +349,8 @@ class ASTVisitor(NodeVisitor):
     def generic_visit(self, node, visited_children):
         return visited_children
 
+# Compile
+
 _visitor = ASTVisitor()
 
 def compile(ast):
