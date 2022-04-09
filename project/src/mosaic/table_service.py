@@ -51,6 +51,7 @@ class Table:
             raise TableIndexException(f'No column with name "{column_name}" in table "{self.table_name}"')
 
     def rename(self, name):
+        self.table_name = name
         self.schema_names = map(lambda _name: _name.replace(f"{self.table_name}.", f"{name}."), self.schema_names)
 
 

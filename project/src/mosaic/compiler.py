@@ -7,7 +7,7 @@ execution plan.
 from parsimonious.exceptions import VisitationError
 from parsimonious.nodes import NodeVisitor
 
-from operators.table_scan import TableScan
+from .operators.table_scan import TableScan
 
 class QueryExecutionError(Exception):
     pass

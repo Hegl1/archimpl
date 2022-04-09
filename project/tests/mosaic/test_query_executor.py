@@ -17,9 +17,8 @@ def test_execute_query():
         assert len(query_executor.execute_query("pi studenten.MatrNr MatrNr;")) == 1
     except Exception:
         assert False, "Exception raised despite valid input"
-    # TODO: reenable this test, when table-scan is implemented
-    #with pytest.raises(cli.CliErrorMessageException):
-    #    query_executor.execute_query("tableNotFound;")
+    with pytest.raises(cli.CliErrorMessageException):
+       query_executor.execute_query("tableNotFound;")
     with pytest.raises(cli.CliErrorMessageException):
         query_executor.execute_query("this is no valid query;")
 
