@@ -50,6 +50,9 @@ class Table:
         except ValueError:
             raise TableIndexException(f'No column with name "{column_name}" in table "{self.table_name}"')
 
+    def rename(self, name):
+        self.schema_names = map(lambda _name: _name.replace(f"{self.table_name}.", f"{name}."), self.schema_names)
+
 
 class TableIndexException(Exception):
     pass
@@ -229,8 +232,8 @@ def retrieve(table_name):
     try:
         return _tables[table_name]
     except KeyError:
-        raise TableNotFoundException
+        raise TableNotFoundException(table_name)
 
 
 def table_exists(name):
-    return name in _tables or name == '#tables' or name == '#columns'
+    return name in _tables
