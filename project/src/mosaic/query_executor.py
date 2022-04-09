@@ -42,5 +42,7 @@ def execute_query_file(file_path):
                 return execute_query(queries)
     except FileNotFoundError:
         raise cli.CliErrorMessageException("Invalid Path, no query file found")
+    except PermissionError:
+        raise cli.CliErrorMessageException("Permission error when accessing the file")
     except IsADirectoryError:
         raise cli.CliErrorMessageException("Path is a directory, not a query file")
