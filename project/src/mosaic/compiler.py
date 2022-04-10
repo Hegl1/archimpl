@@ -6,6 +6,8 @@ execution plan.
 
 from parsimonious.exceptions import VisitationError
 from parsimonious.nodes import NodeVisitor
+from mosaic.operators.literal_expression import LiteralExpression
+
 
 class QueryExecutionError(Exception):
     pass
@@ -25,35 +27,31 @@ class ASTVisitor(NodeVisitor):
     # Literals
     ####################
     def visit_int_literal(self, node, visited_children):
-        # Example:
-        # return LiteralExpression(int(node.text))
-        pass
+        return LiteralExpression(int(node.text))
 
     def visit_float_literal(self, node, visited_children):
-        pass
+        return LiteralExpression(float(node.text))
 
     def visit_varchar_literal(self, node, visited_children):
-        pass
+        return LiteralExpression(node.text)
 
     def visit_null_literal(self, node, visited_children):
-        pass
+        return LiteralExpression(None)
 
     def visit_literal(self, node, visited_children):
-        pass
+        return visited_children
 
     ####################
     # Operators
     ####################
     def visit_comparison_operator(self, node, visited_children):
-        # Example:
-        # return node.text
-        pass
+        return node.text
 
     def visit_addition_operator(self, node, visited_children):
-        pass
+        return node.text
 
     def visit_multiplication_operator(self, node, visited_children):
-        pass
+        return node.text
 
     ####################
     # Expressions
