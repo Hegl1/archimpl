@@ -36,7 +36,7 @@ class ASTVisitor(NodeVisitor):
         return LiteralExpression(node.text)
 
     def visit_null_literal(self, node, visited_children):
-        return None
+        return LiteralExpression(None)
 
     def visit_literal(self, node, visited_children):
         return visited_children
