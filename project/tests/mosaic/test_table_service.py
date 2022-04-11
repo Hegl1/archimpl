@@ -46,3 +46,23 @@ def test_table_exists():
     assert table_service.table_exists("#tables")
     assert not table_service.table_exists("notExists")
 
+
+def test_table_get_column_index():
+    table = table_service.retrieve("#columns")
+    assert table is not None
+
+    assert table.get_column_index("#columns.column_name") == 1 # FQN
+    assert table.get_column_index("column_name") == 1 # simple name
+
+    with pytest.raises(table_service.TableIndexException):
+        table.get_column_index("notFoundIndex")
+
+def test_table_get_item():
+    table = table_service.retrieve("#columns")
+    assert table is not None
+
+    assert len(table[0]) == 4
+    assert table[0, "ordinal_position"] == 0
+    assert table[0, "#columns.table_name"] == "#tables"
+    assert len(table[0:2]) == 2
+    assert table[1:5, "column_name"] == ["#columns.table_name", "#columns.column_name", "#columns.ordinal_position", "#columns.data_type"]

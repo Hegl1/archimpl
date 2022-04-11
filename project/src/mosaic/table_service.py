@@ -48,7 +48,7 @@ class Table:
 
     def __getitem__(self, item):
         try:
-            if isinstance(item, int):
+            if isinstance(item, int) or isinstance(item, slice):
                 return self.records[item]
 
             row_index, column_name = item
@@ -222,11 +222,11 @@ def _create_columns_table():
     for table_name in _tables:
         column_names = _tables[table_name].schema_names
         for i, column_name in enumerate(column_names):
-            columns_data.append([table_name, column_name, i, _tables[table_name].schema_types[i].value])
+            columns_data.append([table_name, table_name + "." + column_name, i, _tables[table_name].schema_types[i].value])
 
     # add entries for the #columns table columns
     for i, columns_schema_name in enumerate(columns_schema_names):
-        columns_data.append([columns_table_name, columns_schema_name,
+        columns_data.append([columns_table_name, columns_table_name + "." + columns_schema_name,
                              i, columns_schema_types[i].value])
 
     _tables[columns_table_name] = Table(columns_table_name, columns_schema_names, columns_schema_types, columns_data)
