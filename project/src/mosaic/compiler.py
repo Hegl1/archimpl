@@ -9,6 +9,8 @@ from parsimonious.nodes import NodeVisitor
 from mosaic.operators.literal_expression import LiteralExpression
 
 
+from mosaic.operators.table_scan import TableScan
+
 class QueryExecutionError(Exception):
     pass
 
@@ -128,9 +130,7 @@ class ASTVisitor(NodeVisitor):
     # References
     ####################
     def visit_name(self, node, visited_children):
-        # Example:
-        # return node.text.strip()
-        pass
+        return node.text.strip()
 
     def visit_column_name(self, node, visited_children):
         # Example:
@@ -138,7 +138,7 @@ class ASTVisitor(NodeVisitor):
         pass
 
     def visit_table_name(self, node, visited_children):
-        pass
+        return node.text.strip()
 
     def visit_column_reference(self, node, visited_children):
         # Example:
@@ -250,20 +250,18 @@ class ASTVisitor(NodeVisitor):
         pass
 
     def visit_relation_reference(self, node, visited_children):
-        # Example:
-        # # If there are two children, we have a simple reference.
-        # if len(visited_children[0]) == 3:
-        #     return TableScan(visited_children[0][1])
-        # # Otherwise, we have an aliased reference.
-        # else:
-        #     return TableScan(visited_children[0][1], visited_children[0][5])
-        pass
+        # If there are two children, we have a simple reference.
+        if len(visited_children[0]) == 3:
+            return TableScan(visited_children[0][1])
+        # Otherwise, we have an aliased reference.
+        else:
+            return TableScan(visited_children[0][1], visited_children[0][5])
 
     def visit_paren_query(self, node, visited_children):
         pass
 
     def visit_join_factor(self, node, visited_children):
-        pass
+        return visited_children[0]
 
     def visit_set_operator(self, node, visited_children):
         pass
@@ -296,50 +294,50 @@ class ASTVisitor(NodeVisitor):
         pass
 
     def visit_set_factor(self, node, visited_children):
-        # Example:
-        # if len(visited_children[1]) > 0:
-        #     left = visited_children[0]
+        if len(visited_children[1]) > 0:
+            left = visited_children[0]
 
-        #     for join_type, condition, right in visited_children[1]:
-        #         left = NestedLoopsJoin(left,
-        #                                right,
-        #                                join_type,
-        #                                condition=condition,
-        #                                is_natural=(condition is None))
+            # for join_type, condition, right in visited_children[1]:
+            #     left = NestedLoopsJoin(left,
+            #                            right,
+            #                            join_type,
+            #                            condition=condition,
+            #                            is_natural=(condition is None))
 
-        #     return left
-        # else:
-        #     term = visited_children[0]
-        #     return term
-        pass
+            return left
+        else:
+            term = visited_children[0]
+            return term
 
     def visit_set_operation(self, node, visited_children):
         pass
 
     def visit_query(self, node, visited_children):
         # Example:
-        # if len(visited_children[1]) > 0:
-        #     left = visited_children[0]
+        if len(visited_children[1]) > 0:
+            left = visited_children[0]
 
-        #     for operation_type, right in visited_children[1]:
-        #         if operation_type == SetOperationType.UNION:
-        #             left = Union(left, right)
-        #         elif operation_type == SetOperationType.INTERSECT:
-        #             left = Intersect(left, right)
-        #         elif operation_type == SetOperationType.EXCEPT:
-        #             left = Except(left, right)
+            # for operation_type, right in visited_children[1]:
+            #     if operation_type == SetOperationType.UNION:
+            #         left = Union(left, right)
+            #     elif operation_type == SetOperationType.INTERSECT:
+            #         left = Intersect(left, right)
+            #     elif operation_type == SetOperationType.EXCEPT:
+            #         left = Except(left, right)
 
-        #     return left
-        # else:
-        #     term = visited_children[0]
-        #     return term
-        pass
+            return left
+        else:
+            term = visited_children[0]
+            return term
 
     def visit_explain_command(self, node, visited_children):
         pass
 
     def visit_command(self, node, visited_children):
-        pass
+        # print("visit_command")
+        # print(node)
+        # return "command"
+        return visited_children[0]
 
     ####################
     # Generic

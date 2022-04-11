@@ -1,6 +1,7 @@
 from mosaic import parser
 from mosaic import cli
 from mosaic import compiler
+from mosaic.table_service import TableNotFoundException
 
 
 def execute_query(user_in):
@@ -20,9 +21,12 @@ def execute_query(user_in):
             if ast.has_error():
                 raise cli.CliErrorMessageException(ast.error)
 
-            result = compiler.compile(ast.ast)
+            try:
+                result_operator = compiler.compile(ast.ast)
 
-            results.append(result)
+                results.append(result_operator.get_result())
+            except TableNotFoundException as e:
+                raise cli.CliErrorMessageException(f"Table with name \"{e.args[0]}\" does not exist")
 
     return results
 
