@@ -177,6 +177,9 @@ def load_tables_from_directory(path):
     This function calls the load_from_file function for every file (which represent a table) in path
     Returns a list of tuples for files that could not be loaded (file_name, error_information)
     """
+    global _tables
+    _tables = dict()
+
     not_loaded_files = []
     loaded_files = []
     for file in os.listdir(path):
@@ -244,3 +247,13 @@ def retrieve(table_name, makeCopy = False):
 
 def table_exists(name):
     return name in _tables
+
+
+def initialize():
+    """
+    Clears the stored tables and creates #tables and #columns table at start
+    """
+    global _tables
+    _tables = dict()
+    _create_tables_table()
+    _create_columns_table()

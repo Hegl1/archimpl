@@ -4,13 +4,13 @@ from mosaic import table_service
 
 @pytest.fixture(autouse=True)
 def clean_loaded_tables():
-    table_service._tables = dict()
+    table_service.initialize()
 
 
 def test_load_from_file():
-    assert len(table_service._tables) == 0
+    assert len(table_service._tables) == 2
     table_service.load_from_file("./tests/testdata/studenten.table")
-    assert len(table_service._tables) == 1
+    assert len(table_service._tables) == 3
     table = table_service._tables["studenten"]
     assert table is not None
     assert table.table_name == "studenten"
@@ -21,7 +21,7 @@ def test_load_from_file():
 
 
 def test_load_tables_from_directory():
-    assert len(table_service._tables) == 0
+    assert len(table_service._tables) == 2
     not_loaded = table_service.load_tables_from_directory("./tests/testdata/")
     assert len(table_service._tables) == 3  # incl. #tables and #columns
     assert len(not_loaded) == 1
