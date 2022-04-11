@@ -7,7 +7,7 @@ execution plan.
 from parsimonious.exceptions import VisitationError
 from parsimonious.nodes import NodeVisitor
 
-from .operators.table_scan import TableScan
+from mosaic.operators.table_scan import TableScan
 
 class QueryExecutionError(Exception):
     pass
@@ -140,7 +140,7 @@ class ASTVisitor(NodeVisitor):
         pass
 
     def visit_table_name(self, node, visited_children):
-        return node.text
+        return node.text.strip()
 
     def visit_column_reference(self, node, visited_children):
         # Example:

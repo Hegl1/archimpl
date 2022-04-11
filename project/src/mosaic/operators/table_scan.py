@@ -1,4 +1,3 @@
-from copy import copy
 from .abstract_operator import AbstractOperator
 from mosaic import table_service
 
@@ -10,12 +9,10 @@ class TableScan(AbstractOperator):
         self.alias = alias
 
     def get_result(self):
-        table = table_service.retrieve(self.table_name)
+        table = table_service.retrieve(self.table_name, makeCopy = True)
 
         if(self.alias is not None):
-            table = copy(table)
-
-            table.rename(self.alias)
+            table.table_name = self.alias
 
         return table
 
