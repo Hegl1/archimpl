@@ -1,7 +1,7 @@
-from .abstract_operator import AbstractOperator
+from .abstract_expression import AbstractExpression
 from mosaic import table_service
 
-class TableScan(AbstractOperator):
+class TableScan(AbstractExpression):
     def __init__(self, table_name, alias = None):
         super().__init__()
 

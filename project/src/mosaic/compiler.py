@@ -6,10 +6,9 @@ execution plan.
 
 from parsimonious.exceptions import VisitationError
 from parsimonious.nodes import NodeVisitor
-from mosaic.operators.literal_expression import LiteralExpression
 
-
-from mosaic.operators.table_scan import TableScan
+from mosaic.expressions.literal_expression import LiteralExpression
+from mosaic.expressions.table_scan import TableScan
 
 class QueryExecutionError(Exception):
     pass

@@ -22,9 +22,9 @@ def execute_query(user_in):
                 raise cli.CliErrorMessageException(ast.error)
 
             try:
-                result_operator = compiler.compile(ast.ast)
+                result_expression = compiler.compile(ast.ast)
 
-                results.append(result_operator.get_result())
+                results.append(result_expression.get_result())
             except TableNotFoundException as e:
                 raise cli.CliErrorMessageException(f"Table with name \"{e.args[0]}\" does not exist")
 

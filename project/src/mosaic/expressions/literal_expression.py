@@ -1,7 +1,7 @@
-from mosaic.operators.abstract_operator import AbstractOperator
+from .abstract_expression import AbstractExpression
 
 
-class LiteralExpression(AbstractOperator):
+class LiteralExpression(AbstractExpression):
     def __init__(self, value):
         self.value = value
 

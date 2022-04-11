@@ -1,7 +1,7 @@
 from abc import ABC
 from abc import abstractmethod
 
-class AbstractOperator(ABC):
+class AbstractExpression(ABC):
     def __init__(self):
         pass
 
