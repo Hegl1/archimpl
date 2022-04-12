@@ -41,8 +41,11 @@ def _execute_query_file_from_command(user_in):
 
 
 def _print_results(results):
-    for result in results:
+    for result, execution_time in results:
+        execution_time = "{:0.3f}".format(execution_time)
+
         click.echo(result)
+        click.echo(f"Executed query in {execution_time} ms.\n")
 
 
 def _execute_command(user_in):

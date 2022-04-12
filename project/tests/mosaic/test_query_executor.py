@@ -13,7 +13,11 @@ def test_execute_query():
     try:
         assert len(query_executor.execute_query("#tables;")) == 1
         assert len(query_executor.execute_query("#tables; #tables;")) == 2
-        assert len(query_executor.execute_query("studenten;")) == 1
+
+        table_result = query_executor.execute_query("studenten;")
+        assert len(table_result) == 1
+        assert len(table_result[0]) == 2
+        assert table_result[0][1] < 10
         # TODO: re-enable test after projection was implemented
         #assert len(query_executor.execute_query("pi studenten.MatrNr MatrNr;")) == 1
     except Exception:
