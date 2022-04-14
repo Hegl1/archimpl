@@ -31,8 +31,9 @@ class BinaryOperationExpression(AbstractExpression):
             return self.left.get_result() + self.right.get_result()
         elif self.operator == BinaryOperator.SUBTRACT:
             return self.left.get_result() - self.right.get_result()
-        elif self.operator == BinaryOperator.EQUAL:
-            pass
+        else:
+            #TODO: implement comparitive operators
+            pass 
 
     def __str__(self):
         return f"BinaryOperationExpression(left={self.left},right={self.right},operator={self.operator})"

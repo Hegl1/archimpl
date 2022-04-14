@@ -121,22 +121,66 @@ class ASTVisitor(NodeVisitor):
             return term
 
     def visit_comparative(self, node, visited_children):
-        pass
+        operator = visited_children[0]
+        right = visited_children[2]
+
+        return (operator, right)
 
     def visit_comparative_term(self, node, visited_children):
-        pass
+        if len(visited_children[1]) > 0:
+            left = visited_children[0]
+
+            for operator, right in visited_children[1]:
+                if operator == '=':
+                    left = BinaryOperationExpression(left,
+                                                     BinaryOperator.EQUAL,
+                                                     right)
+                elif operator == '!=':
+                    left = BinaryOperationExpression(left,
+                                                     BinaryOperator.NOT_EQUAL,
+                                                     right)
+                elif operator == '<':
+                    left = BinaryOperationExpression(left,
+                                                     BinaryOperator.SMALLER,
+                                                     right)
+                elif operator == '<=':
+                    left = BinaryOperationExpression(left,
+                                                     BinaryOperator.SMALLER_EQUAL,
+                                                     right)         
+                elif operator == '>':
+                    left = BinaryOperationExpression(left,
+                                                     BinaryOperator.GREATER,
+                                                     right)
+                elif operator == '>=':
+                    left = BinaryOperationExpression(left,
+                                                     BinaryOperator.GREATER_EQUAL,
+                                                     right)                                                                                                                                                         
+
+            return left
+        else:
+            term = visited_children[0]
+            return term
 
     def visit_conjunctive(self, node, visited_children):
         pass
 
     def visit_conjunctive_term(self, node, visited_children):
-        pass
+        if len(visited_children[1]) > 0:
+            pass
+        else:
+            term = visited_children[0]
+            return term
 
     def visit_disjunctive(self, node, visited_children):
-        pass
+        if len(visited_children[1]) > 0:
+            pass
+        else:
+            term = visited_children[0]
+            return term
 
     def visit_expression(self, node, visited_children):
-        pass
+        term = visited_children[0]
+        return term
 
     ####################
     # References
