@@ -1,3 +1,4 @@
+from time import perf_counter_ns
 from mosaic import parser
 from mosaic import cli
 from mosaic import compiler
@@ -7,11 +8,14 @@ from mosaic.table_service import TableNotFoundException
 def execute_query(user_in):
     """
     Function that executes queries. Multiple queries per line are also possible.
-    Returns a list containing all results
+    Returns a list containing all results as tuples: (result, execution_time)
+    The execution_time is passed as milliseconds
     """
     results = []
 
     for query in user_in.split(";"):
+        start_execution = perf_counter_ns()
+
         # strip to allow chaining of multiple queries in a line
         query = query.strip()
 
@@ -23,8 +27,12 @@ def execute_query(user_in):
 
             try:
                 result_expression = compiler.compile(ast.ast)
+                result = result_expression.get_result()
 
-                results.append(result_expression.get_result())
+                end_execution = perf_counter_ns()
+                execution_time = (end_execution - start_execution) / 1000000
+
+                results.append((result, execution_time))
             except TableNotFoundException as e:
                 raise cli.CliErrorMessageException(f"Table with name \"{e.args[0]}\" does not exist")
 

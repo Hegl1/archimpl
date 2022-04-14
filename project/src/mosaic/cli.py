@@ -27,6 +27,14 @@ def _print_command_help():
     click.echo("<query> \t\t\t executes a query that needs to be terminated by \";\"")
 
 
+def _print_results(results, printTime = True):
+    for result, execution_time in results:
+        click.echo(result)
+
+        if printTime:
+            click.echo(f"Executed query in {execution_time:0.3f} ms.\n")
+
+
 def _execute_query_file_from_command(user_in):
     """
     Function that parses the \\execute <file_name> command and calls the regular execute function with the resulting
@@ -38,11 +46,6 @@ def _execute_query_file_from_command(user_in):
     else:
         results = query_executor.execute_query_file(split_string[1])
         _print_results(results)
-
-
-def _print_results(results):
-    for result in results:
-        click.echo(result)
 
 
 def _execute_command(user_in):
