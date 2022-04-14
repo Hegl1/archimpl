@@ -1,10 +1,19 @@
+from lib2to3.pgen2.token import EQUAL
 from xmlrpc.client import Boolean
 from .abstract_expression import AbstractExpression
 from enum import Enum
 
 class BinaryOperator(Enum):
     TIMES=0,
-    DIVIDE=1
+    DIVIDE=1,
+    ADD=2,
+    SUBTRACT=3,
+    EQUAL=4,
+    NOT_EQUAL=5,
+    SMALLER=6,
+    SMALLER_EQUAL=7,
+    GREATER=8,
+    GREATER_EQUAL=9
 
 
 class BinaryOperationExpression(AbstractExpression):
@@ -15,9 +24,15 @@ class BinaryOperationExpression(AbstractExpression):
 
     def get_result(self):
         if self.operator == BinaryOperator.TIMES:
-            self.left.get_result() * self.right.get_result()
+            return self.left.get_result() * self.right.get_result()
         elif self.operator == BinaryOperator.DIVIDE:
-            self.left.get_result() / self.right.get_result()
+            return self.left.get_result() / self.right.get_result()
+        elif self.operator == BinaryOperator.ADD:
+            return self.left.get_result() + self.right.get_result()
+        elif self.operator == BinaryOperator.SUBTRACT:
+            return self.left.get_result() - self.right.get_result()
+        elif self.operator == BinaryOperator.EQUAL:
+            pass
 
     def __str__(self):
         return f"BinaryOperationExpression(left={self.left},right={self.right},operator={self.operator})"

@@ -95,10 +95,29 @@ class ASTVisitor(NodeVisitor):
             return term
 
     def visit_additive(self, node, visited_children):
-        pass
+        operator = visited_children[0]
+        right = visited_children[2]
+
+        return (operator, right)
 
     def visit_additive_term(self, node, visited_children):
-        pass
+        if len(visited_children[1]) > 0:
+            left = visited_children[0]
+
+            for operator, right in visited_children[1]:
+                if operator == '+':
+                    left = BinaryOperationExpression(left,
+                                                     BinaryOperator.ADD,
+                                                     right)
+                elif operator == '-':
+                    left = BinaryOperationExpression(left,
+                                                     BinaryOperator.SUBTRACT,
+                                                     right)
+
+            return left
+        else:
+            term = visited_children[0]
+            return term
 
     def visit_comparative(self, node, visited_children):
         pass
