@@ -9,6 +9,7 @@ from parsimonious.nodes import NodeVisitor
 
 from mosaic.expressions.literal_expression import LiteralExpression
 from mosaic.expressions.table_scan import TableScan
+from mosaic.expressions.column_expression import ColumnExpression
 
 class QueryExecutionError(Exception):
     pass
@@ -132,44 +133,36 @@ class ASTVisitor(NodeVisitor):
         return node.text.strip()
 
     def visit_column_name(self, node, visited_children):
-        # Example:
-        # return ColumnExpression(node.text.strip())
-        pass
+        return ColumnExpression(node.text.strip())
 
     def visit_table_name(self, node, visited_children):
         return node.text.strip()
 
     def visit_column_reference(self, node, visited_children):
-        # Example:
-        # # If visited_children is a string, it is a simple column reference.
-        # if type(visited_children[0]) == str:
-        #     return (None, ColumnExpression(visited_children[0]))
-        # # If it is a list, it is an aliased reference.
-        # elif type(visited_children[0]) == list:
-        #     return (visited_children[0][0], visited_children[0][3])
-        pass
+        # If visited_children is a string, it is a simple column reference.
+        if type(visited_children[0]) == str:
+            return (None, ColumnExpression(visited_children[0]))
+        # If it is a list, it is an aliased reference.
+        elif type(visited_children[0]) == list:
+            return (visited_children[0][0], visited_children[0][3])
 
     def visit_column_list(self, node, visited_children):
-        # Example:
-        # # If the child is a tuple, we have just a single column.
-        # if type(visited_children[0]) == tuple:
-        #     return [visited_children[0]]
-        # # If the children are a list, we have multiple names.
-        # elif type(visited_children[0]) == list:
-        #     columns = [visited_children[0][0]] + visited_children[0][2]
-        #     return columns
-        pass
+        # If the child is a tuple, we have just a single column.
+        if type(visited_children[0]) == tuple:
+            return [visited_children[0]]
+        # If the children are a list, we have multiple names.
+        elif type(visited_children[0]) == list:
+            columns = [visited_children[0][0]] + visited_children[0][2]
+            return columns
 
     def visit_simple_column_list(self, node, visited_children):
-        # Example:
-        # # If the children are a list, we have multiple names.
-        # if type(visited_children[0]) == list:
-        #     columns = [visited_children[0][0]] + visited_children[0][2]
-        #     return columns
-        # # Otherwise, we have just a single column.
-        # else:
-        #     return [visited_children[0]]
-        pass
+        # If the children are a list, we have multiple names.
+        if type(visited_children[0]) == list:
+            columns = [visited_children[0][0]] + visited_children[0][2]
+            return columns
+        # Otherwise, we have just a single column.
+        else:
+            return [visited_children[0]]
 
     def visit_aggregate_list(self, node, visited_children):
         pass
