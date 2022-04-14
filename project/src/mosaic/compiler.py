@@ -10,6 +10,8 @@ from parsimonious.nodes import NodeVisitor
 from mosaic.expressions.literal_expression import LiteralExpression
 from mosaic.expressions.table_scan import TableScan
 from mosaic.expressions.column_expression import ColumnExpression
+from mosaic.expressions.projection import Projection
+from mosaic.expressions.hash_distinct import HashDistinct
 
 class QueryExecutionError(Exception):
     pass
@@ -180,20 +182,18 @@ class ASTVisitor(NodeVisitor):
     # Commands
     ####################
     def visit_projection(self, node, visited_children):
-        # Example:
-        # # Check if DISTINCT was specified. Depending on that, different
-        # # children contain the information we need.
-        # if len(visited_children[0]) == 6:
-        #     input_node = visited_children[0][5]
-        #     column_expressions = visited_children[0][4]
+        # Check if DISTINCT was specified. Depending on that, different
+        # children contain the information we need.
+        if len(visited_children[0]) == 6:
+            table_reference = visited_children[0][5]
+            column_expressions = visited_children[0][4]
 
-        #     return HashDistinct(Projection(input_node, column_expressions))
-        # else:
-        #     input_node = visited_children[0][3]
-        #     column_expressions = visited_children[0][2]
+            return HashDistinct(Projection(column_expressions, table_reference))
+        else:
+            table_reference = visited_children[0][3]
+            column_expressions = visited_children[0][2]
 
-        #     return Projection(input_node, column_expressions)
-        pass
+            return Projection(column_expressions, table_reference)
 
     def visit_selection(self, node, visited_children):
         condition = visited_children[2]

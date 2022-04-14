@@ -31,9 +31,21 @@ class Table:
         self.schema_types = schema_types
         self.records = data
 
-    def get_column_index(self, column_name):
+    def get_simple_column_name(self, column_name):
+        """
+        Transforms the FQN column name into a simple column name
+        """
         if column_name.startswith(self.table_name + "."):
             column_name = column_name[len(self.table_name) + 1:] # remove FQN
+
+        return column_name
+
+    def get_column_index(self, column_name):
+        """
+        Returns the index of the column in the schema. It handles also FQNs and simple references.
+        If the column is not found, a TableIndexException is raised
+        """
+        column_name = self.get_simple_column_name(column_name)
 
         try:
             return self.schema_names.index(column_name)

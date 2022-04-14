@@ -3,6 +3,7 @@ from mosaic import parser
 from mosaic import cli
 from mosaic import compiler
 from mosaic.table_service import TableNotFoundException
+from mosaic.table_service import TableIndexException
 
 
 def execute_query(user_in):
@@ -35,6 +36,8 @@ def execute_query(user_in):
                 results.append((result, execution_time))
             except TableNotFoundException as e:
                 raise cli.CliErrorMessageException(f"Table with name \"{e.args[0]}\" does not exist")
+            except TableIndexException as e:
+                raise cli.CliErrorMessageException(e)
 
     return results
 
