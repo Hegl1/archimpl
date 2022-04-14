@@ -9,6 +9,8 @@ from parsimonious.nodes import NodeVisitor
 
 from mosaic.expressions.literal_expression import LiteralExpression
 from mosaic.expressions.table_scan import TableScan
+from mosaic.expressions.binary_operation_expression import BinaryOperationExpression
+from mosaic.expressions.binary_operation_expression import BinaryOperator
 
 class QueryExecutionError(Exception):
     pass
@@ -60,46 +62,37 @@ class ASTVisitor(NodeVisitor):
     def visit_parens(self, node, visited_children):
         expression = visited_children[2]
 
-        # Example:
-        # return expression
-        pass
+        return expression
 
     def visit_term(self, node, visited_children):
         term = visited_children[0]
 
-        # Example:
-        # return term
-        pass
+        return term
 
     def visit_multiplicative(self, node, visited_children):
         operator = visited_children[0]
         right = visited_children[2]
 
-        # Example:
-        # return (operator, right)
-        pass
+        return (operator, right)
 
     def visit_multiplicative_term(self, node, visited_children):
-        # Example:
-        # if len(visited_children[1]) > 0:
-        #     left = visited_children[0]
+        if len(visited_children[1]) > 0:
+            left = visited_children[0]
 
-        #     for operator, right in visited_children[1]:
-        #         if operator == '*':
-        #             left = BinaryOperationExpression(left,
-        #                                              BinaryOperator.TIMES,
-        #                                              right)
-        #         elif operator == '/':
-        #             left = BinaryOperationExpression(left,
-        #                                              BinaryOperator.DIVIDE,
-        #                                              right)
+            for operator, right in visited_children[1]:
+                if operator == '*':
+                    left = BinaryOperationExpression(left,
+                                                     BinaryOperator.TIMES,
+                                                     right)
+                elif operator == '/':
+                    left = BinaryOperationExpression(left,
+                                                     BinaryOperator.DIVIDE,
+                                                     right)
 
-        #     return left
-        # else:
-        #     term = visited_children[0]
-        #     return term
-
-        pass
+            return left
+        else:
+            term = visited_children[0]
+            return term
 
     def visit_additive(self, node, visited_children):
         pass
@@ -257,7 +250,7 @@ class ASTVisitor(NodeVisitor):
             return TableScan(visited_children[0][1], visited_children[0][5])
 
     def visit_paren_query(self, node, visited_children):
-        pass
+        return visited_children[3]
 
     def visit_join_factor(self, node, visited_children):
         return visited_children[0]
