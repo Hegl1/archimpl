@@ -326,9 +326,6 @@ class ASTVisitor(NodeVisitor):
         pass
 
     def visit_command(self, node, visited_children):
-        # print("visit_command")
-        # print(node)
-        # return "command"
         return visited_children[0]
 
     ####################
