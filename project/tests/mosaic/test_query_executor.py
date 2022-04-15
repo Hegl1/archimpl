@@ -18,8 +18,7 @@ def test_execute_query():
         assert len(table_result) == 1
         assert len(table_result[0]) == 2
         assert table_result[0][1] < 10
-        # TODO: re-enable test after projection was implemented
-        #assert len(query_executor.execute_query("pi studenten.MatrNr MatrNr;")) == 1
+        assert len(query_executor.execute_query("pi studenten.MatrNr studenten;")) == 1
     except Exception:
         assert False, "Exception raised despite valid input"
     with pytest.raises(cli.CliErrorMessageException):
@@ -29,11 +28,10 @@ def test_execute_query():
 
 
 def test_execute_query_file():
-    # TODO: re-enable test after projection was implemented
-    #try:
-    #    assert len(query_executor.execute_query_file("./tests/mosaic/testqueries/valid_query.mql")) == 2
-    #except Exception as e:
-    #    assert False, f"Exception raised despite valid query file: {e}"
+    try:
+       assert len(query_executor.execute_query_file("./tests/mosaic/testqueries/valid_query.mql")) == 2
+    except Exception as e:
+       assert False, f"Exception raised despite valid query file: {e}"
     with pytest.raises(cli.CliErrorMessageException):
         query_executor.execute_query_file("./notaValidFile")
     with pytest.raises(cli.CliErrorMessageException):
