@@ -10,19 +10,16 @@ class HashDistinct(AbstractExpression):
         table = self.table.get_result()
 
         hashes = set()
-        duplicate_indices = []
 
-        for index, record in enumerate(table.records):
+        for index in range(len(table.records) - 1, -1, -1):
+            print(index)
+            record = table[index]
             record_hash = hash(str(record))
+
             if record_hash in hashes:
-                duplicate_indices.append(index)
+                table.records.pop(index)
             else:
                 hashes.add(record_hash)
-
-        duplicate_indices.reverse()
-
-        for index in duplicate_indices:
-            table.records.pop(index)
 
         return table
 
