@@ -166,6 +166,7 @@ class ASTVisitor(NodeVisitor):
 
     def visit_conjunctive_term(self, node, visited_children):
         if len(visited_children[1]) > 0:
+            #TODO: implement
             pass
         else:
             term = visited_children[0]
@@ -173,6 +174,7 @@ class ASTVisitor(NodeVisitor):
 
     def visit_disjunctive(self, node, visited_children):
         if len(visited_children[1]) > 0:
+            #TODO: implement
             pass
         else:
             term = visited_children[0]
