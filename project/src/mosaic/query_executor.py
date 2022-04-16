@@ -38,6 +38,8 @@ def execute_query(user_in):
                 raise cli.CliErrorMessageException(f"Table with name \"{e.args[0]}\" does not exist")
             except TableIndexException as e:
                 raise cli.CliErrorMessageException(e)
+            except Exception as e:
+                raise cli.CliErrorMessageException(e)
 
     return results
 
