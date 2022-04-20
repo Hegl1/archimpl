@@ -12,6 +12,8 @@ from mosaic.expressions.table_scan import TableScan
 from mosaic.expressions.binary_operation_expression import BinaryOperationExpression
 from mosaic.expressions.binary_operation_expression import BinaryOperator
 from mosaic.expressions.column_expression import ColumnExpression
+from mosaic.expressions.projection import Projection
+from mosaic.expressions.hash_distinct import HashDistinct
 
 class QueryExecutionError(Exception):
     pass
@@ -31,31 +33,31 @@ class ASTVisitor(NodeVisitor):
     # Literals
     ####################
     def visit_int_literal(self, node, visited_children):
-        return LiteralExpression(int(node.text))
+        return LiteralExpression(int(node.text.strip()))
 
     def visit_float_literal(self, node, visited_children):
-        return LiteralExpression(float(node.text))
+        return LiteralExpression(float(node.text.strip()))
 
     def visit_varchar_literal(self, node, visited_children):
-        return LiteralExpression(node.text)
+        return LiteralExpression(node.text.strip())
 
     def visit_null_literal(self, node, visited_children):
         return LiteralExpression(None)
 
     def visit_literal(self, node, visited_children):
-        return visited_children
+        return visited_children[0]
 
     ####################
     # Operators
     ####################
     def visit_comparison_operator(self, node, visited_children):
-        return node.text
+        return node.text.strip()
 
     def visit_addition_operator(self, node, visited_children):
-        return node.text
+        return node.text.strip()
 
     def visit_multiplication_operator(self, node, visited_children):
-        return node.text
+        return node.text.strip()
 
     ####################
     # Expressions
@@ -85,10 +87,12 @@ class ASTVisitor(NodeVisitor):
                     left = BinaryOperationExpression(left,
                                                      BinaryOperator.TIMES,
                                                      right)
+                    break
                 elif operator == '/':
                     left = BinaryOperationExpression(left,
                                                      BinaryOperator.DIVIDE,
                                                      right)
+                    break
 
             return left
         else:
@@ -110,10 +114,12 @@ class ASTVisitor(NodeVisitor):
                     left = BinaryOperationExpression(left,
                                                      BinaryOperator.ADD,
                                                      right)
+                    break
                 elif operator == '-':
                     left = BinaryOperationExpression(left,
                                                      BinaryOperator.SUBTRACT,
                                                      right)
+                    break
 
             return left
         else:
@@ -135,26 +141,32 @@ class ASTVisitor(NodeVisitor):
                     left = BinaryOperationExpression(left,
                                                      BinaryOperator.EQUAL,
                                                      right)
+                    break
                 elif operator == '!=':
                     left = BinaryOperationExpression(left,
                                                      BinaryOperator.NOT_EQUAL,
                                                      right)
+                    break
                 elif operator == '<':
                     left = BinaryOperationExpression(left,
                                                      BinaryOperator.SMALLER,
                                                      right)
+                    break
                 elif operator == '<=':
                     left = BinaryOperationExpression(left,
                                                      BinaryOperator.SMALLER_EQUAL,
-                                                     right)         
+                                                     right)
+                    break
                 elif operator == '>':
                     left = BinaryOperationExpression(left,
                                                      BinaryOperator.GREATER,
                                                      right)
+                    break
                 elif operator == '>=':
                     left = BinaryOperationExpression(left,
                                                      BinaryOperator.GREATER_EQUAL,
-                                                     right)                                                                                                                                                         
+                                                     right)
+                    break
 
             return left
         else:
@@ -238,20 +250,18 @@ class ASTVisitor(NodeVisitor):
     # Commands
     ####################
     def visit_projection(self, node, visited_children):
-        # Example:
-        # # Check if DISTINCT was specified. Depending on that, different
-        # # children contain the information we need.
-        # if len(visited_children[0]) == 6:
-        #     input_node = visited_children[0][5]
-        #     column_expressions = visited_children[0][4]
+        # Check if DISTINCT was specified. Depending on that, different
+        # children contain the information we need.
+        if len(visited_children[0]) == 6:
+            table_reference = visited_children[0][5]
+            column_expressions = visited_children[0][4]
 
-        #     return HashDistinct(Projection(input_node, column_expressions))
-        # else:
-        #     input_node = visited_children[0][3]
-        #     column_expressions = visited_children[0][2]
+            return HashDistinct(Projection(column_expressions, table_reference))
+        else:
+            table_reference = visited_children[0][3]
+            column_expressions = visited_children[0][2]
 
-        #     return Projection(input_node, column_expressions)
-        pass
+            return Projection(column_expressions, table_reference)
 
     def visit_selection(self, node, visited_children):
         condition = visited_children[2]
@@ -262,7 +272,7 @@ class ASTVisitor(NodeVisitor):
         pass
 
     def visit_aggregate_function(self, node, visited_children):
-        function_name = node.text.lower()
+        function_name = node.text.strip().lower()
 
         # Example:
         # if function_name == 'sum':
@@ -384,9 +394,6 @@ class ASTVisitor(NodeVisitor):
         pass
 
     def visit_command(self, node, visited_children):
-        # print("visit_command")
-        # print(node)
-        # return "command"
         return visited_children[0]
 
     ####################

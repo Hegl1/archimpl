@@ -9,4 +9,4 @@ class ColumnExpression(AbstractExpression):
         return self.value
 
     def __str__(self):
-        return f"ColumnExpression(value={self.value})"
+        return self.value
