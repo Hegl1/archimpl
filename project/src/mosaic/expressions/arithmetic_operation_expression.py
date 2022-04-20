@@ -21,6 +21,9 @@ class ArithmeticOperationExpression(AbstractExpression):
         self.operator = operator
 
     def get_result(self, table, row_index):
+        """
+        Returns the result for a table and the given row (with the given index)
+        """
         left_operand = self._get_operand(table, row_index, expression = self.left)
         right_operand = self._get_operand(table, row_index, expression = self.right)
 
@@ -39,6 +42,10 @@ class ArithmeticOperationExpression(AbstractExpression):
             return left_operand - right_operand
 
     def get_schema_type(self, table):
+        """
+        Computes the schema_type for the expression by evaluating the types of
+        the both operands.
+        """
         left_schema = self._get_schema_type_for_expression(table, self.left)
         right_schema = self._get_schema_type_for_expression(table, self.right)
 
@@ -53,6 +60,9 @@ class ArithmeticOperationExpression(AbstractExpression):
         return SchemaType.INT
 
     def _get_schema_type_for_expression(self, table, expression):
+        """
+        Returns the schema_type for the given expression in the given table
+        """
         if isinstance(expression, ArithmeticOperationExpression):
             return expression.get_schema_type(table)
         elif isinstance(expression, ColumnExpression):

@@ -19,6 +19,15 @@ class Projection(AbstractExpression):
         return Table(table.table_name, schema_names, schema_types, data)
 
     def _build_schema(self, table):
+        """
+        Builds the schema for the projection-result, including the columns.
+        columns is a list containing:
+        - integers (index of the value in the reference table)
+        - ArithmeticOperationExpressions (get_result used for calculation of row value)
+        - LiteralExpression (get_result used for value)
+
+        Returns the following tuple: (schema_names, schema_types, columns)
+        """
         schema_names = []
         schema_types = []
 
@@ -48,6 +57,10 @@ class Projection(AbstractExpression):
         return (schema_names, schema_types, columns)
 
     def _build_data(self, table, columns):
+        """
+        Builds the data (rows/records) for the projection-result.
+        For this it uses the columns returned by the _build_schema method
+        """
         data = []
 
         for (index, record) in enumerate(table.records):

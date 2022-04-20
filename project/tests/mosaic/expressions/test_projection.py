@@ -4,6 +4,9 @@ from mosaic.expressions.projection import Projection
 from mosaic import table_service
 from mosaic.table_service import Table
 from mosaic.table_service import TableIndexException
+from mosaic.expressions.arithmetic_operation_expression import ArithmeticOperationExpression, ArithmeticOperator, IncompatibleOperationException
+from mosaic.expressions.literal_expression import LiteralExpression
+from mosaic.table_service import SchemaType
 import pytest
 
 @pytest.mark.parametrize(
@@ -68,4 +71,128 @@ def test_select_non_existent_column():
     projection = Projection([(None, column_expression)], table_scan)
 
     with pytest.raises(TableIndexException):
+        projection.get_result()
+
+def test_select_string_concat():
+    table_scan = TableScan("#columns")
+    arithemetic_operation = ArithmeticOperationExpression(LiteralExpression("Position: "), ArithmeticOperator.ADD, ColumnExpression("ordinal_position"))
+
+    projection = Projection([("FullOrdinal", arithemetic_operation)], table_scan)
+
+    result = projection.get_result()
+
+    assert result.schema_names[0] == "FullOrdinal"
+    assert result.schema_types[0] == SchemaType.VARCHAR
+    assert result[0, "FullOrdinal"] == "Position: 0"
+
+def test_select_int_subtract():
+    table_scan = TableScan("#columns")
+    arithemetic_operation = ArithmeticOperationExpression(ColumnExpression("ordinal_position"), ArithmeticOperator.SUBTRACT, LiteralExpression(1))
+
+    table = table_service.retrieve("#columns")
+
+    projection = Projection([("t", arithemetic_operation)], table_scan)
+
+    result = projection.get_result()
+
+    assert result.schema_names[0] == "t"
+    assert result.schema_types[0] == SchemaType.INT
+    assert len(result.records) == len(table.records)
+
+    for index, record in enumerate(result.records):
+        assert record[0] == (table[index, "ordinal_position"] - 1)
+
+def test_select_float_multiply():
+    table_scan = TableScan("#columns")
+    arithemetic_operation = ArithmeticOperationExpression(ColumnExpression("ordinal_position"), ArithmeticOperator.TIMES, LiteralExpression(1.5))
+
+    table = table_service.retrieve("#columns")
+
+    projection = Projection([("t", arithemetic_operation)], table_scan)
+
+    result = projection.get_result()
+
+    assert result.schema_names[0] == "t"
+    assert result.schema_types[0] == SchemaType.FLOAT
+    assert len(result.records) == len(table.records)
+
+    for index, record in enumerate(result.records):
+        assert record[0] == (table[index, "ordinal_position"] * 1.5)
+
+def test_select_float_divide():
+    table_scan = TableScan("#columns")
+    arithemetic_operation = ArithmeticOperationExpression(ColumnExpression("ordinal_position"), ArithmeticOperator.DIVIDE, LiteralExpression(2))
+
+    table = table_service.retrieve("#columns")
+
+    projection = Projection([("t", arithemetic_operation)], table_scan)
+
+    result = projection.get_result()
+
+    assert result.schema_names[0] == "t"
+    assert result.schema_types[0] == SchemaType.FLOAT
+    assert len(result.records) == len(table.records)
+
+    for index, record in enumerate(result.records):
+        assert record[0] == (table[index, "ordinal_position"] / 2)
+
+def test_select_literal_only():
+    table_scan = TableScan("#columns")
+    literal = LiteralExpression(0)
+
+    table = table_service.retrieve("#columns")
+
+    projection = Projection([("zero", literal)], table_scan)
+
+    result = projection.get_result()
+
+    assert result.schema_names[0] == "zero"
+    assert result.schema_types[0] == SchemaType.INT
+    assert len(result.records) == len(table.records)
+
+    for record in result.records:
+        assert record[0] == 0
+
+def test_select_concat_columns():
+    table_scan = TableScan("#columns")
+    arithemetic_operation = ArithmeticOperationExpression(ColumnExpression("ordinal_position"), ArithmeticOperator.ADD, ColumnExpression("data_type"))
+
+    table = table_service.retrieve("#columns")
+
+    projection = Projection([("t", arithemetic_operation)], table_scan)
+
+    result = projection.get_result()
+
+    assert result.schema_names[0] == "t"
+    assert result.schema_types[0] == SchemaType.VARCHAR
+    assert len(result.records) == len(table.records)
+
+    for index, record in enumerate(result.records):
+        assert record[0] == (str(table[index, "ordinal_position"]) + table[index, "data_type"])
+
+def test_select_nested_arithmetic():
+    table_scan = TableScan("#columns")
+    inner_arithemetic_operation = ArithmeticOperationExpression(LiteralExpression(10), ArithmeticOperator.ADD, LiteralExpression(5))
+    arithemetic_operation = ArithmeticOperationExpression(LiteralExpression(10), ArithmeticOperator.ADD, inner_arithemetic_operation)
+
+    table = table_service.retrieve("#columns")
+
+    projection = Projection([("t", arithemetic_operation)], table_scan)
+
+    result = projection.get_result()
+
+    assert result.schema_names[0] == "t"
+    assert result.schema_types[0] == SchemaType.INT
+    assert len(result.records) == len(table.records)
+
+    for record in result.records:
+        assert record[0] == 25
+
+def test_select_bad_string_operation():
+    table_scan = TableScan("#columns")
+    arithemetic_operation = ArithmeticOperationExpression(ColumnExpression("ordinal_position"), ArithmeticOperator.SUBTRACT, LiteralExpression("test"))
+
+    projection = Projection([("t", arithemetic_operation)], table_scan)
+
+    with pytest.raises(IncompatibleOperationException):
         projection.get_result()
