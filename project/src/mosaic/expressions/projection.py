@@ -1,6 +1,7 @@
 from .abstract_expression import AbstractExpression
 from .arithmetic_operation_expression import ArithmeticOperationExpression
-from mosaic.table_service import Table
+from .literal_expression import LiteralExpression
+from mosaic.table_service import Table, get_schema_type
 
 class Projection(AbstractExpression):
     def __init__(self, column_references, table_reference):
@@ -24,12 +25,16 @@ class Projection(AbstractExpression):
         columns = []
 
         for (alias, column_reference) in self.column_references:
-
             if isinstance(column_reference, ArithmeticOperationExpression):
                 column_value = column_reference
 
                 schema_names.append(alias)
                 schema_types.append(column_reference.get_schema_type(table))
+            elif isinstance(column_reference, LiteralExpression):
+                column_value = column_reference
+
+                schema_names.append(alias)
+                schema_types.append(get_schema_type(column_reference.get_result()))
             else:
                 column = column_reference.get_result()
                 column_name = table.get_simple_column_name(column)
@@ -50,6 +55,8 @@ class Projection(AbstractExpression):
             for column_value in columns:
                 if isinstance(column_value, ArithmeticOperationExpression):
                     row.append(column_value.get_result(table, index))
+                elif isinstance(column_value, LiteralExpression):
+                    row.append(column_value.get_result())
                 else:
                     row.append(record[column_value])
             data.append(row)
@@ -57,5 +64,5 @@ class Projection(AbstractExpression):
         return data
 
     def __str__(self):
-        column_names = list(map(lambda column: column[1].get_result(), self.column_references))
+        column_names = list(map(lambda column: f"{column[0] if column[0] is not None else str(column[1])}={str(column[1])}", self.column_references))
         return f"Projection(columns={column_names})"

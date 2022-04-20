@@ -1,7 +1,6 @@
 from .abstract_expression import AbstractExpression
 from .column_expression import ColumnExpression
-from mosaic.table_service import SchemaType
-from mosaic.table_service import WrongSchemaTypeException
+from mosaic.table_service import SchemaType, get_schema_type
 from enum import Enum
 
 class ArithmeticOperator(Enum):
@@ -29,7 +28,7 @@ class ArithmeticOperationExpression(AbstractExpression):
         if self.operator == ArithmeticOperator.TIMES:
             return left_operand * right_operand
         elif self.operator == ArithmeticOperator.DIVIDE:
-            return left_operand / right_operand
+            return float(left_operand / right_operand)
         elif self.operator == ArithmeticOperator.ADD:
             if isinstance(left_operand, str) or isinstance(right_operand, str):
                 left_operand = str(left_operand)
@@ -48,7 +47,7 @@ class ArithmeticOperationExpression(AbstractExpression):
                 raise IncompatibleOperationException("The given operation is not applicable for strings")
 
             return SchemaType.VARCHAR
-        elif left_schema == SchemaType.FLOAT or right_schema == SchemaType.FLOAT:
+        elif left_schema == SchemaType.FLOAT or right_schema == SchemaType.FLOAT or self.operator == ArithmeticOperator.DIVIDE:
             return SchemaType.FLOAT
 
         return SchemaType.INT
@@ -59,16 +58,12 @@ class ArithmeticOperationExpression(AbstractExpression):
         elif isinstance(expression, ColumnExpression):
             return table.schema_types[table.get_column_index(expression.get_result())]
 
-        if isinstance(expression.get_result(), int):
-            return SchemaType.INT
-        elif isinstance(expression.get_result(), float):
-            return SchemaType.FLOAT
-        elif isinstance(expression.get_result(), str):
-            return SchemaType.VARCHAR
-        else:
-            raise WrongSchemaTypeException
+        return get_schema_type(expression.get_result())
 
     def _get_operand(self, table, row_index, expression):
+        """
+        Returns the actual operand for the given expression
+        """
         if isinstance(expression, ArithmeticOperationExpression):
             return expression.get_result(table, row_index)
         elif isinstance(expression, ColumnExpression):

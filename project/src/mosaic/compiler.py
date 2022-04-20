@@ -39,7 +39,7 @@ class ASTVisitor(NodeVisitor):
         return LiteralExpression(float(node.text.strip()))
 
     def visit_varchar_literal(self, node, visited_children):
-        return LiteralExpression(node.text.strip("\" "))
+        return LiteralExpression(node.text.strip().strip("\""))
 
     def visit_null_literal(self, node, visited_children):
         return LiteralExpression(None)
