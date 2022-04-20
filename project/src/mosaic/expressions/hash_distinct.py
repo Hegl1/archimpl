@@ -11,8 +11,7 @@ class HashDistinct(AbstractExpression):
 
         hashes = set()
 
-        for index in range(len(table.records) - 1, -1, -1):
-            print(index)
+        for index in reversed(range(len(table.records))):
             record = table[index]
             record_hash = hash(str(record))
 

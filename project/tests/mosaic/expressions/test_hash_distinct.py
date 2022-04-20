@@ -13,5 +13,5 @@ def test_distinct_one_column():
 
     result_column = result[:,"table_name"]
 
-    for index in range(len(result_column) - 1, -1, -1):
+    for index in reversed(range(len(result_column))):
         assert result_column.index(result_column[index]) == index
