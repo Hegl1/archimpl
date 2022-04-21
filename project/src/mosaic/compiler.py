@@ -4,6 +4,8 @@ The compiler takes the AST produced by the parser and turns it into an
 execution plan.
 """
 
+from mosaic.expressions.disjunctive_expression import DisjunctiveExpresssion
+from mosaic.expressions.conjunctive_expression import ConjunctiveExpression
 from parsimonious.exceptions import VisitationError
 from parsimonious.nodes import NodeVisitor
 
@@ -174,27 +176,32 @@ class ASTVisitor(NodeVisitor):
             return term
 
     def visit_conjunctive(self, node, visited_children):
-        pass
+        term = visited_children[2]
+        return term
 
     def visit_conjunctive_term(self, node, visited_children):
         if len(visited_children[1]) > 0:
-            #TODO: implement
-            pass
+            conjunctive_list = []
+            conjunctive_list.append(visited_children[0])
+            conjunctive_list += visited_children[1]
+            return ConjunctiveExpression(conjunctive_list)
         else:
             term = visited_children[0]
             return term
 
     def visit_disjunctive(self, node, visited_children):
+        term = visited_children[2]
+        return term
+
+    def visit_expression(self, node, visited_children):
         if len(visited_children[1]) > 0:
-            #TODO: implement
-            pass
+            disjunctive_list = []
+            disjunctive_list.append(visited_children[0])
+            disjunctive_list += visited_children[1]
+            return DisjunctiveExpresssion(disjunctive_list)
         else:
             term = visited_children[0]
             return term
-
-    def visit_expression(self, node, visited_children):
-        term = visited_children[0]
-        return term
 
     ####################
     # References
