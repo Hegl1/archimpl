@@ -15,6 +15,7 @@ from mosaic.expressions.column_expression import ColumnExpression
 from mosaic.expressions.projection import Projection
 from mosaic.expressions.hash_distinct import HashDistinct
 from mosaic.expressions.explain import Explain
+from mosaic.expressions.set_expression import SetOperationType, Union
 
 class QueryExecutionError(Exception):
     pass
@@ -325,7 +326,13 @@ class ASTVisitor(NodeVisitor):
         return visited_children[0]
 
     def visit_set_operator(self, node, visited_children):
-        pass
+        operator = node.text.strip()
+        if operator == "union":
+            return SetOperationType.UNION
+        elif operator == "intersect":
+            return SetOperationType.INTERSECT
+        elif operator == "except":
+            return SetOperationType.EXCEPT
 
     def visit_join_operator(self, node, visited_children):
         pass
@@ -371,16 +378,16 @@ class ASTVisitor(NodeVisitor):
             return term
 
     def visit_set_operation(self, node, visited_children):
-        pass
+        return visited_children[0], visited_children[2]
 
     def visit_query(self, node, visited_children):
         # Example:
         if len(visited_children[1]) > 0:
             left = visited_children[0]
 
-            # for operation_type, right in visited_children[1]:
-            #     if operation_type == SetOperationType.UNION:
-            #         left = Union(left, right)
+            for operation_type, right in visited_children[1]:
+                if operation_type == SetOperationType.UNION:
+                    left = Union(left, right)
             #     elif operation_type == SetOperationType.INTERSECT:
             #         left = Intersect(left, right)
             #     elif operation_type == SetOperationType.EXCEPT:
