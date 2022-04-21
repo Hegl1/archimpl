@@ -106,6 +106,19 @@ def _convert_schema_type_string(type_string):
     else:
         raise WrongSchemaTypeException
 
+def get_schema_type(obj):
+    """
+    Returns the schema type for the given object,
+    or raises a WrongSchemaTypeException if the type does not match
+    """
+    if isinstance(obj, int):
+        return SchemaType.INT
+    elif isinstance(obj, float):
+        return SchemaType.FLOAT
+    elif isinstance(obj, str):
+        return SchemaType.VARCHAR
+
+    raise WrongSchemaTypeException
 
 def _read_schema_section(schema_start, schema_lines):
     schema_names = []

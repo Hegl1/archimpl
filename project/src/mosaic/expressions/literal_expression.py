@@ -10,3 +10,6 @@ class LiteralExpression(AbstractExpression):
 
     def __str__(self):
         return f"LiteralExpression(value={self.value})"
+
+    def explain(self, rows, indent):
+        pass

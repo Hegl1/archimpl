@@ -9,11 +9,12 @@ from parsimonious.nodes import NodeVisitor
 
 from mosaic.expressions.literal_expression import LiteralExpression
 from mosaic.expressions.table_scan import TableScan
-from mosaic.expressions.binary_operation_expression import BinaryOperationExpression
-from mosaic.expressions.binary_operation_expression import BinaryOperator
+from mosaic.expressions.arithmetic_operation_expression import ArithmeticOperationExpression, ArithmeticOperator
+from mosaic.expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
 from mosaic.expressions.column_expression import ColumnExpression
 from mosaic.expressions.projection import Projection
 from mosaic.expressions.hash_distinct import HashDistinct
+from mosaic.expressions.explain import Explain
 
 class QueryExecutionError(Exception):
     pass
@@ -39,7 +40,7 @@ class ASTVisitor(NodeVisitor):
         return LiteralExpression(float(node.text.strip()))
 
     def visit_varchar_literal(self, node, visited_children):
-        return LiteralExpression(node.text.strip())
+        return LiteralExpression(node.text.strip().strip("\""))
 
     def visit_null_literal(self, node, visited_children):
         return LiteralExpression(None)
@@ -84,13 +85,13 @@ class ASTVisitor(NodeVisitor):
 
             for operator, right in visited_children[1]:
                 if operator == '*':
-                    left = BinaryOperationExpression(left,
-                                                     BinaryOperator.TIMES,
+                    left = ArithmeticOperationExpression(left,
+                                                     ArithmeticOperator.TIMES,
                                                      right)
                     break
                 elif operator == '/':
-                    left = BinaryOperationExpression(left,
-                                                     BinaryOperator.DIVIDE,
+                    left = ArithmeticOperationExpression(left,
+                                                     ArithmeticOperator.DIVIDE,
                                                      right)
                     break
 
@@ -111,13 +112,13 @@ class ASTVisitor(NodeVisitor):
 
             for operator, right in visited_children[1]:
                 if operator == '+':
-                    left = BinaryOperationExpression(left,
-                                                     BinaryOperator.ADD,
+                    left = ArithmeticOperationExpression(left,
+                                                     ArithmeticOperator.ADD,
                                                      right)
                     break
                 elif operator == '-':
-                    left = BinaryOperationExpression(left,
-                                                     BinaryOperator.SUBTRACT,
+                    left = ArithmeticOperationExpression(left,
+                                                     ArithmeticOperator.SUBTRACT,
                                                      right)
                     break
 
@@ -138,33 +139,33 @@ class ASTVisitor(NodeVisitor):
 
             for operator, right in visited_children[1]:
                 if operator == '=':
-                    left = BinaryOperationExpression(left,
-                                                     BinaryOperator.EQUAL,
+                    left = ComparativeOperationExpression(left,
+                                                     ComparativeOperator.EQUAL,
                                                      right)
                     break
                 elif operator == '!=':
-                    left = BinaryOperationExpression(left,
-                                                     BinaryOperator.NOT_EQUAL,
+                    left = ComparativeOperationExpression(left,
+                                                     ComparativeOperator.NOT_EQUAL,
                                                      right)
                     break
                 elif operator == '<':
-                    left = BinaryOperationExpression(left,
-                                                     BinaryOperator.SMALLER,
+                    left = ComparativeOperationExpression(left,
+                                                     ComparativeOperator.SMALLER,
                                                      right)
                     break
                 elif operator == '<=':
-                    left = BinaryOperationExpression(left,
-                                                     BinaryOperator.SMALLER_EQUAL,
+                    left = ComparativeOperationExpression(left,
+                                                     ComparativeOperator.SMALLER_EQUAL,
                                                      right)
                     break
                 elif operator == '>':
-                    left = BinaryOperationExpression(left,
-                                                     BinaryOperator.GREATER,
+                    left = ComparativeOperationExpression(left,
+                                                     ComparativeOperator.GREATER,
                                                      right)
                     break
                 elif operator == '>=':
-                    left = BinaryOperationExpression(left,
-                                                     BinaryOperator.GREATER_EQUAL,
+                    left = ComparativeOperationExpression(left,
+                                                     ComparativeOperator.GREATER_EQUAL,
                                                      right)
                     break
 
@@ -391,7 +392,7 @@ class ASTVisitor(NodeVisitor):
             return term
 
     def visit_explain_command(self, node, visited_children):
-        pass
+        return Explain(visited_children[2])
 
     def visit_command(self, node, visited_children):
         return visited_children[0]
