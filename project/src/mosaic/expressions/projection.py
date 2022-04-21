@@ -77,5 +77,10 @@ class Projection(AbstractExpression):
         return data
 
     def __str__(self):
+        # TODO fix string to match specification
         column_names = list(map(lambda column: f"{column[0] if column[0] is not None else str(column[1])}={str(column[1])}", self.column_references))
         return f"Projection(columns={column_names})"
+
+    def explain(self, rows, indent):
+        rows.append([indent * "-" + ">" + self.__str__()])
+        self.table_reference.explain(rows, indent + 2)

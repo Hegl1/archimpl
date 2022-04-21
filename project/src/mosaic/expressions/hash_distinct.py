@@ -24,3 +24,7 @@ class HashDistinct(AbstractExpression):
 
     def __str__(self):
         return f"HashDistinct"
+
+    def explain(self, rows, indent):
+        rows.append([indent * "-" + ">" + self.__str__()])
+        self.table.explain(rows, indent + 2)
