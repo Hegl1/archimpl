@@ -23,4 +23,4 @@ class HashDistinct(AbstractExpression):
         return table
 
     def __str__(self):
-        return f"HashDistinct(table_name={self.table.table_name})"
+        return f"HashDistinct"
