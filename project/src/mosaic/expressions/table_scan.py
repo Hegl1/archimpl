@@ -21,3 +21,6 @@ class TableScan(AbstractExpression):
             return f"TableScan({self.table_name})"
         
         return f"TableScan(table_name={self.table_name}, alias={self.alias})"
+
+    def explain(self, rows, indent):
+        rows.append([indent * "-" + ">" + self.__str__()])

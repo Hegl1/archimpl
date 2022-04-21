@@ -83,3 +83,6 @@ class ArithmeticOperationExpression(AbstractExpression):
 
     def __str__(self):
         return f"ArithmeticOperationExpression(left={self.left},right={self.right},operator={self.operator})"
+
+    def explain(self, rows, indent):
+        pass
