@@ -14,7 +14,7 @@ def test_load_from_file():
     table = table_service._tables["studenten"]
     assert table is not None
     assert table.table_name == "studenten"
-    assert table.schema_names == ["MatrNr", "Name", "Semester"]
+    assert table.schema_names == ["studenten.MatrNr", "studenten.Name", "studenten.Semester"]
     assert table.schema_types == [table_service.SchemaType.INT, table_service.SchemaType.VARCHAR,
                                   table_service.SchemaType.INT]
     assert table[0, "studenten.MatrNr"] == 24002
@@ -33,7 +33,7 @@ def test_retrieve():
     table_service.load_tables_from_directory("./tests/testdata/")
     assert table_service.retrieve("studenten") is not None
     assert len(table_service.retrieve("studenten").records) == 8
-    assert table_service.retrieve("studenten").schema_names == ["MatrNr", "Name", "Semester"]
+    assert table_service.retrieve("studenten").schema_names == ["studenten.MatrNr", "studenten.Name", "studenten.Semester"]
     with pytest.raises(table_service.TableNotFoundException):
         table_service.retrieve("notFoundTable")
     assert table_service.retrieve("#tables") is not None

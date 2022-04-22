@@ -12,7 +12,7 @@ class TableScan(AbstractExpression):
         table = table_service.retrieve(self.table_name, makeCopy = True)
 
         if(self.alias is not None):
-            table.table_name = self.alias
+            table.rename(self.alias)
 
         return table
 
