@@ -15,7 +15,7 @@ from mosaic.expressions.column_expression import ColumnExpression
 from mosaic.expressions.projection import Projection
 from mosaic.expressions.hash_distinct import HashDistinct
 from mosaic.expressions.explain import Explain
-from mosaic.expressions.set_expression import SetOperationType, Union, Intersect
+from mosaic.expressions.set_expression import SetOperationType, Union, Intersect, Except
 
 class QueryExecutionError(Exception):
     pass
@@ -390,8 +390,8 @@ class ASTVisitor(NodeVisitor):
                     left = Union(left, right)
                 elif operation_type == SetOperationType.INTERSECT:
                     left = Intersect(left, right)
-            #     elif operation_type == SetOperationType.EXCEPT:
-            #         left = Except(left, right)
+                elif operation_type == SetOperationType.EXCEPT:
+                    left = Except(left, right)
 
             return left
         else:
