@@ -25,7 +25,7 @@ def test_explain_table_scan_rename():
 def test_explain_projection():
     result, _ = execute_query("explain pi MatrNr, Name studenten;")[0]
     assert len(result.records) == 2
-    assert result.records[0][0] == "-->Projection(columns=['MatrNr=MatrNr', 'Name=Name'])"
+    assert result.records[0][0] == "-->Projection(columns=[MatrNr=MatrNr, Name=Name])"
     assert result.records[1][0] == "---->TableScan(studenten)"
 
 
