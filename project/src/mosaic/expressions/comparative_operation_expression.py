@@ -29,7 +29,10 @@ class ComparativeOperationExpression(AbstractExpression):
         right_operand = self._get_operand(
             table, row_index, expression=self.right)
 
-        #handles None literals
+        if left_operand is None and right_operand is None and self.operator is ComparativeOperator.EQUAL:
+            return True
+
+        # handles None literals
         if left_operand is None or right_operand is None:
             return False
 
@@ -62,7 +65,7 @@ class ComparativeOperationExpression(AbstractExpression):
         return expression.get_result()
 
     def __str__(self):
-        return f"{self.left} {self.operator.value} {self.right}"
+        return f"({self.left} {self.operator.value} {self.right})"
 
     def explain(self, rows, indent):
         pass

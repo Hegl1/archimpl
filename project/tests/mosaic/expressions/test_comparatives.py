@@ -70,4 +70,4 @@ def test_explain():
     comparison_string = "hello"
     expression = ComparativeOperationExpression(LiteralExpression(
         comparison_string), ComparativeOperator.GREATER, ColumnExpression("MatrNr"))
-    assert str(expression) == f'"{comparison_string}" > MatrNr'
+    assert str(expression) == f'("{comparison_string}" > MatrNr)'

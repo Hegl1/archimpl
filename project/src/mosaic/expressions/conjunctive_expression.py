@@ -16,8 +16,8 @@ class ConjunctiveExpression(AbstractExpression):
 
     def __str__(self):
         if isinstance(self.value, list):
-            return " and ".join([str(comparative) for comparative in self.value])
-        return f"{self.value}"
+            return "(" + " and ".join([str(comparative) for comparative in self.value]) + ")"
+        return f"({self.value})"
 
     def explain(self, rows, indent):
         pass
