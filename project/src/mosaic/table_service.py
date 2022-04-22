@@ -19,7 +19,7 @@ class Table:
     Class that represents one table in our Database.
     This class has the following properties:
     table_name: str - the name of the table
-    schema_names: [str] - the names of the columns. Position in the list matters
+    schema_names: [str] - the FQN of the columns. Position in the list matters
     schema_types: [SchemaType] - the type of the corresponding column
     data: [[float | int | str]]] - list that represents tables data.
         Each entry of the list represents a row in the table.
@@ -40,22 +40,39 @@ class Table:
 
         return column_name
 
+    def get_fully_qualified_column_name(self, column_name):
+        """
+        Transforms a column name to a FQN column name
+        """
+        if column_name in self.schema_names:
+            return column_name
+
+        if "." in column_name:
+            return column_name
+
+        return f"{self.table_name}.{column_name}"
+
     def get_column_index(self, column_name):
         """
         Returns the index of the column in the schema. It handles also FQNs and simple references.
         If the column is not found, a TableIndexException is raised
         """
-        column_name = self.get_simple_column_name(column_name)
+        fqn_column_name = self.get_fully_qualified_column_name(column_name)
 
         try:
-            return self.schema_names.index(column_name)
+            return self.schema_names.index(fqn_column_name)
         except ValueError:
-            raise TableIndexException(f'No column with name "{column_name}" in table "{self.table_name}"')
+            raise TableIndexException(f'No column with name "{self.get_simple_column_name(column_name)}" in table "{self.table_name}"')
+
+    def rename(self, new_name):
+        """
+        Renames the table
+        """
+        self.schema_names = [name.replace(f"{self.table_name}.", f"{new_name}.") for name in self.schema_names]
+        self.table_name = new_name
 
     def __str__(self):
-        schema_names = [f"{self.table_name}.{_name}" for _name in self.schema_names]
-
-        return tabulate.tabulate(self.records, schema_names, tablefmt="psql",
+        return tabulate.tabulate(self.records, self.schema_names, tablefmt="psql",
                                  stralign="left")
 
     def __getitem__(self, item):
@@ -120,7 +137,7 @@ def get_schema_type(obj):
 
     raise WrongSchemaTypeException
 
-def _read_schema_section(schema_start, schema_lines):
+def _read_schema_section(table_name, schema_start, schema_lines):
     schema_names = []
     schema_types = []
     for i, line in enumerate(schema_lines):
@@ -132,7 +149,7 @@ def _read_schema_section(schema_start, schema_lines):
         if " " in schema[0]:
             raise TableParsingException(f"Column name can not contain spaces in line {i + 2 + schema_start}")
 
-        schema_names.append(schema[0])
+        schema_names.append(f"{table_name}.{schema[0]}")
 
         try:
             schema_types.append(_convert_schema_type_string(schema[1]))
@@ -191,7 +208,7 @@ def load_from_file(path):
             raise TableParsingException("No data section found")
 
         # read content
-        schema_names, schema_types = _read_schema_section(schema_start, lines[schema_start + 1:schema_end])
+        schema_names, schema_types = _read_schema_section(table_name, schema_start, lines[schema_start + 1:schema_end])
         data_list = _read_data_section(schema_types, data_start, lines[data_start + 1:])
 
     _tables[table_name] = Table(table_name, schema_names, schema_types, data_list)
@@ -230,13 +247,16 @@ def load_tables_from_directory(path):
 def _create_tables_table():
     table_name = "#tables"
     table_names = [[item] for item in list(_tables.keys())] + [["#tables"]] + [["#columns"]]
-    _tables[table_name] = Table(table_name, ["table_name"], [_convert_schema_type_string("varchar")],
+    _tables[table_name] = Table(table_name, [f"{table_name}.table_name"], [_convert_schema_type_string("varchar")],
                                 table_names)
 
 
 def _create_columns_table():
     columns_table_name = "#columns"
-    columns_schema_names = ["table_name", "column_name", "ordinal_position", "data_type"]
+    columns_schema_names = [f"{columns_table_name}.table_name",
+                            f"{columns_table_name}.column_name",
+                            f"{columns_table_name}.ordinal_position",
+                            f"{columns_table_name}.data_type"]
     columns_schema_types = [_convert_schema_type_string("varchar"),
                             _convert_schema_type_string("varchar"),
                             _convert_schema_type_string("int"),
@@ -247,11 +267,11 @@ def _create_columns_table():
     for table_name in _tables:
         column_names = _tables[table_name].schema_names
         for i, column_name in enumerate(column_names):
-            columns_data.append([table_name, table_name + "." + column_name, i, _tables[table_name].schema_types[i].value])
+            columns_data.append([table_name, column_name, i, _tables[table_name].schema_types[i].value])
 
     # add entries for the #columns table columns
     for i, columns_schema_name in enumerate(columns_schema_names):
-        columns_data.append([columns_table_name, columns_table_name + "." + columns_schema_name,
+        columns_data.append([columns_table_name, columns_schema_name,
                              i, columns_schema_types[i].value])
 
     _tables[columns_table_name] = Table(columns_table_name, columns_schema_names, columns_schema_types, columns_data)

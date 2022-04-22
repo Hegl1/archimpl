@@ -10,3 +10,6 @@ class ColumnExpression(AbstractExpression):
 
     def __str__(self):
         return self.value
+
+    def explain(self, rows, indent):
+        pass

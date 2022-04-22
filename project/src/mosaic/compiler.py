@@ -16,6 +16,7 @@ from mosaic.expressions.comparative_operation_expression import ComparativeOpera
 from mosaic.expressions.column_expression import ColumnExpression
 from mosaic.expressions.projection import Projection
 from mosaic.expressions.hash_distinct import HashDistinct
+from mosaic.expressions.explain import Explain
 
 class QueryExecutionError(Exception):
     pass
@@ -398,7 +399,7 @@ class ASTVisitor(NodeVisitor):
             return term
 
     def visit_explain_command(self, node, visited_children):
-        pass
+        return Explain(visited_children[2])
 
     def visit_command(self, node, visited_children):
         return visited_children[0]

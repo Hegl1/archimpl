@@ -3,6 +3,11 @@ from .arithmetic_operation_expression import ArithmeticOperationExpression
 from .literal_expression import LiteralExpression
 from mosaic.table_service import Table, get_schema_type
 
+
+class InvalidAliasException(Exception):
+    pass
+
+
 class Projection(AbstractExpression):
     def __init__(self, column_references, table_reference):
         super().__init__()
@@ -34,6 +39,9 @@ class Projection(AbstractExpression):
         columns = []
 
         for (alias, column_reference) in self.column_references:
+            if alias is not None and "." in alias:
+                raise InvalidAliasException("Aliases cannot contain \".\"")
+
             if isinstance(column_reference, ArithmeticOperationExpression):
                 column_value = column_reference
 
@@ -46,7 +54,7 @@ class Projection(AbstractExpression):
                 schema_types.append(get_schema_type(column_reference.get_result()))
             else:
                 column = column_reference.get_result()
-                column_name = table.get_simple_column_name(column)
+                column_name = table.get_fully_qualified_column_name(column)
                 column_value = table.get_column_index(column)
 
                 schema_names.append(column_name if alias is None else alias)
@@ -78,4 +86,8 @@ class Projection(AbstractExpression):
 
     def __str__(self):
         column_names = list(map(lambda column: f"{column[0] if column[0] is not None else str(column[1])}={str(column[1])}", self.column_references))
-        return f"Projection(columns={column_names})"
+        return f"Projection(columns=[{', '.join(column_names)}])"
+
+    def explain(self, rows, indent):
+        rows.append([indent * "-" + ">" + self.__str__()])
+        self.table_reference.explain(rows, indent + 2)

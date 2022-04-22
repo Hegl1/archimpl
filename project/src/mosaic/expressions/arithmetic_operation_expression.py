@@ -4,10 +4,10 @@ from mosaic.table_service import SchemaType, get_schema_type
 from enum import Enum
 
 class ArithmeticOperator(Enum):
-    TIMES=0,
-    DIVIDE=1,
-    ADD=2,
-    SUBTRACT=3
+    TIMES = "*",
+    DIVIDE = "/",
+    ADD = "+",
+    SUBTRACT = "-"
 
 
 class IncompatibleOperationException(Exception):
@@ -82,4 +82,7 @@ class ArithmeticOperationExpression(AbstractExpression):
         return expression.get_result()
 
     def __str__(self):
-        return f"ArithmeticOperationExpression(left={self.left},right={self.right},operator={self.operator})"
+        return f"{{{self.left} {self.operator.value[0]} {self.right}}}"
+
+    def explain(self, rows, indent):
+        pass

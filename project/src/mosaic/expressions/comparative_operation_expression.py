@@ -60,3 +60,6 @@ class ComparativeOperationExpression(AbstractExpression):
 
     def __str__(self):
         return f"ComparativeOperationExpression(left={self.left},right={self.right},operator={self.operator})"
+
+    def explain(self, rows, indent):
+        pass

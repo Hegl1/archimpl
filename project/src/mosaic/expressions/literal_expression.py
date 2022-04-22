@@ -9,4 +9,10 @@ class LiteralExpression(AbstractExpression):
         return self.value
 
     def __str__(self):
-        return f"LiteralExpression(value={self.value})"
+        if isinstance(self.value, str):
+            return f"\"{self.value}\""
+
+        return str(self.value)
+
+    def explain(self, rows, indent):
+        pass
