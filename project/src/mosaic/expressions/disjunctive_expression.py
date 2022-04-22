@@ -17,3 +17,6 @@ class DisjunctiveExpression(AbstractExpression):
 
     def __str__(self):
         return f"DisjunctiveExpression(value={self.value})"
+
+    def explain(self, rows, indent):
+        pass

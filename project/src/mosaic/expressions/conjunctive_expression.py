@@ -16,3 +16,6 @@ class ConjunctiveExpression(AbstractExpression):
 
     def __str__(self):
         return f"ConjunctiveExpression(value={self.value})"
+
+    def explain(self, rows, indent):
+        pass
