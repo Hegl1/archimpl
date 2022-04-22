@@ -17,3 +17,4 @@ test:
     - pipenv install && pipenv install --dev
     - cd project
     - pipenv run make test
+  coverage: '/TOTAL.*\s([.\d]+)%/'
