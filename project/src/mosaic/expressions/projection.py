@@ -85,7 +85,7 @@ class Projection(AbstractExpression):
         return data
 
     def __str__(self):
-        column_names = list(map(lambda column: f"{column[0] if column[0] is not None else str(column[1])}={str(column[1])}", self.column_references))
+        column_names = [f"{column[0] if column[0] is not None else str(column[1])}={str(column[1])}" for column in self.column_references]
         return f"Projection(columns=[{', '.join(column_names)}])"
 
     def explain(self, rows, indent):

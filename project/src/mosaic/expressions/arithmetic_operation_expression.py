@@ -4,9 +4,9 @@ from mosaic.table_service import SchemaType, get_schema_type
 from enum import Enum
 
 class ArithmeticOperator(Enum):
-    TIMES = "*",
-    DIVIDE = "/",
-    ADD = "+",
+    TIMES = "*"
+    DIVIDE = "/"
+    ADD = "+"
     SUBTRACT = "-"
 
 
@@ -27,7 +27,9 @@ class ArithmeticOperationExpression(AbstractExpression):
         left_operand = self._get_operand(table, row_index, expression = self.left)
         right_operand = self._get_operand(table, row_index, expression = self.right)
 
-        # TODO: do handle null?
+        if left_operand is None or right_operand is None:
+            return None
+
         if self.operator == ArithmeticOperator.TIMES:
             return left_operand * right_operand
         elif self.operator == ArithmeticOperator.DIVIDE:
@@ -49,6 +51,9 @@ class ArithmeticOperationExpression(AbstractExpression):
         left_schema = self._get_schema_type_for_expression(table, self.left)
         right_schema = self._get_schema_type_for_expression(table, self.right)
 
+        if left_schema is None and right_schema is None:
+            return SchemaType.VARCHAR # default column type is varchar
+
         if left_schema == SchemaType.VARCHAR or right_schema == SchemaType.VARCHAR:
             if self.operator != ArithmeticOperator.ADD:
                 raise IncompatibleOperationException("The given operation is not applicable for strings")
@@ -68,7 +73,12 @@ class ArithmeticOperationExpression(AbstractExpression):
         elif isinstance(expression, ColumnExpression):
             return table.schema_types[table.get_column_index(expression.get_result())]
 
-        return get_schema_type(expression.get_result())
+        value = expression.get_result()
+
+        if value is None:
+            return None
+
+        return get_schema_type(value)
 
     def _get_operand(self, table, row_index, expression):
         """
@@ -82,7 +92,7 @@ class ArithmeticOperationExpression(AbstractExpression):
         return expression.get_result()
 
     def __str__(self):
-        return f"{{{self.left} {self.operator.value[0]} {self.right}}}"
+        return f"{{{self.left} {self.operator.value} {self.right}}}"
 
     def explain(self, rows, indent):
         pass
