@@ -33,3 +33,16 @@ def test_nested_conjunction():
     nested = ConjunctiveExpression([comparative_operation_three, conjunctive])
     sum, _ = comparative_helper.evaluate(nested)
     assert(sum == 1)
+
+def test_explain():
+    comparison_string = "fun"
+    column = "Name"
+    comparative_operation_two = ComparativeOperationExpression(LiteralExpression(
+        comparison_string), ComparativeOperator.EQUAL, ColumnExpression("Name"))
+    comparison_number = 25403
+    column2 = "MatrNr"
+    comparative_operation = ComparativeOperationExpression(ColumnExpression(
+        column2), ComparativeOperator.GREATER, LiteralExpression(comparison_number))
+    conjunctive = ConjunctiveExpression(
+        [comparative_operation, comparative_operation_two])
+    assert str(conjunctive) == f'{column2} > {comparison_number} and "{comparison_string}" = {column}'

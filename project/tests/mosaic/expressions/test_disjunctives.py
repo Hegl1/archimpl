@@ -45,3 +45,23 @@ def test_nested_disjunction():
 
     sum, _ = comparative_helper.evaluate(nested_disjunction)
     assert(sum == 3)
+
+def test_explain():
+    comparison_string = "1234"
+    column = "Name"
+    comparative_operation_two = ComparativeOperationExpression(LiteralExpression(
+        comparison_string), ComparativeOperator.EQUAL, ColumnExpression("Name"))
+    comparison_number = 3256
+    column2 = "MatrNr"
+    comparative_operation = ComparativeOperationExpression(ColumnExpression(
+        column2), ComparativeOperator.GREATER, LiteralExpression(comparison_number))
+    conjunctive = ConjunctiveExpression(
+        [comparative_operation, comparative_operation_two])
+
+    comparison_string2 = "Something"
+    comparative_operation_three = ComparativeOperationExpression(ColumnExpression(
+        column), ComparativeOperator.EQUAL, LiteralExpression(comparison_string2))
+    
+    disjunctive = DisjunctiveExpression([comparative_operation_three, conjunctive])
+
+    assert str(disjunctive) == f'{column} = "{comparison_string2}" or {column2} > {comparison_number} and "{comparison_string}" = {column}'

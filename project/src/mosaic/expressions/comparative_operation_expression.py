@@ -5,12 +5,12 @@ from .column_expression import ColumnExpression
 
 
 class ComparativeOperator(Enum):
-    EQUAL = 4,
-    NOT_EQUAL = 5,
-    SMALLER = 6,
-    SMALLER_EQUAL = 7,
-    GREATER = 8,
-    GREATER_EQUAL = 9
+    EQUAL = "="
+    NOT_EQUAL = "!="
+    SMALLER = "<"
+    SMALLER_EQUAL = "<="
+    GREATER = ">"
+    GREATER_EQUAL = ">="
 
 
 class IncompatibleOperandTypesException(Exception):
@@ -24,22 +24,18 @@ class ComparativeOperationExpression(AbstractExpression):
         self.operator = operator
 
     def get_result(self, table, row_index):
-        #handles None value from table
-        if self.left is None or self.right is None:
-            return False 
-
         left_operand = self._get_operand(
             table, row_index, expression=self.left)
         right_operand = self._get_operand(
             table, row_index, expression=self.right)
 
-        if type(left_operand) != type(right_operand) and left_operand is not None and right_operand is not None:
-            raise IncompatibleOperandTypesException(
-                "Operands of a comparison operator must be of the same type")
-            
         #handles None literals
         if left_operand is None or right_operand is None:
             return False
+
+        if type(left_operand) != type(right_operand):
+            raise IncompatibleOperandTypesException(
+                "Operands of a comparison operator must be of the same type")
 
         if self.operator == ComparativeOperator.EQUAL:
             return left_operand == right_operand
@@ -66,7 +62,7 @@ class ComparativeOperationExpression(AbstractExpression):
         return expression.get_result()
 
     def __str__(self):
-        return f"ComparativeOperationExpression(left={self.left},right={self.right},operator={self.operator})"
+        return f"{self.left} {self.operator.value} {self.right}"
 
     def explain(self, rows, indent):
         pass

@@ -54,21 +54,20 @@ def test_not_equal_numbers():
 
 
 def test_wrong_type_comparison():
-    comparison_number = "hello"
+    comparison_string = "hello"
     comparative_operation = ComparativeOperationExpression(LiteralExpression(
-        comparison_number), ComparativeOperator.GREATER, ColumnExpression("MatrNr"))
+        comparison_string), ComparativeOperator.GREATER, ColumnExpression("MatrNr"))
     table = comparative_helper.retrieve_table("studenten")
     with pytest.raises(IncompatibleOperandTypesException):
         comparative_operation.get_result(table=table, row_index=0)
-
-
-def test_none_comparison():
-    comparative_operation = ComparativeOperationExpression(None, ComparativeOperator.NOT_EQUAL, ColumnExpression("MatrNr"))
-    sum, _ = comparative_helper.evaluate(comparative_operation)
-    assert(sum == 0)
 
 def test_none_literal_comparison():
     comparative_operation = ComparativeOperationExpression(LiteralExpression(None), ComparativeOperator.GREATER, ColumnExpression("Name"))
     sum, _ = comparative_helper.evaluate(comparative_operation)
     assert(sum == 0)
 
+def test_explain():
+    comparison_string = "hello"
+    expression = ComparativeOperationExpression(LiteralExpression(
+        comparison_string), ComparativeOperator.GREATER, ColumnExpression("MatrNr"))
+    assert str(expression) == f'"{comparison_string}" > MatrNr'

@@ -16,7 +16,9 @@ class DisjunctiveExpression(AbstractExpression):
         return self.value.get_result()
 
     def __str__(self):
-        return f"DisjunctiveExpression(value={self.value})"
+        if isinstance(self.value, list):
+            return " or ".join([str(comparative) for comparative in self.value])
+        return f"{self.value}"
 
     def explain(self, rows, indent):
         pass
