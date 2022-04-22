@@ -1,7 +1,7 @@
 from enum import Enum
 
-from .abstract_expression import AbstractExpression
 from mosaic.table_service import Table
+from .abstract_expression import AbstractExpression
 
 
 class SetOperationType(Enum):
@@ -15,6 +15,12 @@ class TableSchemaDoesNotMatchException(Exception):
 
 
 class Union(AbstractExpression):
+    """
+    Represents a union operation
+    result can be retrieved with get_result method
+    an explanation of the operation is created in the explain method
+    """
+
     def __init__(self, table1_reference, table2_reference):
         super().__init__()
         self.table1_reference = table1_reference
@@ -43,6 +49,12 @@ class Union(AbstractExpression):
 
 
 class Intersect(AbstractExpression):
+    """
+    Represents an intersect operation
+    result can be retrieved with get_result method
+    an explanation of the operation is created in the explain method
+    """
+
     def __init__(self, table1_reference, table2_reference):
         super().__init__()
         self.table1_reference = table1_reference
@@ -71,6 +83,12 @@ class Intersect(AbstractExpression):
 
 
 class Except(AbstractExpression):
+    """
+    Represents a difference operation
+    result can be retrieved with get_result method
+    an explanation of the operation is created in the explain method
+    """
+
     def __init__(self, table1_reference, table2_reference):
         super().__init__()
         self.table1_reference = table1_reference
@@ -108,16 +126,25 @@ class Except(AbstractExpression):
 
 
 def _get_simple_schema_names(table1, table2):
+    """
+    constructs simple column names out of fully qualified column names
+    """
     schema_names_1 = [table1.get_simple_column_name(name) for name in table1.schema_names]
     schema_names_2 = [table2.get_simple_column_name(name) for name in table2.schema_names]
     return schema_names_1, schema_names_2
 
 
 def _check_schemas(table1, table2, schema_names_1, schema_names_2):
+    """
+    checks if the schemas of two tables do match in order to apply a set operation
+    """
     if schema_names_1 != schema_names_2:
         raise TableSchemaDoesNotMatchException(
             f"Schemas of {table1.table_name} and {table2.table_name} do not match.")
 
 
 def _construct_schema_names(table_name, simple_schema_names):
+    """
+    constructs fully qualified schema names for the resulting table of a set operation
+    """
     return [f"{table_name}.{name}" for name in simple_schema_names]
