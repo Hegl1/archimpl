@@ -10,7 +10,7 @@ def test_retrieve_table():
 
     assert isinstance(result, Table)
     assert result.table_name == "#tables"
-    assert result.schema_names == ["table_name"]
+    assert result.schema_names == ["#tables.table_name"]
 
 def test_retrieve_alias_table():
     expression = TableScan("#tables", "test")
@@ -18,7 +18,7 @@ def test_retrieve_alias_table():
 
     assert isinstance(result, Table)
     assert result.table_name == "test"
-    assert result.schema_names == ["table_name"]
+    assert result.schema_names == ["test.table_name"]
 
     assert table_service.retrieve("#tables").table_name == "#tables"
 
