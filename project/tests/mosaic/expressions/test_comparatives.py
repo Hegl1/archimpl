@@ -60,3 +60,15 @@ def test_wrong_type_comparison():
     table = comparative_helper.retrieve_table("studenten")
     with pytest.raises(IncompatibleOperandTypesException):
         comparative_operation.get_result(table=table, row_index=0)
+
+
+def test_none_comparison():
+    comparative_operation = ComparativeOperationExpression(None, ComparativeOperator.NOT_EQUAL, ColumnExpression("MatrNr"))
+    sum, _ = comparative_helper.evaluate(comparative_operation)
+    assert(sum == 0)
+
+def test_none_literal_comparison():
+    comparative_operation = ComparativeOperationExpression(LiteralExpression(None), ComparativeOperator.GREATER, ColumnExpression("Name"))
+    sum, _ = comparative_helper.evaluate(comparative_operation)
+    assert(sum == 0)
+

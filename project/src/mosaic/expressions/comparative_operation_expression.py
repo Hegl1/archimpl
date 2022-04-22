@@ -24,15 +24,22 @@ class ComparativeOperationExpression(AbstractExpression):
         self.operator = operator
 
     def get_result(self, table, row_index):
+        #handles None value from table
+        if self.left is None or self.right is None:
+            return False 
+
         left_operand = self._get_operand(
             table, row_index, expression=self.left)
         right_operand = self._get_operand(
             table, row_index, expression=self.right)
 
-        if type(left_operand) != type(right_operand):
+        if type(left_operand) != type(right_operand) and left_operand is not None and right_operand is not None:
             raise IncompatibleOperandTypesException(
                 "Operands of a comparison operator must be of the same type")
-        # TODO: handle null here
+            
+        #handles None literals
+        if left_operand is None or right_operand is None:
+            return False
 
         if self.operator == ComparativeOperator.EQUAL:
             return left_operand == right_operand
