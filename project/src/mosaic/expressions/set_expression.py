@@ -107,10 +107,6 @@ class Except(AbstractExpression):
             if record not in table2.records:
                 table_except_records.append(record)
 
-        for record in table2.records:
-            if record not in table1.records:
-                table_except_records.append(record)
-
         table_except_name = f"{table1.table_name}_except_{table2.table_name}"
 
         return Table(table_except_name, _construct_schema_names(table_except_name, schema_names_1),
