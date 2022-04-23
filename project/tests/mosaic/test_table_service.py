@@ -23,7 +23,7 @@ def test_load_from_file():
 def test_load_tables_from_directory():
     assert len(table_service._tables) == 2
     not_loaded = table_service.load_tables_from_directory("./tests/testdata/")
-    assert len(table_service._tables) == 5  # incl. #tables and #columns
+    assert len(table_service._tables) == 6  # incl. #tables and #columns
     assert len(not_loaded) == 1
     with pytest.raises(table_service.NoTableLoadedException):
         table_service.load_tables_from_directory("./")
@@ -37,9 +37,9 @@ def test_retrieve():
     with pytest.raises(table_service.TableNotFoundException):
         table_service.retrieve("notFoundTable")
     assert table_service.retrieve("#tables") is not None
-    assert len(table_service.retrieve("#tables").records) == 5
+    assert len(table_service.retrieve("#tables").records) == 6
     assert table_service.retrieve("#columns") is not None
-    assert len(table_service.retrieve("#columns").records) == 14
+    assert len(table_service.retrieve("#columns").records) == 18
 
 
 def test_table_exists():
@@ -56,6 +56,7 @@ def test_table_get_column_index():
 
     with pytest.raises(table_service.TableIndexException):
         table.get_column_index("notFoundIndex")
+
 
 def test_table_get_item():
     table = table_service.retrieve("#columns")
