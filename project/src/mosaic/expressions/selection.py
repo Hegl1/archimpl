@@ -20,7 +20,7 @@ class Selection(AbstractExpression):
         return Table(table.table_name, table.schema_names, table.schema_types, result)
 
     def __str__(self):
-        return f"Selection(condition=({self.condition.__str__()}))"
+        return f"Selection(condition={self.condition.__str__()})"
 
     def explain(self, rows, indent):
         rows.append([indent * "-" + ">" + self.__str__()])
