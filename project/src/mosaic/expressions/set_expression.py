@@ -132,7 +132,7 @@ def _get_simple_schema_names(table1, table2):
 
 def _check_schemas(table1, table2, schema_names_1, schema_names_2):
     """
-    checks if the schemas of two tables do match in order to apply a set operation
+    checks if the schemas (with simple schema names) of two tables do match in order to apply a set operation
     """
     if schema_names_1 != schema_names_2:
         raise TableSchemaDoesNotMatchException(
