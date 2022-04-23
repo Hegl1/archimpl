@@ -14,7 +14,7 @@ def test_intersect_get_result():
 
 
 def test_except_get_result():
-    result, _ = execute_query("pi VorlNr as Vorgaenger voraussetzen except pi VorlNr vorlesungen;")[0]
+    result, _ = execute_query("pi VorlNr vorlesungen except pi VorlNr as Vorgaenger voraussetzen;")[0]
     assert len(result.records) == 6
     result, _ = execute_query("pi VorlNr vorlesungen except pi VorlNr vorlesungen;")[0]
     assert len(result.records) == 0
