@@ -57,6 +57,7 @@ def test_table_get_column_index():
     with pytest.raises(table_service.TableIndexException):
         table.get_column_index("notFoundIndex")
 
+
 def test_table_get_item():
     table = table_service.retrieve("#columns")
     assert table is not None

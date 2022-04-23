@@ -36,7 +36,11 @@ def test_explain_projection_distinct():
 
 
 def test_explain_selection():
-    pass
+    result, _ = execute_query("explain sigma Rang > \"C3\" professoren;")[0]
+    assert len(result.records) == 2
+    assert result.records[0][0] == "-->Selection(condition=(Rang > \"C3\"))"
+    assert result.records[1][0] == "---->TableScan(professoren)"
+
 
 
 def test_explain_union():
