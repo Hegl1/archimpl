@@ -15,6 +15,7 @@ from mosaic.expressions.arithmetic_operation_expression import ArithmeticOperati
 from mosaic.expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
 from mosaic.expressions.column_expression import ColumnExpression
 from mosaic.expressions.projection import Projection
+from mosaic.expressions.selection import Selection
 from mosaic.expressions.hash_distinct import HashDistinct
 from mosaic.expressions.explain import Explain
 from mosaic.expressions.set_expression import SetOperationType, Union, Intersect, Except
@@ -277,7 +278,7 @@ class ASTVisitor(NodeVisitor):
         input_node = visited_children[3]
 
         # Example:
-        # return Selection(input_node, condition)
+        return Selection(input_node, condition)
         pass
 
     def visit_aggregate_function(self, node, visited_children):
