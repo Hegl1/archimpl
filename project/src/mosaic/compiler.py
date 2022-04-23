@@ -280,7 +280,6 @@ class ASTVisitor(NodeVisitor):
 
         # Example:
         return Selection(input_node, condition)
-        pass
 
     def visit_aggregate_function(self, node, visited_children):
         function_name = node.text.strip().lower()
