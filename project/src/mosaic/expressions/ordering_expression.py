@@ -2,7 +2,7 @@ from mosaic.table_service import Table
 from .abstract_expression import AbstractExpression
 
 
-class OrderBy(AbstractExpression):
+class OrderingExpression(AbstractExpression):
     """
     Represents an ordering operation
     result can be retrieved with get_result method
@@ -16,8 +16,7 @@ class OrderBy(AbstractExpression):
 
     def get_result(self):
         table = self.table_reference.get_result()
-        column_list = self.column_list
-        column_indices = _get_column_indices(column_list, table)
+        column_indices = _get_column_indices(self.column_list, table)
 
         ordered_records = sorted(table.records, key=lambda record: _get_sort_key(record, column_indices))
 
@@ -25,7 +24,7 @@ class OrderBy(AbstractExpression):
                      table.schema_types, ordered_records)
 
     def __str__(self):
-        return f"OrderBy(columns={self.column_list})"
+        return f"OrderBy(columns=[{', '.join(self.column_list)}])"
 
     def explain(self, rows, indent):
         rows.append([indent * "-" + ">" + self.__str__()])
