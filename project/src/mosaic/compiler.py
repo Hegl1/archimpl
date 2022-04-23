@@ -10,6 +10,7 @@ from parsimonious.exceptions import VisitationError
 from parsimonious.nodes import NodeVisitor
 
 from mosaic.expressions.literal_expression import LiteralExpression
+from mosaic.expressions.nested_loops_join import JoinType, NestedLoopsJoin
 from mosaic.expressions.ordering_expression import OrderingExpression
 from mosaic.expressions.table_scan import TableScan
 from mosaic.expressions.arithmetic_operation_expression import ArithmeticOperationExpression, ArithmeticOperator
@@ -349,36 +350,32 @@ class ASTVisitor(NodeVisitor):
         pass
 
     def visit_cross_join_operator(self, node, visited_children):
-        # Example:
-        # return JoinType.Cross
-        pass
+        return JoinType.CROSS
 
     def visit_join(self, node, visited_children):
-        # Example:
-        # # If there are three children, we have a join without a condition.
-        # if len(visited_children[0]) == 3:
-        #     join_type = visited_children[0][0]
-        #     condition = None
-        #     right = visited_children[0][2]
-        # # Otherwise, we have a join with a condition.
-        # else:
-        #     join_type = visited_children[0][0]
-        #     condition = visited_children[0][2]
-        #     right = visited_children[0][3]
+        # If there are three children, we have a join without a condition.
+        if len(visited_children[0]) == 3:
+            join_type = visited_children[0][0]
+            condition = None
+            right = visited_children[0][2]
+        # Otherwise, we have a join with a condition.
+        else:
+            join_type = visited_children[0][0]
+            condition = visited_children[0][2]
+            right = visited_children[0][3]
 
-        # return (join_type, condition, right)
-        pass
+        return join_type, condition, right
 
     def visit_set_factor(self, node, visited_children):
         if len(visited_children[1]) > 0:
             left = visited_children[0]
 
-            # for join_type, condition, right in visited_children[1]:
-            #     left = NestedLoopsJoin(left,
-            #                            right,
-            #                            join_type,
-            #                            condition=condition,
-            #                            is_natural=(condition is None))
+            for join_type, condition, right in visited_children[1]:
+                left = NestedLoopsJoin(left,
+                                       right,
+                                       join_type,
+                                       condition=condition,
+                                       is_natural=(condition is None))
 
             return left
         else:
