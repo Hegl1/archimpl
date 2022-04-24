@@ -24,7 +24,7 @@ class OrderingExpression(AbstractExpression):
                      table.schema_types, ordered_records)
 
     def __str__(self):
-        return f"OrderBy(columns=[{', '.join(self.column_list)}])"
+        return f"OrderBy(key=[{', '.join([str(column) for column in self.column_list])}])"
 
     def explain(self, rows, indent):
         rows.append([indent * "-" + ">" + self.__str__()])
