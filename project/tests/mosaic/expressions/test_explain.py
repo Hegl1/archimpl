@@ -2,8 +2,6 @@ import pytest
 from mosaic.query_executor import execute_query
 from mosaic import table_service
 
-# TODO expand tests when more commands are implemented
-
 
 @pytest.fixture(autouse=True)
 def refresh_loaded_tables():
@@ -74,8 +72,17 @@ def test_explain_difference():
 
 
 def test_explain_cross_join():
-    pass
+    result, _ = execute_query("explain pi PersNr, Name professoren cross join pi PersNr, Name, Boss assistenten;")[0]
+    assert len(result.records) == 5
+    assert result.records[0][0] == "-->NestedLoopsJoin(cross, natural=True, condition=None)"
+    assert result.records[1][0] == "---->Projection(columns=[PersNr=PersNr, Name=Name])"
+    assert result.records[2][0] == "------>TableScan(professoren)"
+    assert result.records[3][0] == "---->Projection(columns=[PersNr=PersNr, Name=Name, Boss=Boss])"
+    assert result.records[4][0] == "------>TableScan(assistenten)"
 
 
 def test_explain_ordering():
-    pass
+    result, _ = execute_query("explain tau PersNr professoren;")[0]
+    assert len(result.records) == 2
+    assert result[0][0] == "-->OrderBy(key=[PersNr])"
+    assert result[1][0] == "---->TableScan(professoren)"
