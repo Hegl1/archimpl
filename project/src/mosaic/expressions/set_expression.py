@@ -34,7 +34,7 @@ class Union(AbstractExpression):
         _check_schemas(table1, table2, schema_names_1, schema_names_2)
 
         table_union_records = table1.records + table2.records
-        table_union_name = f"{table1.table_name}_union_{table2.table_name}"
+        table_union_name = f"{table1.table_name}"
 
         return Table(table_union_name, _construct_schema_names(table_union_name, schema_names_1),
                      table1.schema_types, table_union_records)
@@ -68,7 +68,7 @@ class Intersect(AbstractExpression):
         _check_schemas(table1, table2, schema_names_1, schema_names_2)
 
         table_intersect_records = [x for y in table1.records for x in table2.records if x == y]
-        table_intersect_name = f"{table1.table_name}_intersect_{table2.table_name}"
+        table_intersect_name = f"{table1.table_name}"
 
         return Table(table_intersect_name, _construct_schema_names(table_intersect_name, schema_names_1),
                      table1.schema_types, table_intersect_records)
@@ -107,7 +107,7 @@ class Except(AbstractExpression):
             if record not in table2.records:
                 table_except_records.append(record)
 
-        table_except_name = f"{table1.table_name}_except_{table2.table_name}"
+        table_except_name = f"{table1.table_name}"
 
         return Table(table_except_name, _construct_schema_names(table_except_name, schema_names_1),
                      table1.schema_types, table_except_records)
