@@ -51,8 +51,8 @@ class ArithmeticOperationExpression(AbstractExpression):
         left_schema = self._get_schema_type_for_expression(table, self.left)
         right_schema = self._get_schema_type_for_expression(table, self.right)
 
-        if left_schema is None and right_schema is None:
-            return SchemaType.VARCHAR # default column type is varchar
+        if left_schema == SchemaType.NULL and right_schema == SchemaType.NULL:
+            return SchemaType.NULL
 
         if left_schema == SchemaType.VARCHAR or right_schema == SchemaType.VARCHAR:
             if self.operator != ArithmeticOperator.ADD:
@@ -74,9 +74,6 @@ class ArithmeticOperationExpression(AbstractExpression):
             return table.schema_types[table.get_column_index(expression.get_result())]
 
         value = expression.get_result()
-
-        if value is None:
-            return None
 
         return get_schema_type(value)
 

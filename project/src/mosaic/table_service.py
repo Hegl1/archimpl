@@ -12,6 +12,7 @@ class SchemaType(Enum):
     INT = "int"
     FLOAT = "float"
     VARCHAR = "varchar"
+    NULL = "null"
 
 
 class Table:
@@ -62,7 +63,8 @@ class Table:
         try:
             return self.schema_names.index(fqn_column_name)
         except ValueError:
-            raise TableIndexException(f'No column with name "{self.get_simple_column_name(column_name)}" in table "{self.table_name}"')
+            raise TableIndexException(
+                f'No column with name "{self.get_simple_column_name(column_name)}" in table "{self.table_name}"')
 
     def rename(self, new_name):
         """
@@ -72,8 +74,8 @@ class Table:
         self.table_name = new_name
 
     def __str__(self):
-        return tabulate.tabulate(self.records, self.schema_names, tablefmt="psql",
-                                 stralign="left")
+        records = [[column if column is not None else "NULL" for column in row] for row in self.records]
+        return tabulate.tabulate(records, self.schema_names, tablefmt="psql", stralign="left")
 
     def __getitem__(self, item):
         try:
@@ -123,12 +125,15 @@ def _convert_schema_type_string(type_string):
     else:
         raise WrongSchemaTypeException
 
+
 def get_schema_type(obj):
     """
     Returns the schema type for the given object,
     or raises a WrongSchemaTypeException if the type does not match
     """
-    if isinstance(obj, int):
+    if obj is None:
+        return SchemaType.NULL
+    elif isinstance(obj, int):
         return SchemaType.INT
     elif isinstance(obj, float):
         return SchemaType.FLOAT
@@ -136,6 +141,7 @@ def get_schema_type(obj):
         return SchemaType.VARCHAR
 
     raise WrongSchemaTypeException
+
 
 def _read_schema_section(table_name, schema_start, schema_lines):
     schema_names = []
@@ -277,7 +283,7 @@ def _create_columns_table():
     _tables[columns_table_name] = Table(columns_table_name, columns_schema_names, columns_schema_types, columns_data)
 
 
-def retrieve(table_name, makeCopy = False):
+def retrieve(table_name, makeCopy=False):
     """
     This function returns a table specified by the table_name
     """
