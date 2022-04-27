@@ -21,8 +21,7 @@ class AbstractExpression(ABC):
         """
         pass
 
-    @abstractmethod
-    def explain(self, rows, indent): # pragma: no cover
+    def explain(self, rows, indent):
         """
         Method to build a list of strings for the explain command.
         Adds the representative String of the current command
@@ -33,4 +32,4 @@ class AbstractExpression(ABC):
             rows: list to add the representative string to.
             indent: Describes the level of indentation at the current command.
         """
-        pass
+        rows.append([indent * "-" + ">" + self.__str__()])

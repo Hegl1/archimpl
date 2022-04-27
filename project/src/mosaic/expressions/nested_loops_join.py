@@ -44,7 +44,6 @@ class NestedLoopsJoin(AbstractExpression):
         # TODO convert join type enum to string
 
     def explain(self, rows, indent):
-        rows.append([indent * "-" + ">" + self.__str__()])
+        super().explain(rows, indent)
         self.table1_reference.explain(rows, indent + 2)
         self.table2_reference.explain(rows, indent + 2)
-

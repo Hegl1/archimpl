@@ -63,6 +63,3 @@ class ComparativeOperationExpression(AbstractExpression):
 
     def __str__(self):
         return f"({self.left} {self.operator.value} {self.right})"
-
-    def explain(self, rows, indent): # pragma: no cover
-        pass

@@ -13,6 +13,3 @@ class LiteralExpression(AbstractExpression):
             return f"\"{self.value}\""
 
         return str(self.value)
-
-    def explain(self, rows, indent): # pragma: no cover
-        pass

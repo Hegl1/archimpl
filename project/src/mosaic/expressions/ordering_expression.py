@@ -27,7 +27,7 @@ class OrderingExpression(AbstractExpression):
         return f"OrderBy(key=[{', '.join([str(column) for column in self.column_list])}])"
 
     def explain(self, rows, indent):
-        rows.append([indent * "-" + ">" + self.__str__()])
+        super().explain(rows, indent)
         self.table_reference.explain(rows, indent + 2)
 
 

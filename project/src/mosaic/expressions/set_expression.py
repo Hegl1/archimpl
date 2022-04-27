@@ -41,7 +41,7 @@ class Union(AbstractExpression):
         return "Union"
 
     def explain(self, rows, indent):
-        rows.append([indent * "-" + ">" + self.__str__()])
+        super().explain(rows, indent)
         self.table1_reference.explain(rows, indent + 2)
         self.table2_reference.explain(rows, indent + 2)
 
@@ -73,7 +73,7 @@ class Intersect(AbstractExpression):
         return "Intersect"
 
     def explain(self, rows, indent):
-        rows.append([indent * "-" + ">" + self.__str__()])
+        super().explain(rows, indent)
         self.table1_reference.explain(rows, indent + 2)
         self.table2_reference.explain(rows, indent + 2)
 
@@ -110,7 +110,7 @@ class Except(AbstractExpression):
         return "Except"
 
     def explain(self, rows, indent):
-        rows.append([indent * "-" + ">" + self.__str__()])
+        super().explain(rows, indent)
         self.table1_reference.explain(rows, indent + 2)
         self.table2_reference.explain(rows, indent + 2)
 

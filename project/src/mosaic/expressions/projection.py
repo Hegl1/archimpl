@@ -89,5 +89,5 @@ class Projection(AbstractExpression):
         return f"Projection(columns=[{', '.join(column_names)}])"
 
     def explain(self, rows, indent):
-        rows.append([indent * "-" + ">" + self.__str__()])
+        super().explain(rows, indent)
         self.table_reference.explain(rows, indent + 2)
