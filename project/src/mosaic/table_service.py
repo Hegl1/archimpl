@@ -91,6 +91,8 @@ class Table:
         except IndexError:
             raise TableIndexException(f'No row with given index in table "{self.table_name}"')
 
+    def __len__(self):
+        return len(self.records)
 
 class TableIndexException(Exception):
     pass

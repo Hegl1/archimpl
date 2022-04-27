@@ -13,7 +13,7 @@ from mosaic.query_executor import execute_query
 )
 def test_ordering_single_key(query, correctly_sorted_fields, column_index):
     result, _ = execute_query(query)[0]
-    assert len(result.records) == len(correctly_sorted_fields)
+    assert len(result) == len(correctly_sorted_fields)
     for i, correctly_sorted_field in enumerate(correctly_sorted_fields):
         assert result.records[i][column_index] == correctly_sorted_field
 

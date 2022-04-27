@@ -6,7 +6,7 @@ class AbstractExpression(ABC):
         pass
 
     @abstractmethod
-    def get_result(self):
+    def get_result(self): # pragma: no cover
         """
         Computes the result for this expression-node and returns it.
         For that it calls the compute nodes of the child-nodes recursively.
@@ -15,14 +15,14 @@ class AbstractExpression(ABC):
         pass
 
     @abstractmethod
-    def __str__(self):
+    def __str__(self): # pragma: no cover
         """
         Returns the string used to explain the execution plan for this command.
         """
         pass
 
     @abstractmethod
-    def explain(self, rows, indent):
+    def explain(self, rows, indent): # pragma: no cover
         """
         Method to build a list of strings for the explain command.
         Adds the representative String of the current command

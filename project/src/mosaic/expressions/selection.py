@@ -10,7 +10,7 @@ class Selection(AbstractExpression):
 
     def get_result(self):
         table = self.table_reference.get_result()
-        row_count = len(table.records)
+        row_count = len(table)
         result = []
 
         for i in range(0, row_count):

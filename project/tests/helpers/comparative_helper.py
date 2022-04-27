@@ -5,7 +5,7 @@ def evaluate(comparative_operation):
 
     table = retrieve_table("studenten")
     sum = 0
-    entries = len(table.records)
+    entries = len(table)
     for i in range(entries):
         sum += comparative_operation.get_result(table=table, row_index=i)
 

@@ -36,10 +36,13 @@ def execute_query(user_in):
                 results.append((result, execution_time))
             except TableNotFoundException as e:
                 raise cli.CliErrorMessageException(f"Table with name \"{e.args[0]}\" does not exist")
-            except TableIndexException as e:
-                raise cli.CliErrorMessageException(e)
             except Exception as e:
-                raise cli.CliErrorMessageException(e)
+                message = str(e)
+
+                if len(message) == 0:
+                    message = f"A '{type(e).__name__}' occurred"
+
+                raise cli.CliErrorMessageException(message)
 
     return results
 

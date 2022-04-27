@@ -1,0 +1,6 @@
+[Schema]
+TestNr: int
+
+[Data]
+1;2
+1

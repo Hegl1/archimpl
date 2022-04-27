@@ -14,5 +14,5 @@ class LiteralExpression(AbstractExpression):
 
         return str(self.value)
 
-    def explain(self, rows, indent):
+    def explain(self, rows, indent): # pragma: no cover
         pass
