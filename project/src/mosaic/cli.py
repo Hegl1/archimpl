@@ -66,13 +66,29 @@ def _execute_command(user_in):
         raise CliErrorMessageException("Unknown command entered. See \\help for a list of available commands.")
 
 
+def _get_prompt_session():
+    """
+    Function that returns a prompt session with the proper history
+    """
+    command_history = FileHistory(os.path.expanduser("~/archimpl_history"))
+    return PromptSession(history=command_history, auto_suggest=AutoSuggestFromHistory())
+
+
+def _get_prompt_input(prompt_symbol, prompt_session):
+    """
+    Helper function that returns the result of prompt_session.prompt.
+    Useful for mocking in unit tests.
+    """
+    return prompt_session.prompt(prompt_symbol)
+
+
 def _multi_line_loop(user_in, prompt_session):
     """
     Helper function to allow for multiline input.
     Concatenates every new input line with the previous input and returns it.
     """
     while not user_in.endswith(';'):
-        user_in += " " + prompt_session.prompt(">   ")
+        user_in += " " + _get_prompt_input(">   ", prompt_session)
     return user_in
 
 
@@ -81,11 +97,10 @@ def _main_loop():
     Function that represents the main interaction with the user.
     Distinguishes between queries and commands and also handles wrong input.
     """
-    command_history = FileHistory(os.path.expanduser("~/archimpl_history"))
-    session = PromptSession(history=command_history, auto_suggest=AutoSuggestFromHistory())
+    session = _get_prompt_session()
     while True:
         try:
-            user_in = session.prompt(">>> ")
+            user_in = _get_prompt_input(">>> ", session)
             if user_in == '':
                 continue
             elif user_in.startswith("\\"):
