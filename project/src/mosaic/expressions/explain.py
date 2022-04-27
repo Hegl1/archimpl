@@ -13,8 +13,8 @@ class Explain(AbstractExpression):
         self.explain(rows, 0)
         return Table("Execution_plan", ["Operator"], [SchemaType.VARCHAR], rows)
 
-    def __str__(self):
-        return ""
+    def __str__(self): # pragma: no cover
+        return "Explain"
 
     def explain(self, rows, indent):
         self.execution_plan.explain(rows, indent + 2)

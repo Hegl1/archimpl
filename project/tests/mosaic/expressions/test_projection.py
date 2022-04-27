@@ -1,6 +1,6 @@
 from mosaic.expressions.table_scan import TableScan
 from mosaic.expressions.column_expression import ColumnExpression
-from mosaic.expressions.projection import Projection
+from mosaic.expressions.projection import Projection, InvalidAliasException
 from mosaic import table_service
 from mosaic.table_service import Table
 from mosaic.table_service import TableIndexException
@@ -97,7 +97,7 @@ def test_select_int_subtract():
 
     assert result.schema_names[0] == "t"
     assert result.schema_types[0] == SchemaType.INT
-    assert len(result.records) == len(table.records)
+    assert len(result) == len(table)
 
     for index, record in enumerate(result.records):
         assert record[0] == (table[index, "ordinal_position"] - 1)
@@ -114,7 +114,7 @@ def test_select_float_multiply():
 
     assert result.schema_names[0] == "t"
     assert result.schema_types[0] == SchemaType.FLOAT
-    assert len(result.records) == len(table.records)
+    assert len(result) == len(table)
 
     for index, record in enumerate(result.records):
         assert record[0] == (table[index, "ordinal_position"] * 1.5)
@@ -131,7 +131,7 @@ def test_select_float_divide():
 
     assert result.schema_names[0] == "t"
     assert result.schema_types[0] == SchemaType.FLOAT
-    assert len(result.records) == len(table.records)
+    assert len(result) == len(table)
 
     for index, record in enumerate(result.records):
         assert record[0] == (table[index, "ordinal_position"] / 2)
@@ -148,7 +148,7 @@ def test_select_literal_only():
 
     assert result.schema_names[0] == "zero"
     assert result.schema_types[0] == SchemaType.INT
-    assert len(result.records) == len(table.records)
+    assert len(result) == len(table)
 
     for record in result.records:
         assert record[0] == 0
@@ -165,7 +165,7 @@ def test_select_concat_columns():
 
     assert result.schema_names[0] == "t"
     assert result.schema_types[0] == SchemaType.VARCHAR
-    assert len(result.records) == len(table.records)
+    assert len(result) == len(table)
 
     for index, record in enumerate(result.records):
         assert record[0] == (str(table[index, "ordinal_position"]) + table[index, "data_type"])
@@ -183,7 +183,7 @@ def test_select_nested_arithmetic():
 
     assert result.schema_names[0] == "t"
     assert result.schema_types[0] == SchemaType.INT
-    assert len(result.records) == len(table.records)
+    assert len(result) == len(table)
 
     for record in result.records:
         assert record[0] == 25
@@ -195,4 +195,22 @@ def test_select_bad_string_operation():
     projection = Projection([("t", arithemetic_operation)], table_scan)
 
     with pytest.raises(IncompatibleOperationException):
+        projection.get_result()
+
+def test_select_null():
+    table_scan = TableScan("#tables")
+
+    projection = Projection([("t", LiteralExpression(None))], table_scan)
+
+    result = projection.get_result()
+
+    for index in range(len(result)):
+        assert result[index, "t"] == None
+
+def test_select_bad_alias():
+    table_scan = TableScan("#tables")
+
+    projection = Projection([("test.test", LiteralExpression("test"))], table_scan)
+
+    with pytest.raises(InvalidAliasException):
         projection.get_result()

@@ -7,7 +7,7 @@ def test_cross_join():
     table1 = table_service.retrieve("professoren", makeCopy=False)
     table2 = table_service.retrieve("assistenten", makeCopy=False)
 
-    assert len(result.records) == len(table1.records) * len(table2.records)
+    assert len(result) == len(table1) * len(table2)
     assert len(result.schema_names) == 3
     assert ["C4", "Sokrates", "Platon"] in result.records
     assert ["C4", "Sokrates", "Spinoza"] in result.records

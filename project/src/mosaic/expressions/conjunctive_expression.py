@@ -19,5 +19,5 @@ class ConjunctiveExpression(AbstractExpression):
             return "(" + " and ".join([str(comparative) for comparative in self.value]) + ")"
         return f"({self.value})"
 
-    def explain(self, rows, indent):
+    def explain(self, rows, indent): # pragma: no cover
         pass

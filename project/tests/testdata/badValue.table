@@ -1,0 +1,5 @@
+[Schema]
+TestNr: int
+
+[Data]
+not_int

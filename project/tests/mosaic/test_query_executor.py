@@ -32,6 +32,9 @@ def test_execute_query_file():
        assert len(query_executor.execute_query_file("./tests/mosaic/testqueries/valid_query.mql")) == 2
     except Exception as e:
        assert False, f"Exception raised despite valid query file: {e}"
+
+
+def test_execute_bad_query_file():
     with pytest.raises(cli.CliErrorMessageException):
         query_executor.execute_query_file("./notaValidFile")
     with pytest.raises(cli.CliErrorMessageException):
@@ -40,3 +43,5 @@ def test_execute_query_file():
         query_executor.execute_query_file("./tests/mosaic/testqueries/incomplete_query.mql")
     with pytest.raises(cli.CliErrorMessageException):
         query_executor.execute_query_file("./tests/mosaic/testqueries/wrong_query.mql")
+    with pytest.raises(cli.CliErrorMessageException):
+        query_executor.execute_query_file("./tests/mosaic/testqueries")
