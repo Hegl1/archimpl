@@ -168,6 +168,9 @@ def _read_schema_section(table_name, schema_start, schema_lines):
 def _read_data_section(schema_types, data_start, data_lines):
     data_list = []
     for i, line in enumerate(data_lines):
+        if line == "\n":
+            break
+
         fields = line.rstrip('\n').split(';')
         if len(fields) != len(schema_types):
             raise TableParsingException(f"Wrong number of columns in line {i + 2 + data_start}")
@@ -204,14 +207,20 @@ def load_from_file(path):
             schema_start = lines.index('[Schema]\n')
         except ValueError:
             raise TableParsingException("No schema section found")
-        schema_end = schema_start
-        while lines[schema_end] != "\n":
-            schema_end += 1
 
         try:
             data_start = lines.index('[Data]\n')
         except ValueError:
-            raise TableParsingException("No data section found")
+            try:
+                data_start = lines.index('[Data]')
+            except ValueError:
+                raise TableParsingException("No data section found")
+
+        schema_end = schema_start
+        while schema_end < len(lines) and lines[schema_end] != "\n":
+            if schema_end == data_start:
+                raise TableParsingException("Newline between schema and data section required")
+            schema_end += 1
 
         # read content
         schema_names, schema_types = _read_schema_section(table_name, schema_start, lines[schema_start + 1:schema_end])
