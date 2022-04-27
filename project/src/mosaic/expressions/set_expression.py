@@ -1,5 +1,5 @@
 from enum import Enum
-
+from abc import abstractmethod
 from mosaic.table_service import Table
 from .abstract_expression import AbstractExpression
 
@@ -14,17 +14,33 @@ class TableSchemaDoesNotMatchException(Exception):
     pass
 
 
-class Union(AbstractExpression):
-    """
-    Represents a union operation
-    result can be retrieved with get_result method
-    an explanation of the operation is created in the explain method
-    """
+class AbstractSetExpression(AbstractExpression):
 
     def __init__(self, table1_reference, table2_reference):
         super().__init__()
         self.table1_reference = table1_reference
         self.table2_reference = table2_reference
+
+    def explain(self, rows, indent):
+        super().explain(rows, indent)
+        self.table1_reference.explain(rows, indent + 2)
+        self.table2_reference.explain(rows, indent + 2)
+
+    @abstractmethod
+    def get_result(self):
+        pass
+
+    @abstractmethod
+    def __str__(self):
+        pass
+
+
+class Union(AbstractSetExpression):
+    """
+    Represents a union operation
+    result can be retrieved with get_result method
+    an explanation of the operation is created in the explain method
+    """
 
     def get_result(self):
         table1 = self.table1_reference.get_result()
@@ -40,23 +56,13 @@ class Union(AbstractExpression):
     def __str__(self):
         return "Union"
 
-    def explain(self, rows, indent):
-        super().explain(rows, indent)
-        self.table1_reference.explain(rows, indent + 2)
-        self.table2_reference.explain(rows, indent + 2)
 
-
-class Intersect(AbstractExpression):
+class Intersect(AbstractSetExpression):
     """
     Represents an intersect operation
     result can be retrieved with get_result method
     an explanation of the operation is created in the explain method
     """
-
-    def __init__(self, table1_reference, table2_reference):
-        super().__init__()
-        self.table1_reference = table1_reference
-        self.table2_reference = table2_reference
 
     def get_result(self):
         table1 = self.table1_reference.get_result()
@@ -72,23 +78,13 @@ class Intersect(AbstractExpression):
     def __str__(self):
         return "Intersect"
 
-    def explain(self, rows, indent):
-        super().explain(rows, indent)
-        self.table1_reference.explain(rows, indent + 2)
-        self.table2_reference.explain(rows, indent + 2)
 
-
-class Except(AbstractExpression):
+class Except(AbstractSetExpression):
     """
     Represents a difference operation
     result can be retrieved with get_result method
     an explanation of the operation is created in the explain method
     """
-
-    def __init__(self, table1_reference, table2_reference):
-        super().__init__()
-        self.table1_reference = table1_reference
-        self.table2_reference = table2_reference
 
     def get_result(self):
         table1 = self.table1_reference.get_result()
@@ -108,11 +104,6 @@ class Except(AbstractExpression):
 
     def __str__(self):
         return "Except"
-
-    def explain(self, rows, indent):
-        super().explain(rows, indent)
-        self.table1_reference.explain(rows, indent + 2)
-        self.table2_reference.explain(rows, indent + 2)
 
 
 def _get_simple_schema_names(table1, table2):
