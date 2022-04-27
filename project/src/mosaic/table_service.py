@@ -51,6 +51,13 @@ class Table:
         if "." in column_name:
             return column_name
 
+        found_columns = list(filter(lambda column: column.endswith(f".{column_name}"), self.schema_names))
+
+        if len(found_columns) > 1:
+            raise AmbiguousColumnException(f"Column \"{column_name}\" is ambiguous in table \"{self.table_name}\"")
+        elif len(found_columns) == 1:
+            return found_columns[0]
+
         return f"{self.table_name}.{column_name}"
 
     def get_column_index(self, column_name):
@@ -113,6 +120,8 @@ class WrongSchemaTypeException(Exception):
 class TableParsingException(Exception):
     pass
 
+class AmbiguousColumnException(Exception):
+    pass
 
 _tables = dict()
 

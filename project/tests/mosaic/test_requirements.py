@@ -1,11 +1,40 @@
 import pytest
 from mosaic import query_executor
 from mosaic import table_service
+from mosaic.cli import CliErrorMessageException
+
 
 @pytest.fixture(autouse=True)
 def refresh_loaded_tables():
     table_service.initialize()
     table_service.load_tables_from_directory("./data/kemper")
+
+
+def _test_query(query, column_names, result_rows):
+    results = query_executor.execute_query(query)
+
+    assert len(results) == 1
+
+    result, _ = results[0]
+
+    print(result.records)
+    assert result.schema_names == column_names
+    assert len(result) == result_rows
+
+
+@pytest.mark.parametrize(
+    'query,column_names,result_rows',
+    [
+        ('sigma test != null and test <= 58237.5 pi test as (MatrNr * 2) - 5.0 / 2, test2 as null hoeren;', ['test', 'test2'], 10),
+    ],
+)
+def test_queries(query, column_names, result_rows):
+    _test_query(query, column_names, result_rows)
+
+
+def test_ambiguous_column_name():
+    with pytest.raises(CliErrorMessageException):
+        _test_query('pi Name (professoren cross join assistenten);', [], 0)
 
 
 # Milestone 2 queries
@@ -39,23 +68,13 @@ def refresh_loaded_tables():
         ('tau Rang professoren;', ['professoren.PersNr', 'professoren.Name', 'professoren.Rang', 'professoren.Raum'], 7),
         ('explain (pi studenten.MatrNr, Name, Semester, VorlNr sigma studenten.MatrNr = hoeren.MatrNr (studenten cross join hoeren));', ['Operator'], 5),
         ('sigma studenten.MatrNr = hoeren.MatrNr (studenten cross join hoeren);', ['studenten.MatrNr', 'studenten.Name', 'studenten.Semester', 'hoeren.MatrNr', 'hoeren.VorlNr'], 10),
-        # TODO: reenable test when fixed
-        #(
-        #    '(pi studenten.MatrNr, Name, Semester, VorlNr sigma studenten.MatrNr = hoeren.MatrNr (studenten cross join hoeren)) except ' +
-        #    '(pi studenten.MatrNr, Name, Semester, VorlNr sigma studenten.MatrNr = hoeren.MatrNr (studenten cross join hoeren));',
-        #    ['studenten.MatrNr', 'studenten.Name', 'studenten.Semester', 'hoeren.VorlNr'], 0
-        #),
-        ('sigma test != null and test <= 58237.5 pi test as (MatrNr * 2) - 5.0 / 2, test2 as null hoeren;', ['test', 'test2'], 10),
+        (
+            '(pi studenten.MatrNr, Name, Semester, VorlNr sigma studenten.MatrNr = hoeren.MatrNr (studenten cross join hoeren)) except ' +
+            '(pi studenten.MatrNr, Name, Semester, VorlNr sigma studenten.MatrNr = hoeren.MatrNr (studenten cross join hoeren));',
+            ['studenten.MatrNr', 'studenten.Name', 'studenten.Semester', 'hoeren.VorlNr'], 0
+        ),
         ('((pi VorlNr sigma MatrNr = 29120 hoeren) intersect (pi VorlNr sigma gelesenVon = 2125 vorlesungen));', ['hoeren.VorlNr'], 2),
     ],
 )
 def test_milestone_2_query(query, column_names, result_rows):
-    results = query_executor.execute_query(query)
-
-    assert len(results) == 1
-
-    result, _ = results[0]
-
-    print(result.records)
-    assert result.schema_names == column_names
-    assert len(result) == result_rows
+    _test_query(query, column_names, result_rows)
