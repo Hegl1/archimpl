@@ -29,16 +29,13 @@ class ComparativeOperationExpression(AbstractExpression):
         right_operand = self._get_operand(
             table, row_index, expression=self.right)
 
-        if left_operand is None and right_operand is None and self.operator is ComparativeOperator.EQUAL:
-            return True
-
-        # handles None literals
-        if left_operand is None or right_operand is None:
-            return False
-
-        if type(left_operand) != type(right_operand):
-            raise IncompatibleOperandTypesException(
-                "Operands of a comparison operator must be of the same type")
+        if self.operator not in [ComparativeOperator.EQUAL, ComparativeOperator.NOT_EQUAL]:
+            if left_operand is not None and right_operand is not None:
+                if type(left_operand) != type(right_operand):
+                    raise IncompatibleOperandTypesException(
+                        "Operands of a comparison operator must be of the same type")
+            else:
+                return False
 
         if self.operator == ComparativeOperator.EQUAL:
             return left_operand == right_operand

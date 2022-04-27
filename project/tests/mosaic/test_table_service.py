@@ -68,6 +68,7 @@ def test_table_get_item():
     assert len(table[0:2]) == 2
     assert table[1:5, "column_name"] == ["#columns.table_name", "#columns.column_name", "#columns.ordinal_position", "#columns.data_type"]
 
+
 def test_table_get_item_not_found():
     table = table_service.retrieve("#columns")
     assert table is not None
