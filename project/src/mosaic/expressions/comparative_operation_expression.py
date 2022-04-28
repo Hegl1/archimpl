@@ -29,7 +29,7 @@ class ComparativeOperationExpression(AbstractExpression):
         right_operand = self._get_operand(
             table, row_index, expression=self.right)
 
-        if self.operator not in [ComparativeOperator.EQUAL, ComparativeOperator.NOT_EQUAL]:
+        if self.operator not in [ComparativeOperator.EQUAL, ComparativeOperator.NOT_EQUAL] or isinstance(left_operand, bool) or isinstance(right_operand, bool):
             if left_operand is not None and right_operand is not None:
                 if type(left_operand) != type(right_operand):
                     raise IncompatibleOperandTypesException(

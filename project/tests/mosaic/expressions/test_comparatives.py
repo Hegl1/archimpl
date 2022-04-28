@@ -5,6 +5,24 @@ import pytest
 import comparative_helper
 
 
+def test_nested_comparisons():
+    comparison_number = 24002
+    comparative_operation = ComparativeOperationExpression(ColumnExpression(
+        "MatrNr"), ComparativeOperator.EQUAL, LiteralExpression(
+        comparison_number))
+
+    comparison_number2 = 25403
+    comparative_operation2 = ComparativeOperationExpression(ColumnExpression(
+        "MatrNr"), ComparativeOperator.EQUAL, LiteralExpression(
+        comparison_number2))
+
+    nested_compare = ComparativeOperationExpression(
+        comparative_operation, ComparativeOperator.EQUAL, comparative_operation2)
+    print(nested_compare)
+    sum, entries = comparative_helper.evaluate(nested_compare)
+    assert (sum == (entries - 2))
+
+
 def test_smaller_numbers():
     comparison_number = 25403
     comparative_operation = ComparativeOperationExpression(LiteralExpression(
@@ -61,10 +79,13 @@ def test_wrong_type_comparison():
     with pytest.raises(IncompatibleOperandTypesException):
         comparative_operation.get_result(table=table, row_index=0)
 
+
 def test_none_literal_comparison():
-    comparative_operation = ComparativeOperationExpression(LiteralExpression(None), ComparativeOperator.GREATER, ColumnExpression("Name"))
+    comparative_operation = ComparativeOperationExpression(
+        LiteralExpression(None), ComparativeOperator.GREATER, ColumnExpression("Name"))
     sum, _ = comparative_helper.evaluate(comparative_operation)
     assert(sum == 0)
+
 
 def test_explain():
     comparison_string = "hello"

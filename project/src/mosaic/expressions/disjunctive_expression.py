@@ -10,12 +10,10 @@ class DisjunctiveExpression(AbstractExpression):
     def get_result(self, table, row_index):
         if isinstance(self.value, list):
             return any(map(lambda comparative: comparative.get_result(table=table, row_index=row_index), self.value))
-        elif isinstance(self.value, ComparativeOperationExpression) or isinstance(self.value, ConjunctiveExpression):
-            return self.value.get_result(table=table, row_index=row_index)
 
-        return self.value.get_result()
+        return self.value.get_result(table=table, row_index=row_index)
 
     def __str__(self):
         if isinstance(self.value, list):
             return "(" + " or ".join([str(comparative) for comparative in self.value]) + ")"
-        return f"({self.value})"
+        return f"{self.value}"
