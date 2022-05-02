@@ -2,6 +2,7 @@ from .abstract_expression import AbstractExpression
 from enum import Enum
 from mosaic.table_service import SchemaType, get_schema_type
 from .column_expression import ColumnExpression
+from .arithmetic_operation_expression import ArithmeticOperationExpression
 
 
 class ComparativeOperator(Enum):
@@ -54,7 +55,7 @@ class ComparativeOperationExpression(AbstractExpression):
         """
         Returns the actual operand for the given expression
         """
-        if isinstance(expression, ComparativeOperationExpression):
+        if isinstance(expression, ComparativeOperationExpression) or isinstance(expression, ArithmeticOperationExpression):
             return expression.get_result(table, row_index)
         elif isinstance(expression, ColumnExpression):
             return table[row_index, expression.get_result()]
