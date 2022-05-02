@@ -1,4 +1,4 @@
-from .abstract_expression import AbstractExpression
+from .abstract_computation_expression import AbstractComputationExpression
 from .column_expression import ColumnExpression
 from mosaic.table_service import SchemaType, get_schema_type
 from enum import Enum
@@ -14,8 +14,10 @@ class IncompatibleOperationException(Exception):
     pass
 
 
-class ArithmeticOperationExpression(AbstractExpression):
+class ArithmeticOperationExpression(AbstractComputationExpression):
     def __init__(self, left, operator, right):
+        super().__init__()
+
         self.left = left
         self.right = right
         self.operator = operator
@@ -81,7 +83,7 @@ class ArithmeticOperationExpression(AbstractExpression):
         """
         Returns the actual operand for the given expression
         """
-        if isinstance(expression, ArithmeticOperationExpression):
+        if isinstance(expression, AbstractComputationExpression):
             return expression.get_result(table, row_index)
         elif isinstance(expression, ColumnExpression):
             return table[row_index, expression.get_result()]

@@ -1,5 +1,6 @@
 from .abstract_expression import AbstractExpression
 from .arithmetic_operation_expression import ArithmeticOperationExpression
+from .abstract_computation_expression import AbstractComputationExpression
 from .literal_expression import LiteralExpression
 from mosaic.table_service import Table, get_schema_type
 
@@ -74,7 +75,7 @@ class Projection(AbstractExpression):
         for (index, record) in enumerate(table.records):
             row = []
             for column_value in columns:
-                if isinstance(column_value, ArithmeticOperationExpression):
+                if isinstance(column_value, AbstractComputationExpression):
                     row.append(column_value.get_result(table, index))
                 elif isinstance(column_value, LiteralExpression):
                     row.append(column_value.get_result())

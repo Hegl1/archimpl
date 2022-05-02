@@ -18,6 +18,7 @@ class NestedLoopsJoin(AbstractExpression):
 
     def __init__(self, table1_reference, table2_reference, join_type, condition, is_natural):
         super().__init__()
+
         self.table1_reference = table1_reference
         self.table2_reference = table2_reference
         self.join_type = join_type

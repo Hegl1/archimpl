@@ -26,14 +26,6 @@ class AbstractSetExpression(AbstractExpression):
         self.table1_reference.explain(rows, indent + 2)
         self.table2_reference.explain(rows, indent + 2)
 
-    @abstractmethod
-    def get_result(self):
-        pass
-
-    @abstractmethod
-    def __str__(self):
-        pass
-
 
 class Union(AbstractSetExpression):
     """

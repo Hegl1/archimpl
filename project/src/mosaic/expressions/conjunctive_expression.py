@@ -1,16 +1,19 @@
-from .abstract_expression import AbstractExpression
-from .comparative_operation_expression import ComparativeOperationExpression
+from .abstract_computation_expression import AbstractComputationExpression
 
 
-class ConjunctiveExpression(AbstractExpression):
+class ConjunctiveExpression(AbstractComputationExpression):
     def __init__(self, value):
+        super().__init__()
+
         self.value = value
 
     def get_result(self, table, row_index):
         if isinstance(self.value, list):
             return all(map(lambda comparative: comparative.get_result(table=table, row_index=row_index), self.value))
-            
-        return self.value.get_result(table=table, row_index=row_index)
+        elif isinstance(self.value, AbstractComputationExpression):
+            return self.value.get_result(table=table, row_index=row_index)
+
+        return self.value.get_result()
 
     def __str__(self):
         if isinstance(self.value, list):
