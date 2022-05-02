@@ -26,6 +26,7 @@ def _test_query(query, column_names, result_rows):
     'query,column_names,result_rows',
     [
         ('sigma test != null and test <= 58237.5 pi test as (MatrNr * 2) - 5.0 / 2, test2 as null hoeren;', ['test', 'test2'], 10),
+        ('pi col as (null + 2) hoeren;', ['col'], 10),
     ],
 )
 def test_queries(query, column_names, result_rows):

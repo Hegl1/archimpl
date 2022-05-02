@@ -86,3 +86,10 @@ def test_explain_ordering():
     assert len(result) == 2
     assert result[0][0] == "-->OrderBy(key=[PersNr])"
     assert result[1][0] == "---->TableScan(professoren)"
+
+
+def test_explain_arithmetic():
+    result, _ = execute_query("explain pi col as (null + 4) professoren;")[0]
+    assert len(result) == 2
+    assert result[0][0] == "-->Projection(columns=[col={NULL + 4}])"
+    assert result[1][0] == "---->TableScan(professoren)"

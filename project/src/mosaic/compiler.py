@@ -246,10 +246,10 @@ class ASTVisitor(NodeVisitor):
         else:
             return [visited_children[0]]
 
-    def visit_aggregate_list(self, node, visited_children):
+    def visit_aggregate_list(self, node, visited_children): # pragma: no cover
         pass
 
-    def visit_aggregate_column(self, node, visited_children):
+    def visit_aggregate_column(self, node, visited_children): # pragma: no cover
         # Example:
         # name = visited_children[0]
         # aggregate_function = visited_children[3]
@@ -279,10 +279,9 @@ class ASTVisitor(NodeVisitor):
         condition = visited_children[2]
         input_node = visited_children[3]
 
-        # Example:
         return Selection(input_node, condition)
 
-    def visit_aggregate_function(self, node, visited_children):
+    def visit_aggregate_function(self, node, visited_children): # pragma: no cover
         function_name = node.text.strip().lower()
 
         # Example:
@@ -298,7 +297,7 @@ class ASTVisitor(NodeVisitor):
         #     return AggregateFunction.COUNT
         pass
 
-    def visit_grouping(self, node, visited_children):
+    def visit_grouping(self, node, visited_children): # pragma: no cover
         # Example:
         # children = visited_children[0]
 
@@ -343,10 +342,10 @@ class ASTVisitor(NodeVisitor):
         elif operator == "except":
             return SetOperationType.EXCEPT
 
-    def visit_join_operator(self, node, visited_children):
+    def visit_join_operator(self, node, visited_children): # pragma: no cover
         pass
 
-    def visit_natural_join_operator(self, node, visited_children):
+    def visit_natural_join_operator(self, node, visited_children): # pragma: no cover
         pass
 
     def visit_cross_join_operator(self, node, visited_children):
@@ -386,7 +385,6 @@ class ASTVisitor(NodeVisitor):
         return visited_children[0], visited_children[2]
 
     def visit_query(self, node, visited_children):
-        # Example:
         if len(visited_children[1]) > 0:
             left = visited_children[0]
 

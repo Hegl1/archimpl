@@ -32,26 +32,24 @@ class ComparativeOperationExpression(AbstractComputationExpression):
         right_operand = self._get_operand(
             table, row_index, expression=self.right)
 
-        if self.operator not in [ComparativeOperator.EQUAL, ComparativeOperator.NOT_EQUAL] or isinstance(left_operand, bool) or isinstance(right_operand, bool):
-            if left_operand is not None and right_operand is not None:
-                if type(left_operand) != type(right_operand):
-                    raise IncompatibleOperandTypesException(
-                        "Operands of a comparison operator must be of the same type")
-            else:
-                return False
+        if (left_operand is None or right_operand is None) and self.operator not in [ComparativeOperator.EQUAL, ComparativeOperator.NOT_EQUAL]:
+            return False
 
-        if self.operator == ComparativeOperator.EQUAL:
-            return left_operand == right_operand
-        elif self.operator == ComparativeOperator.NOT_EQUAL:
-            return left_operand != right_operand
-        elif self.operator == ComparativeOperator.SMALLER:
-            return left_operand < right_operand
-        elif self.operator == ComparativeOperator.SMALLER_EQUAL:
-            return left_operand <= right_operand
-        elif self.operator == ComparativeOperator.GREATER:
-            return left_operand > right_operand
-        elif self.operator == ComparativeOperator.GREATER_EQUAL:
-            return left_operand >= right_operand
+        try:
+            if self.operator == ComparativeOperator.EQUAL:
+                return left_operand == right_operand
+            elif self.operator == ComparativeOperator.NOT_EQUAL:
+                return left_operand != right_operand
+            elif self.operator == ComparativeOperator.SMALLER:
+                return left_operand < right_operand
+            elif self.operator == ComparativeOperator.SMALLER_EQUAL:
+                return left_operand <= right_operand
+            elif self.operator == ComparativeOperator.GREATER:
+                return left_operand > right_operand
+            elif self.operator == ComparativeOperator.GREATER_EQUAL:
+                return left_operand >= right_operand
+        except TypeError:
+            raise IncompatibleOperandTypesException("Operands of a comparison operation must be compatible")
 
     def _get_operand(self, table, row_index, expression):
         """
