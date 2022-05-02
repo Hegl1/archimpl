@@ -1,4 +1,8 @@
+import pytest
+
 from mosaic import table_service
+from mosaic.expressions.nested_loops_join import SelfJoinWithoutRenamingException, NestedLoopsJoin, JoinType
+from mosaic.expressions.table_scan import TableScan
 from mosaic.query_executor import execute_query
 
 
@@ -12,3 +16,24 @@ def test_cross_join():
     assert ["C4", "Sokrates", "Platon"] in result.records
     assert ["C4", "Sokrates", "Spinoza"] in result.records
     assert ["C4", "Kant", "Spinoza"] in result.records
+
+
+def test_table_self_join_without_renaming():
+    table1 = TableScan("professoren")
+    join = NestedLoopsJoin(table1, table1, JoinType.CROSS, condition=None, is_natural=False)
+    with pytest.raises(SelfJoinWithoutRenamingException):
+        join.get_result()
+    table2 = TableScan("assistenten", "professoren")
+    join = NestedLoopsJoin(table1, table2, JoinType.CROSS, condition=None, is_natural=False)
+    with pytest.raises(SelfJoinWithoutRenamingException):
+        join.get_result()
+
+
+def test_table_self_join_with_renaming():
+    table1 = TableScan("professoren")
+    table2 = TableScan("professoren", "p")
+    join = NestedLoopsJoin(table1, table2, JoinType.CROSS, condition=None, is_natural=False)
+    try:
+        join.get_result()
+    except SelfJoinWithoutRenamingException as e:
+        assert False

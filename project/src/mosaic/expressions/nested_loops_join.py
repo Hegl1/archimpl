@@ -27,6 +27,11 @@ class NestedLoopsJoin(AbstractExpression):
     def get_result(self):
         table1 = self.table1_reference.get_result()
         table2 = self.table2_reference.get_result()
+
+        if table1.table_name == table2.table_name:
+            raise SelfJoinWithoutRenamingException(f"Table \"{table1.table_name}\" can't be joined with itself "
+                                                   f"without renaming one of the occurrences")
+
         if self.join_type == JoinType.CROSS:
             joined_table_records = []
             for record1 in table1.records:
@@ -47,3 +52,7 @@ class NestedLoopsJoin(AbstractExpression):
         super().explain(rows, indent)
         self.table1_reference.explain(rows, indent + 2)
         self.table2_reference.explain(rows, indent + 2)
+
+
+class SelfJoinWithoutRenamingException(Exception):
+    pass
