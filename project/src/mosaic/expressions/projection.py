@@ -2,7 +2,7 @@ from .abstract_expression import AbstractExpression
 from .arithmetic_operation_expression import ArithmeticOperationExpression
 from .abstract_computation_expression import AbstractComputationExpression
 from .literal_expression import LiteralExpression
-from mosaic.table_service import Table, get_schema_type
+from mosaic.table_service import Table, get_schema_type, Schema
 
 
 class InvalidAliasException(Exception):
@@ -21,8 +21,8 @@ class Projection(AbstractExpression):
 
         schema_names, schema_types, columns = self._build_schema(table)
         data = self._build_data(table, columns)
-
-        return Table(table.table_name, schema_names, schema_types, data)
+        schema = Schema(table.get_table_name(), schema_names, schema_types)
+        return Table(schema, data)
 
     def _build_schema(self, table):
         """
@@ -59,7 +59,7 @@ class Projection(AbstractExpression):
                 column_value = table.get_column_index(column)
 
                 schema_names.append(column_name if alias is None else alias)
-                schema_types.append(table.schema_types[column_value])
+                schema_types.append(table.schema.column_types[column_value])
 
             columns.append(column_value)
 

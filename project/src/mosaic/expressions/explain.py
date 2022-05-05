@@ -1,5 +1,5 @@
 from .abstract_expression import AbstractExpression
-from mosaic.table_service import Table, SchemaType
+from mosaic.table_service import Table, SchemaType, Schema
 
 
 class Explain(AbstractExpression):
@@ -11,7 +11,8 @@ class Explain(AbstractExpression):
     def get_result(self):
         rows = []
         self.explain(rows, 0)
-        return Table("Execution_plan", ["Operator"], [SchemaType.VARCHAR], rows)
+        schema = Schema("Execution_plan", ["Operator"], [SchemaType.VARCHAR])
+        return Table(schema, rows)
 
     def __str__(self): # pragma: no cover
         return "Explain"

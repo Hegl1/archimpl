@@ -73,7 +73,7 @@ class ArithmeticOperationExpression(AbstractComputationExpression):
         if isinstance(expression, ArithmeticOperationExpression):
             return expression.get_schema_type(table)
         elif isinstance(expression, ColumnExpression):
-            return table.schema_types[table.get_column_index(expression.get_result())]
+            return table.schema.column_types[table.get_column_index(expression.get_result())]
 
         value = expression.get_result()
 

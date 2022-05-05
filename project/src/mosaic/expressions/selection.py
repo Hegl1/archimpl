@@ -1,5 +1,5 @@
 from .abstract_expression import AbstractExpression
-from mosaic.table_service import Table
+from mosaic.table_service import Table, Schema
 
 
 class Selection(AbstractExpression):
@@ -16,8 +16,9 @@ class Selection(AbstractExpression):
         for i in range(0, row_count):
             if self.condition.get_result(table, i):
                 result.append(table.records[i])
+        schema = Schema(table.get_table_name(), table.schema.column_names, table.schema.column_types)
 
-        return Table(table.table_name, table.schema_names, table.schema_types, result)
+        return Table(schema, result)
 
     def __str__(self):
         return f"Selection(condition={self.condition.__str__()})"

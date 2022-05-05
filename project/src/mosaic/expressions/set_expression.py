@@ -1,6 +1,6 @@
 from enum import Enum
 from abc import abstractmethod
-from mosaic.table_service import Table
+from mosaic.table_service import Table, Schema
 from .abstract_expression import AbstractExpression
 
 
@@ -41,9 +41,10 @@ class Union(AbstractSetExpression):
         _check_schemas(table1, table2)
 
         table_union_records = table1.records + table2.records
-        table_union_name = f"{table1.table_name}_union_{table2.table_name}"
+        table_union_name = f"{table1.get_table_name()}_union_{table2.get_table_name()}"
+        schema = Schema(table_union_name, table1.schema.column_names, table1.schema.column_types)
 
-        return Table(table_union_name, table1.schema_names, table1.schema_types, table_union_records)
+        return Table(schema, table_union_records)
 
     def __str__(self):
         return "Union"
@@ -63,9 +64,10 @@ class Intersect(AbstractSetExpression):
         _check_schemas(table1, table2)
 
         table_intersect_records = [x for y in table1.records for x in table2.records if x == y]
-        table_intersect_name = f"{table1.table_name}_intersect_{table2.table_name}"
+        table_intersect_name = f"{table1.get_table_name()}_intersect_{table2.get_table_name()}"
+        schema = Schema(table_intersect_name, table1.schema.column_names, table1.schema.column_types)
 
-        return Table(table_intersect_name, table1.schema_names, table1.schema_types, table_intersect_records)
+        return Table(schema, table_intersect_records)
 
     def __str__(self):
         return "Intersect"
@@ -90,9 +92,10 @@ class Except(AbstractSetExpression):
             if record not in table2.records:
                 table_except_records.append(record)
 
-        table_except_name = f"{table1.table_name}_except_{table2.table_name}"
+        table_except_name = f"{table1.get_table_name()}_except_{table2.get_table_name()}"
+        schema = Schema(table_except_name, table1.schema.column_names, table1.schema.column_types)
 
-        return Table(table_except_name, table1.schema_names, table1.schema_types, table_except_records)
+        return Table(schema, table_except_records)
 
     def __str__(self):
         return "Except"
@@ -102,8 +105,8 @@ def _get_simple_schema_names(table1, table2):
     """
     constructs simple column names out of fully qualified column names
     """
-    schema_names_1 = [table1.get_simple_column_name(name) for name in table1.schema_names]
-    schema_names_2 = [table2.get_simple_column_name(name) for name in table2.schema_names]
+    schema_names_1 = [table1.get_simple_column_name(name) for name in table1.schema.column_names]
+    schema_names_2 = [table2.get_simple_column_name(name) for name in table2.schema.column_names]
     return schema_names_1, schema_names_2
 
 
@@ -115,4 +118,4 @@ def _check_schemas(table1, table2):
 
     if schema_names_1 != schema_names_2:
         raise TableSchemaDoesNotMatchException(
-            f"Schemas of {table1.table_name} and {table2.table_name} do not match.")
+            f"Schemas of {table1.get_table_name()} and {table2.get_table_name()} do not match.")

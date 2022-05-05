@@ -1,6 +1,6 @@
 from enum import Enum
 
-from mosaic.table_service import Table
+from mosaic.table_service import Table, Schema
 from .abstract_expression import AbstractExpression
 
 
@@ -29,8 +29,8 @@ class NestedLoopsJoin(AbstractExpression):
         table1 = self.table1_reference.get_result()
         table2 = self.table2_reference.get_result()
 
-        if table1.table_name == table2.table_name:
-            raise SelfJoinWithoutRenamingException(f"Table \"{table1.table_name}\" can't be joined with itself "
+        if table1.get_table_name() == table2.get_table_name():
+            raise SelfJoinWithoutRenamingException(f"Table \"{table1.get_table_name()}\" can't be joined with itself "
                                                    f"without renaming one of the occurrences")
 
         if self.join_type == JoinType.CROSS:
@@ -38,10 +38,11 @@ class NestedLoopsJoin(AbstractExpression):
             for record1 in table1.records:
                 for record2 in table2.records:
                     joined_table_records.append(record1 + record2)
-            joined_table_name = f"{table1.table_name}_cross_join_{table2.table_name}"
+            joined_table_name = f"{table1.get_table_name()}_cross_join_{table2.get_table_name()}"
+            schema = Schema(joined_table_name, table1.schema.column_names + table2.schema.column_names,
+                            table1.schema.column_types + table2.schema.column_types)
 
-            return Table(joined_table_name, table1.schema_names + table2.schema_names,
-                         table1.schema_types + table2.schema_types, joined_table_records)
+            return Table(schema, joined_table_records)
         # TODO handle other join types correctly
         return None
 
