@@ -1,4 +1,6 @@
 from .abstract_expression import AbstractExpression
+from mosaic.table_service import Table
+
 
 class HashDistinct(AbstractExpression):
     def __init__(self, table):
@@ -10,17 +12,16 @@ class HashDistinct(AbstractExpression):
         table = self.table.get_result()
 
         hashes = set()
+        records = []
 
-        for index in reversed(range(len(table))):
-            record = table[index]
+        for record in table.records:
             record_hash = hash(str(record))
 
-            if record_hash in hashes:
-                table.records.pop(index)
-            else:
+            if record_hash not in hashes:
                 hashes.add(record_hash)
+                records.append(record)
 
-        return table
+        return Table(table_name=table.table_name, schema_names=table.schema_names, schema_types=table.schema_types, data=records)
 
     def __str__(self):
         return f"HashDistinct"
