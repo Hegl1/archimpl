@@ -23,6 +23,9 @@ class OrderingExpression(AbstractExpression):
 
         return Table(schema, ordered_records)
 
+    def get_schema(self):
+        return self.table_reference.get_schema()
+
     def __str__(self):
         return f"OrderBy(key=[{', '.join([str(column) for column in self.column_list])}])"
 

@@ -1,5 +1,6 @@
 from .abstract_expression import AbstractExpression
 
+
 class HashDistinct(AbstractExpression):
     def __init__(self, table):
         super().__init__()
@@ -21,6 +22,9 @@ class HashDistinct(AbstractExpression):
                 hashes.add(record_hash)
 
         return table
+
+    def get_schema(self):
+        return self.table.get_schema()
 
     def __str__(self):
         return f"HashDistinct"

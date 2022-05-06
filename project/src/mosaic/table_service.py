@@ -16,6 +16,13 @@ class SchemaType(Enum):
 
 
 class Schema:
+    """
+        Class that represents the schema of a table in our Database.
+        This class has the following properties:
+        table_name: str - the name of the table
+        column_names: [str] - the FQN of the columns. Position in the list matters
+        column_types: [SchemaType] - the type of the corresponding column
+        """
     def __init__(self, table_name, column_names, column_types):
         self.table_name = table_name
         self.column_names = column_names
@@ -74,9 +81,7 @@ class Table:
     """
     Class that represents one table in our Database.
     This class has the following properties:
-    table_name: str - the name of the table
-    schema_names: [str] - the FQN of the columns. Position in the list matters
-    schema_types: [SchemaType] - the type of the corresponding column
+    schema: Schema - the schema of the table, including the table name, columns names and column types
     data: [[float | int | str]]] - list that represents tables data.
         Each entry of the list represents a row in the table.
     """

@@ -20,6 +20,9 @@ class Selection(AbstractExpression):
 
         return Table(schema, result)
 
+    def get_schema(self):
+        return self.table_reference.get_schema()
+
     def __str__(self):
         return f"Selection(condition={self.condition.__str__()})"
 

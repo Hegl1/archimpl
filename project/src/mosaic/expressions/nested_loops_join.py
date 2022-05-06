@@ -29,9 +29,8 @@ class NestedLoopsJoin(AbstractExpression):
         table1 = self.table1_reference.get_result()
         table2 = self.table2_reference.get_result()
 
-        if table1.get_table_name() == table2.get_table_name():
-            raise SelfJoinWithoutRenamingException(f"Table \"{table1.get_table_name()}\" can't be joined with itself "
-                                                   f"without renaming one of the occurrences")
+        _check_table_names(table1.schema, table2.schema)
+        _check_condition(table1.schema, table2.schema, self.condition)
 
         if self.join_type == JoinType.CROSS:
             joined_table_records = []
@@ -46,6 +45,16 @@ class NestedLoopsJoin(AbstractExpression):
         # TODO handle other join types correctly
         return None
 
+    def get_schema(self):
+        schema1 = self.table1_reference.get_schema()
+        schema2 = self.table2_reference.get_schema()
+        _check_table_names(schema1, schema2)
+        if self.condition is not None:
+            _check_condition(schema1, schema2, self.condition)
+        joined_table_name = f"{schema1.table_name}_cross_join_{schema2.table_name}"
+        return Schema(joined_table_name, schema1.column_names + schema2.column_names,
+                      schema1.column_types + schema2.column_types)
+
     def __str__(self):
         return f"NestedLoopsJoin(cross, natural={self.is_natural}, condition={self.condition})"
         # TODO convert join type enum to string
@@ -54,6 +63,24 @@ class NestedLoopsJoin(AbstractExpression):
         super().explain(rows, indent)
         self.table1_reference.explain(rows, indent + 2)
         self.table2_reference.explain(rows, indent + 2)
+
+
+def _check_table_names(schema1, schema2):
+    if schema1.table_name == schema2.table_name:
+        raise SelfJoinWithoutRenamingException(f"Table \"{schema1.table_name}\" can't be joined with itself "
+                                               f"without renaming one of the occurrences")
+
+
+def _check_condition(schema1, schema2, condition):
+    if condition is None:
+        pass
+    # TODO implement together with other join types
+    # if we don't compare something with columns from both different tables, raise ConditionNotValidException
+    pass
+
+
+class ConditionNotValidException(Exception):
+    pass
 
 
 class SelfJoinWithoutRenamingException(Exception):

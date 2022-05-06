@@ -1,6 +1,6 @@
 from .abstract_computation_expression import AbstractComputationExpression
 from .column_expression import ColumnExpression
-from mosaic.table_service import SchemaType, get_schema_type
+from mosaic.table_service import SchemaType, get_schema_type, Schema
 from enum import Enum
 
 class ArithmeticOperator(Enum):
@@ -45,35 +45,35 @@ class ArithmeticOperationExpression(AbstractComputationExpression):
         elif self.operator == ArithmeticOperator.SUBTRACT:
             return left_operand - right_operand
 
-    def get_schema_type(self, table):
+    def get_schema_type(self, schema):
         """
         Computes the schema_type for the expression by evaluating the types of
         the both operands.
         """
-        left_schema = self._get_schema_type_for_expression(table, self.left)
-        right_schema = self._get_schema_type_for_expression(table, self.right)
+        left_type = self._get_schema_type_for_expression(schema, self.left)
+        right_type = self._get_schema_type_for_expression(schema, self.right)
 
-        if left_schema == SchemaType.NULL and right_schema == SchemaType.NULL:
+        if left_type == SchemaType.NULL and right_type == SchemaType.NULL:
             return SchemaType.NULL
 
-        if left_schema == SchemaType.VARCHAR or right_schema == SchemaType.VARCHAR:
+        if left_type == SchemaType.VARCHAR or right_type == SchemaType.VARCHAR:
             if self.operator != ArithmeticOperator.ADD:
                 raise IncompatibleOperationException("The given operation is not applicable for strings")
 
             return SchemaType.VARCHAR
-        elif left_schema == SchemaType.FLOAT or right_schema == SchemaType.FLOAT or self.operator == ArithmeticOperator.DIVIDE:
+        elif left_type == SchemaType.FLOAT or right_type == SchemaType.FLOAT or self.operator == ArithmeticOperator.DIVIDE:
             return SchemaType.FLOAT
 
         return SchemaType.INT
 
-    def _get_schema_type_for_expression(self, table, expression):
+    def _get_schema_type_for_expression(self, schema, expression):
         """
         Returns the schema_type for the given expression in the given table
         """
         if isinstance(expression, ArithmeticOperationExpression):
-            return expression.get_schema_type(table)
+            return expression.get_schema_type(schema)
         elif isinstance(expression, ColumnExpression):
-            return table.schema.column_types[table.get_column_index(expression.get_result())]
+            return schema.column_types[schema.get_column_index(expression.get_result())]
 
         value = expression.get_result()
 
@@ -91,4 +91,4 @@ class ArithmeticOperationExpression(AbstractComputationExpression):
         return expression.get_result()
 
     def __str__(self):
-        return f"{{{self.left} {self.operator.value} {self.right}}}"
+        return f"{{{self.left} {self.operator.value} {self.right}}}" # TODO sind die extra klammern im output gewollt?
