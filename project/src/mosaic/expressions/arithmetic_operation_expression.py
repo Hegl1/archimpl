@@ -90,5 +90,9 @@ class ArithmeticOperationExpression(AbstractComputationExpression):
 
         return expression.get_result()
 
+    def replace_all_column_names_by_fqn(self, schema: Schema):
+        self.left.replace_all_column_names_by_fqn(schema)
+        self.right.replace_all_column_names_by_fqn(schema)
+
     def __str__(self):
         return f"{{{self.left} {self.operator.value} {self.right}}}" # TODO sind die extra klammern im output gewollt?

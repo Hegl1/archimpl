@@ -1,8 +1,7 @@
 from .abstract_computation_expression import AbstractComputationExpression
 from enum import Enum
-from mosaic.table_service import SchemaType, get_schema_type
+from mosaic.table_service import SchemaType, get_schema_type, Schema
 from .column_expression import ColumnExpression
-from .arithmetic_operation_expression import ArithmeticOperationExpression
 
 
 class ComparativeOperator(Enum):
@@ -61,6 +60,10 @@ class ComparativeOperationExpression(AbstractComputationExpression):
             return table[row_index, expression.get_result()]
 
         return expression.get_result()
+
+    def replace_all_column_names_by_fqn(self, schema: Schema):
+        self.left.replace_all_column_names_by_fqn(schema)
+        self.right.replace_all_column_names_by_fqn(schema)
 
     def __str__(self):
         return f"({self.left} {self.operator.value} {self.right})"

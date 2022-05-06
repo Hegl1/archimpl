@@ -57,6 +57,7 @@ class NestedLoopsJoin(AbstractExpression):
 
     def __str__(self):
         return f"NestedLoopsJoin(cross, natural={self.is_natural}, condition={self.condition})"
+        # TODO does the condition already have to contain only fqn? yes?
         # TODO convert join type enum to string
 
     def explain(self, rows, indent):

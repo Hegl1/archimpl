@@ -1,4 +1,5 @@
 from .abstract_expression import AbstractExpression
+from ..table_service import Schema
 
 
 class LiteralExpression(AbstractExpression):
@@ -9,6 +10,9 @@ class LiteralExpression(AbstractExpression):
 
     def get_result(self):
         return self.value
+
+    def replace_all_column_names_by_fqn(self, schema: Schema):
+        pass
 
     def __str__(self):
         if isinstance(self.value, str):

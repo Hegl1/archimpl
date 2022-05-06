@@ -24,6 +24,9 @@ class Selection(AbstractExpression):
         return self.table_reference.get_schema()
 
     def __str__(self):
+        schema = self.get_schema()
+        if self.condition is not None:
+            self.condition.replace_all_column_names_by_fqn(schema)
         return f"Selection(condition={self.condition.__str__()})"
 
     def explain(self, rows, indent):

@@ -23,7 +23,7 @@ def test_explain_table_scan_rename():
 def test_explain_projection():
     result, _ = execute_query("explain pi MatrNr, Name studenten;")[0]
     assert len(result) == 2
-    assert result.records[0][0] == "-->Projection(columns=[MatrNr=MatrNr, Name=Name])"
+    assert result.records[0][0] == "-->Projection(columns=[studenten.MatrNr=studenten.MatrNr, studenten.Name=studenten.Name])"
     assert result.records[1][0] == "---->TableScan(studenten)"
 
 
@@ -36,7 +36,7 @@ def test_explain_projection_distinct():
 def test_explain_selection():
     result, _ = execute_query("explain sigma Rang > \"C3\" professoren;")[0]
     assert len(result) == 2
-    assert result.records[0][0] == "-->Selection(condition=(Rang > \"C3\"))"
+    assert result.records[0][0] == "-->Selection(condition=(professoren.Rang > \"C3\"))"
     assert result.records[1][0] == "---->TableScan(professoren)"
 
 
@@ -45,9 +45,9 @@ def test_explain_union():
     result, _ = execute_query("explain pi VorlNr as Vorgaenger voraussetzen union pi VorlNr vorlesungen;")[0]
     assert len(result) == 5
     assert result.records[0][0] == "-->Union"
-    assert result.records[1][0] == "---->Projection(columns=[VorlNr=Vorgaenger])"
+    assert result.records[1][0] == "---->Projection(columns=[VorlNr=voraussetzen.Vorgaenger])"
     assert result.records[2][0] == "------>TableScan(voraussetzen)"
-    assert result.records[3][0] == "---->Projection(columns=[VorlNr=VorlNr])"
+    assert result.records[3][0] == "---->Projection(columns=[vorlesungen.VorlNr=vorlesungen.VorlNr])"
     assert result.records[4][0] == "------>TableScan(vorlesungen)"
 
 
@@ -55,9 +55,9 @@ def test_explain_intersect():
     result, _ = execute_query("explain pi VorlNr vorlesungen intersect pi VorlNr as Vorgaenger voraussetzen;")[0]
     assert len(result) == 5
     assert result.records[0][0] == "-->Intersect"
-    assert result.records[1][0] == "---->Projection(columns=[VorlNr=VorlNr])"
+    assert result.records[1][0] == "---->Projection(columns=[vorlesungen.VorlNr=vorlesungen.VorlNr])"
     assert result.records[2][0] == "------>TableScan(vorlesungen)"
-    assert result.records[3][0] == "---->Projection(columns=[VorlNr=Vorgaenger])"
+    assert result.records[3][0] == "---->Projection(columns=[VorlNr=voraussetzen.Vorgaenger])"
     assert result.records[4][0] == "------>TableScan(voraussetzen)"
 
 
@@ -65,9 +65,9 @@ def test_explain_difference():
     result, _ = execute_query("explain pi VorlNr as Vorgaenger voraussetzen except pi VorlNr vorlesungen;")[0]
     assert len(result) == 5
     assert result.records[0][0] == "-->Except"
-    assert result.records[1][0] == "---->Projection(columns=[VorlNr=Vorgaenger])"
+    assert result.records[1][0] == "---->Projection(columns=[VorlNr=voraussetzen.Vorgaenger])"
     assert result.records[2][0] == "------>TableScan(voraussetzen)"
-    assert result.records[3][0] == "---->Projection(columns=[VorlNr=VorlNr])"
+    assert result.records[3][0] == "---->Projection(columns=[vorlesungen.VorlNr=vorlesungen.VorlNr])"
     assert result.records[4][0] == "------>TableScan(vorlesungen)"
 
 
@@ -75,9 +75,9 @@ def test_explain_cross_join():
     result, _ = execute_query("explain pi PersNr, Name professoren cross join pi PersNr, Name, Boss assistenten;")[0]
     assert len(result) == 5
     assert result.records[0][0] == "-->NestedLoopsJoin(cross, natural=True, condition=None)"
-    assert result.records[1][0] == "---->Projection(columns=[PersNr=PersNr, Name=Name])"
+    assert result.records[1][0] == "---->Projection(columns=[professoren.PersNr=professoren.PersNr, professoren.Name=professoren.Name])"
     assert result.records[2][0] == "------>TableScan(professoren)"
-    assert result.records[3][0] == "---->Projection(columns=[PersNr=PersNr, Name=Name, Boss=Boss])"
+    assert result.records[3][0] == "---->Projection(columns=[assistenten.PersNr=assistenten.PersNr, assistenten.Name=assistenten.Name, assistenten.Boss=assistenten.Boss])"
     assert result.records[4][0] == "------>TableScan(assistenten)"
 
 

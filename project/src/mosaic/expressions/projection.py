@@ -91,8 +91,14 @@ class Projection(AbstractExpression):
         return data
 
     def __str__(self):
-        column_names = [f"{column[0] if column[0] is not None else str(column[1])}={str(column[1])}" for column in self.column_references]
-        return f"Projection(columns=[{', '.join(column_names)}])"
+        new_schema = self.get_schema()
+        old_schema = self.table_reference.get_schema()
+        column_name_strings = []
+        for i, (alias, column_ref) in enumerate(self.column_references):
+            column_ref.replace_all_column_names_by_fqn(old_schema)
+            column_name_strings.append(f"{new_schema.column_names[i]}={str(column_ref)}")
+
+        return f"Projection(columns=[{', '.join(column_name_strings)}])"
 
     def explain(self, rows, indent):
         super().explain(rows, indent)
