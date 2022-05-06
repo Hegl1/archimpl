@@ -1,6 +1,5 @@
 from .abstract_expression import AbstractExpression
-from mosaic.table_service import Table
-
+from mosaic.table_service import Table, Schema
 
 
 class HashDistinct(AbstractExpression):
@@ -22,7 +21,8 @@ class HashDistinct(AbstractExpression):
                 hashes.add(record_hash)
                 records.append(record)
 
-        return Table(table_name=table.table_name, schema_names=table.schema_names, schema_types=table.schema_types, data=records)
+        schema = Schema(table.table_name, table.schema.column_names, table.schema.column_types)
+        return Table(schema, records)
 
     def get_schema(self):
         return self.table.get_schema()
