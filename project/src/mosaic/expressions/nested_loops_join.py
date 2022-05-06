@@ -37,7 +37,7 @@ class NestedLoopsJoin(AbstractExpression):
             for record1 in table1.records:
                 for record2 in table2.records:
                     joined_table_records.append(record1 + record2)
-            joined_table_name = f"{table1.get_table_name()}_cross_join_{table2.get_table_name()}"
+            joined_table_name = f"{table1.table_name}_cross_join_{table2.table_name}"
             schema = Schema(joined_table_name, table1.schema.column_names + table2.schema.column_names,
                             table1.schema.column_types + table2.schema.column_types)
 

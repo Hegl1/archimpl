@@ -19,7 +19,7 @@ class OrderingExpression(AbstractExpression):
         column_indices = _get_column_indices(self.column_list, table)
 
         ordered_records = sorted(table.records, key=lambda record: _get_sort_key(record, column_indices))
-        schema = Schema(table.get_table_name(), table.schema.column_names, table.schema.column_types)
+        schema = Schema(table.table_name, table.schema.column_names, table.schema.column_types)
 
         return Table(schema, ordered_records)
 

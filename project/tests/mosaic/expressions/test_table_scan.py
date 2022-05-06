@@ -10,7 +10,7 @@ def test_retrieve_table():
     result = expression.get_result()
 
     assert isinstance(result, Table)
-    assert result.get_table_name() == "#tables"
+    assert result.table_name == "#tables"
     assert result.schema.column_names == ["#tables.table_name"]
 
 
@@ -19,10 +19,10 @@ def test_retrieve_alias_table():
     result = expression.get_result()
 
     assert isinstance(result, Table)
-    assert result.get_table_name() == "test"
+    assert result.table_name == "test"
     assert result.schema.column_names == ["test.table_name"]
 
-    assert table_service.retrieve("#tables").get_table_name() == "#tables"
+    assert table_service.retrieve("#tables").table_name == "#tables"
 
 
 def test_retrieve_non_existent_table():

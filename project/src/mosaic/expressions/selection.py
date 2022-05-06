@@ -16,7 +16,7 @@ class Selection(AbstractExpression):
         for i in range(0, row_count):
             if self.condition.get_result(table, i):
                 result.append(table.records[i])
-        schema = Schema(table.get_table_name(), table.schema.column_names, table.schema.column_types)
+        schema = Schema(table.table_name, table.schema.column_names, table.schema.column_types)
 
         return Table(schema, result)
 

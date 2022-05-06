@@ -21,7 +21,7 @@ class Projection(AbstractExpression):
 
         schema_names, schema_types, columns = self._build_schema(table.schema)
         data = self._build_data(table, columns)
-        schema = Schema(table.get_table_name(), schema_names, schema_types)
+        schema = Schema(table.table_name, schema_names, schema_types)
         return Table(schema, data)
 
     def get_schema(self):

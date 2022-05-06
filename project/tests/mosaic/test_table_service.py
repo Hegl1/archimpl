@@ -13,7 +13,7 @@ def test_load_from_file():
     assert len(table_service._tables) == 3
     table = table_service._tables["studenten"]
     assert table is not None
-    assert table.get_table_name() == "studenten"
+    assert table.table_name == "studenten"
     assert table.schema.column_names == ["studenten.MatrNr", "studenten.Name", "studenten.Semester"]
     assert table.schema.column_types == [table_service.SchemaType.INT, table_service.SchemaType.VARCHAR,
                                          table_service.SchemaType.INT]

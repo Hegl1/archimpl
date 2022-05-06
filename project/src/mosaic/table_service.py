@@ -90,7 +90,8 @@ class Table:
         self.schema = schema
         self.records = data
 
-    def get_table_name(self):
+    @property
+    def table_name(self):
         return self.schema.table_name
 
     def get_simple_column_name(self, column_name):
@@ -121,7 +122,7 @@ class Table:
             else:
                 return [row[column_index] for row in self.records[row_index]]
         except IndexError:
-            raise TableIndexException(f'No row with given index in table "{self.get_table_name()}"')
+            raise TableIndexException(f'No row with given index in table "{self.table_name}"')
 
     def __len__(self):
         return len(self.records)
