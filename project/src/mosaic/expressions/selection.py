@@ -10,12 +10,11 @@ class Selection(AbstractExpression):
 
     def get_result(self):
         table = self.table_reference.get_result()
-        row_count = len(table)
         result = []
 
-        for i in range(0, row_count):
+        for i, record in enumerate(table.records):
             if self.condition.get_result(table, i):
-                result.append(table.records[i])
+                result.append(record)
         schema = Schema(table.table_name, table.schema.column_names, table.schema.column_types)
 
         return Table(schema, result)

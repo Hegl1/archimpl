@@ -1,7 +1,6 @@
-from copy import copy
-
 from .abstract_expression import AbstractExpression
 from mosaic import table_service
+from mosaic.table_service import Table
 
 
 class TableScan(AbstractExpression):
@@ -13,7 +12,7 @@ class TableScan(AbstractExpression):
         self.alias = alias
 
     def get_result(self):
-        table = table_service.retrieve(self.table_name, makeCopy=True)
+        table = table_service.retrieve(self.table_name, makeCopy=self.alias is not None)
 
         if self.alias is not None:
             table.rename(self.alias)
