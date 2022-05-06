@@ -27,7 +27,9 @@ class OrderingExpression(AbstractExpression):
         return self.table_reference.get_schema()
 
     def __str__(self):
-        return f"OrderBy(key=[{', '.join([str(column) for column in self.column_list])}])"
+        schema = self.get_schema()
+        column_name_strings = [schema.get_fully_qualified_column_name(str(column)) for column in self.column_list]
+        return f"OrderBy(key=[{', '.join(column_name_strings)}])"
 
     def explain(self, rows, indent):
         super().explain(rows, indent)

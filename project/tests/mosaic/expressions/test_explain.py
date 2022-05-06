@@ -84,7 +84,7 @@ def test_explain_cross_join():
 def test_explain_ordering():
     result, _ = execute_query("explain tau PersNr professoren;")[0]
     assert len(result) == 2
-    assert result[0][0] == "-->OrderBy(key=[PersNr])"
+    assert result[0][0] == "-->OrderBy(key=[professoren.PersNr])"
     assert result[1][0] == "---->TableScan(professoren)"
 
 
