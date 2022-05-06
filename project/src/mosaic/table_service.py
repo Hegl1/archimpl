@@ -94,12 +94,6 @@ class Table:
     def table_name(self):
         return self.schema.table_name
 
-    def get_simple_column_name(self, column_name):
-        return self.schema.get_simple_column_name(column_name)
-
-    def get_fully_qualified_column_name(self, column_name):
-        return self.schema.get_fully_qualified_column_name(column_name)
-
     def get_column_index(self, column_name):
         return self.schema.get_column_index(column_name)
 

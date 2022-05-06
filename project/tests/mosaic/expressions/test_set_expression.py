@@ -1,3 +1,5 @@
+import pytest
+
 from mosaic.query_executor import execute_query
 
 
@@ -18,3 +20,8 @@ def test_except_get_result():
     assert len(result) == 6
     result, _ = execute_query("pi VorlNr vorlesungen except pi VorlNr vorlesungen;")[0]
     assert len(result) == 0
+
+
+def test_table_schema_does_not_match_exception():
+    with pytest.raises(Exception):
+        execute_query("pi Titel vorlesungen except pi VorlNr vorlesungen;")

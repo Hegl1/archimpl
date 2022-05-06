@@ -49,8 +49,7 @@ class NestedLoopsJoin(AbstractExpression):
         schema1 = self.table1_reference.get_schema()
         schema2 = self.table2_reference.get_schema()
         _check_table_names(schema1, schema2)
-        if self.condition is not None:
-            _check_condition(schema1, schema2, self.condition)
+        _check_condition(schema1, schema2, self.condition)
         joined_table_name = f"{schema1.table_name}_cross_join_{schema2.table_name}"
         return Schema(joined_table_name, schema1.column_names + schema2.column_names,
                       schema1.column_types + schema2.column_types)
@@ -74,7 +73,7 @@ def _check_table_names(schema1, schema2):
 
 def _check_condition(schema1, schema2, condition):
     if condition is None:
-        pass
+        return
     # TODO implement together with other join types
     # if we don't compare something with columns from both different tables, raise ConditionNotValidException
     pass
