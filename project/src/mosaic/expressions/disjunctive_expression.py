@@ -1,4 +1,5 @@
 from .abstract_computation_expression import AbstractComputationExpression
+from ..table_service import Schema
 
 
 class DisjunctiveExpression(AbstractComputationExpression):
@@ -14,6 +15,13 @@ class DisjunctiveExpression(AbstractComputationExpression):
             return self.value.get_result(table=table, row_index=row_index)
 
         return self.value.get_result()
+
+    def replace_all_column_names_by_fqn(self, schema: Schema):
+        if isinstance(self.value, list):
+            for v in self.value:
+                v.replace_all_column_names_by_fqn(schema)
+        else:
+            self.value.replace_all_column_names_by_fqn(schema)
 
     def __str__(self):
         if isinstance(self.value, list):

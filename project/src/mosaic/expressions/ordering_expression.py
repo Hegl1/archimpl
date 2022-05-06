@@ -1,4 +1,4 @@
-from mosaic.table_service import Table
+from mosaic.table_service import Table, Schema
 from .abstract_expression import AbstractExpression
 
 
@@ -18,14 +18,18 @@ class OrderingExpression(AbstractExpression):
         table = self.table_reference.get_result()
         column_indices = _get_column_indices(self.column_list, table)
 
-        ordered_records = sorted(
-            table.records, key=lambda record: _get_sort_key(record, column_indices))
+        ordered_records = sorted(table.records, key=lambda record: _get_sort_key(record, column_indices))
+        schema = Schema(table.table_name, table.schema.column_names, table.schema.column_types)
 
-        return Table(table.table_name, table.schema_names,
-                     table.schema_types, ordered_records)
+        return Table(schema, ordered_records)
+
+    def get_schema(self):
+        return self.table_reference.get_schema()
 
     def __str__(self):
-        return f"OrderBy(key=[{', '.join([str(column) for column in self.column_list])}])"
+        schema = self.get_schema()
+        column_name_strings = [schema.get_fully_qualified_column_name(str(column)) for column in self.column_list]
+        return f"OrderBy(key=[{', '.join(column_name_strings)}])"
 
     def explain(self, rows, indent):
         super().explain(rows, indent)

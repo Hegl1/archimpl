@@ -19,6 +19,12 @@ class TableScan(AbstractExpression):
 
         return table
 
+    def get_schema(self):
+        schema = table_service.retrieve(self.table_name, makeCopy=False).schema
+        if self.alias is not None:
+            schema.rename(self.alias)
+        return schema
+
     def __str__(self):
         if self.alias is None:
             return f"TableScan({self.table_name})"

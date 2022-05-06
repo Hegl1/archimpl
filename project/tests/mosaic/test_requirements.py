@@ -17,7 +17,7 @@ def _test_query(query, column_names, result_rows):
 
     result, _ = results[0]
 
-    assert result.schema_names == column_names
+    assert result.schema.column_names == column_names
     assert len(result) == result_rows
 
 
