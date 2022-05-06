@@ -2,7 +2,8 @@ from .abstract_expression import AbstractExpression
 from .arithmetic_operation_expression import ArithmeticOperationExpression
 from .abstract_computation_expression import AbstractComputationExpression
 from .literal_expression import LiteralExpression
-from mosaic.table_service import Table, get_schema_type, Schema
+from .comparative_operation_expression import ComparativeOperationExpression
+from mosaic.table_service import Table, get_schema_type, Schema, SchemaType
 
 
 class InvalidAliasException(Exception):
@@ -48,11 +49,17 @@ class Projection(AbstractExpression):
             if alias is not None and "." in alias:
                 raise InvalidAliasException("Aliases cannot contain \".\"")
 
-            if isinstance(column_reference, ArithmeticOperationExpression):
+            if isinstance(column_reference, AbstractComputationExpression):
                 column_value = column_reference
 
                 schema_names.append(alias)
-                schema_types.append(column_reference.get_schema_type(old_schema))
+
+                if isinstance(column_reference, ArithmeticOperationExpression):
+                    schema_types.append(column_reference.get_schema_type(old_schema))
+                elif isinstance(column_reference, ComparativeOperationExpression):
+                    schema_types.append(SchemaType.INT)
+                else:
+                    schema_types.append(SchemaType.NULL) # TODO: maybe refactor
             elif isinstance(column_reference, LiteralExpression):
                 column_value = column_reference
 
