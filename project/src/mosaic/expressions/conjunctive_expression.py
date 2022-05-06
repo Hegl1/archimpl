@@ -16,9 +16,9 @@ class ConjunctiveExpression(AbstractComputationExpression):
                 result = comparative.get_result()
 
             if not result:
-                return False
+                return 0
 
-        return True
+        return 1
 
     def replace_all_column_names_by_fqn(self, schema: Schema):
         for v in self.value:

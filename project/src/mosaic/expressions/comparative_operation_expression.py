@@ -32,21 +32,21 @@ class ComparativeOperationExpression(AbstractComputationExpression):
             table, row_index, expression=self.right)
 
         if (left_operand is None or right_operand is None) and self.operator not in [ComparativeOperator.EQUAL, ComparativeOperator.NOT_EQUAL]:
-            return False
+            return 0
 
         try:
             if self.operator == ComparativeOperator.EQUAL:
-                return left_operand == right_operand
+                return int(left_operand == right_operand)
             elif self.operator == ComparativeOperator.NOT_EQUAL:
-                return left_operand != right_operand
+                return int(left_operand != right_operand)
             elif self.operator == ComparativeOperator.SMALLER:
-                return left_operand < right_operand
+                return int(left_operand < right_operand)
             elif self.operator == ComparativeOperator.SMALLER_EQUAL:
-                return left_operand <= right_operand
+                return int(left_operand <= right_operand)
             elif self.operator == ComparativeOperator.GREATER:
-                return left_operand > right_operand
+                return int(left_operand > right_operand)
             elif self.operator == ComparativeOperator.GREATER_EQUAL:
-                return left_operand >= right_operand
+                return int(left_operand >= right_operand)
         except TypeError:
             raise IncompatibleOperandTypesException("Operands of a comparison operation must be compatible")
 

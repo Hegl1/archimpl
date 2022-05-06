@@ -8,6 +8,7 @@ from mosaic.expressions.arithmetic_operation_expression import ArithmeticOperati
     IncompatibleOperationException
 from mosaic.expressions.literal_expression import LiteralExpression
 from mosaic.table_service import SchemaType
+from mosaic.expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
 import pytest
 
 
@@ -236,3 +237,16 @@ def test_select_bad_alias():
 
     with pytest.raises(InvalidAliasException):
         projection.get_result()
+
+
+def test_select_comparative():
+    table_scan = TableScan("#columns")
+    comparative_operation = ComparativeOperationExpression(LiteralExpression(2), ComparativeOperator.EQUAL, LiteralExpression(2))
+
+    projection = Projection([("test", comparative_operation)], table_scan)
+
+    result = projection.get_result()
+
+    assert result.schema.column_names[0] == "test"
+    assert result.schema.column_types[0] == SchemaType.INT
+    assert result[0, "test"] == 1
