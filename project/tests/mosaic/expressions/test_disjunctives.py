@@ -8,15 +8,6 @@ from mosaic.expressions.comparative_operation_expression import ComparativeOpera
 from mosaic import table_service
 import comparative_helper
 
-def test_single_comparative():
-    comparison_number = 26119
-    comparative_operation = ComparativeOperationExpression(LiteralExpression(
-        comparison_number), ComparativeOperator.SMALLER, ColumnExpression("MatrNr"))
-    conjunctive = ConjunctiveExpression(comparative_operation)
-    disjunctive = DisjunctiveExpression(conjunctive)
-
-    sum,entries = comparative_helper.evaluate(disjunctive)
-    assert(sum == (entries -2))
 
 def test_simple_disjunction():
     comparison_number = 25403
@@ -58,14 +49,6 @@ def test_nested_disjunction():
     sum, _ = comparative_helper.evaluate(nested_disjunction)
     assert(sum == 3)
 
-
-def test_simple_explain():
-    comparison_string = "hello"
-    comparitive = ComparativeOperationExpression(LiteralExpression(
-        comparison_string), ComparativeOperator.GREATER, ColumnExpression("MatrNr"))
-    conjunctive = ConjunctiveExpression(comparitive)
-    expression = DisjunctiveExpression(conjunctive)
-    assert str(expression) == f'("{comparison_string}" > MatrNr)'
 
 def test_explain():
     comparison_string = "1234"

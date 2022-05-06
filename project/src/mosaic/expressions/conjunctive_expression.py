@@ -9,21 +9,20 @@ class ConjunctiveExpression(AbstractComputationExpression):
         self.value = value
 
     def get_result(self, table, row_index):
-        if isinstance(self.value, list):
-            return all(map(lambda comparative: comparative.get_result(table=table, row_index=row_index), self.value))
-        elif isinstance(self.value, AbstractComputationExpression):
-            return self.value.get_result(table=table, row_index=row_index)
+        for comparative in self.value:
+            if isinstance(comparative, AbstractComputationExpression):
+                result = comparative.get_result(table, row_index)
+            else:
+                result = comparative.get_result()
 
-        return self.value.get_result()
+            if not result:
+                return False
+
+        return True
 
     def replace_all_column_names_by_fqn(self, schema: Schema):
-        if isinstance(self.value, list):
-            for v in self.value:
-                v.replace_all_column_names_by_fqn(schema)
-        else:
-            self.value.replace_all_column_names_by_fqn(schema)
+        for v in self.value:
+            v.replace_all_column_names_by_fqn(schema)
 
     def __str__(self):
-        if isinstance(self.value, list):
-            return "(" + " and ".join([str(comparative) for comparative in self.value]) + ")"
-        return f"{self.value}"
+        return "(" + " and ".join([str(comparative) for comparative in self.value]) + ")"
