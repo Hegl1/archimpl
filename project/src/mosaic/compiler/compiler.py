@@ -10,7 +10,7 @@ from parsimonious.nodes import NodeVisitor
 
 from mosaic.compiler.expressions.literal_expression import LiteralExpression
 from mosaic.compiler.operators.nested_loops_join_operators import JoinType, NestedLoopsJoin
-from mosaic.compiler.operators.ordering_operator import OrderingExpression
+from mosaic.compiler.operators.ordering_operator import OrderingOperator
 from mosaic.compiler.operators.table_scan_operator import TableScan
 from mosaic.compiler.expressions.arithmetic_operation_expression import ArithmeticOperationExpression, ArithmeticOperator
 from mosaic.compiler.expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
@@ -316,7 +316,7 @@ class ASTVisitor(NodeVisitor):
         pass
 
     def visit_ordering(self, node, visited_children):
-        return OrderingExpression(visited_children[2], visited_children[3])
+        return OrderingOperator(visited_children[2], visited_children[3])
 
     def visit_relation_reference(self, node, visited_children):
         # If there are two children, we have a simple reference.

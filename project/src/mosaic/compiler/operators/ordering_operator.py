@@ -2,7 +2,7 @@ from mosaic.table_service import Table, Schema
 from .abstract_operator import AbstractOperator
 
 
-class OrderingExpression(AbstractOperator):
+class OrderingOperator(AbstractOperator):
     """
     Represents an ordering operation
     result can be retrieved with get_result method
