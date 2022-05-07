@@ -1,8 +1,8 @@
 from mosaic.table_service import Table, Schema
-from mosaic.expressions.abstract_expression import AbstractExpression
+from .abstract_operator import AbstractOperator
 
 
-class OrderingExpression(AbstractExpression):
+class OrderingExpression(AbstractOperator):
     """
     Represents an ordering operation
     result can be retrieved with get_result method

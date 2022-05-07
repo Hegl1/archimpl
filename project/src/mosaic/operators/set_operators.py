@@ -1,6 +1,6 @@
 from enum import Enum
 from mosaic.table_service import Table, Schema
-from mosaic.expressions.abstract_expression import AbstractExpression
+from .abstract_operator import AbstractOperator
 
 
 class SetOperationType(Enum):
@@ -13,7 +13,7 @@ class TableSchemaDoesNotMatchException(Exception):
     pass
 
 
-class AbstractSetExpression(AbstractExpression):
+class AbstractSetExpression(AbstractOperator):
 
     def __init__(self, table1_reference, table2_reference):
         super().__init__()

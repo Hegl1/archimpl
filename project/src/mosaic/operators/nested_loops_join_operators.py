@@ -1,6 +1,6 @@
 from enum import Enum
 from mosaic.table_service import Table, Schema
-from mosaic.expressions.abstract_expression import AbstractExpression
+from .abstract_operator import AbstractOperator
 
 
 class JoinType(Enum):
@@ -8,7 +8,7 @@ class JoinType(Enum):
     # TODO add more join types as needed
 
 
-class NestedLoopsJoin(AbstractExpression):
+class NestedLoopsJoin(AbstractOperator):
     """
     Represents a join operation
     result can be retrieved with get_result method
