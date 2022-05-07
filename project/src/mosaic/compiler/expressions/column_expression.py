@@ -1,8 +1,8 @@
 from .abstract_expression import AbstractExpression
-from ..table_service import Schema
+from mosaic.table_service import Schema
 
 
-class LiteralExpression(AbstractExpression):
+class ColumnExpression(AbstractExpression):
     def __init__(self, value):
         super().__init__()
 
@@ -12,12 +12,7 @@ class LiteralExpression(AbstractExpression):
         return self.value
 
     def replace_all_column_names_by_fqn(self, schema: Schema):
-        pass
+        self.value = schema.get_fully_qualified_column_name(self.value)
 
     def __str__(self):
-        if isinstance(self.value, str):
-            return f"\"{self.value}\""
-        elif self.value is None:
-            return "NULL"
-
-        return str(self.value)
+        return self.value

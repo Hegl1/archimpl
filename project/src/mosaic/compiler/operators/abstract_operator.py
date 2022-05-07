@@ -1,8 +1,13 @@
-from abc import ABC
 from abc import abstractmethod
+from mosaic.compiler.abstract_compile_node import AbstractCompileNode
 
-class AbstractExpression(ABC):
+
+class AbstractOperator(AbstractCompileNode):
     def __init__(self):
+        pass
+
+    @abstractmethod
+    def get_schema(self): # pragma: no cover
         pass
 
     @abstractmethod

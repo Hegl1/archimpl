@@ -1,8 +1,8 @@
-from .abstract_expression import AbstractExpression
 from mosaic.table_service import Table, Schema
+from .abstract_operator import AbstractOperator
 
 
-class HashDistinct(AbstractExpression):
+class HashDistinct(AbstractOperator):
     def __init__(self, table):
         super().__init__()
 

@@ -1,11 +1,8 @@
-from mosaic.expressions.column_expression import ColumnExpression
-from mosaic.expressions.conjunctive_expression import ConjunctiveExpression
-from mosaic.expressions.disjunctive_expression import DisjunctiveExpression
-from mosaic.expressions.arithmetic_operation_expression import ArithmeticOperationExpression
-from mosaic.expressions.literal_expression import LiteralExpression
-from mosaic.expressions.arithmetic_operation_expression import ArithmeticOperator
-from mosaic.expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
-from mosaic import table_service
+from mosaic.compiler.expressions.column_expression import ColumnExpression
+from mosaic.compiler.expressions.conjunctive_expression import ConjunctiveExpression
+from mosaic.compiler.expressions.disjunctive_expression import DisjunctiveExpression
+from mosaic.compiler.expressions.literal_expression import LiteralExpression
+from mosaic.compiler.expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
 import comparative_helper
 
 

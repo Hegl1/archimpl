@@ -1,8 +1,8 @@
-from .abstract_expression import AbstractExpression
 from mosaic.table_service import Table, Schema
+from .abstract_operator import AbstractOperator
 
 
-class Selection(AbstractExpression):
+class Selection(AbstractOperator):
     def __init__(self, table_reference, condition):
         super().__init__()
         self.table_reference = table_reference

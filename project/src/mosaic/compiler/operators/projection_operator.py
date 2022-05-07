@@ -1,16 +1,16 @@
-from .abstract_expression import AbstractExpression
-from .arithmetic_operation_expression import ArithmeticOperationExpression
-from .abstract_computation_expression import AbstractComputationExpression
-from .literal_expression import LiteralExpression
-from .comparative_operation_expression import ComparativeOperationExpression
+from mosaic.compiler.expressions.arithmetic_operation_expression import ArithmeticOperationExpression
+from mosaic.compiler.expressions.abstract_computation_expression import AbstractComputationExpression
+from mosaic.compiler.expressions.literal_expression import LiteralExpression
+from mosaic.compiler.expressions.comparative_operation_expression import ComparativeOperationExpression
 from mosaic.table_service import Table, get_schema_type, Schema, SchemaType
+from .abstract_operator import AbstractOperator
 
 
 class InvalidAliasException(Exception):
     pass
 
 
-class Projection(AbstractExpression):
+class Projection(AbstractOperator):
     def __init__(self, column_references, table_reference):
         super().__init__()
 

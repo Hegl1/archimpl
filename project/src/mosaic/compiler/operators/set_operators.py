@@ -1,7 +1,7 @@
+from abc import ABC
 from enum import Enum
-from abc import abstractmethod
 from mosaic.table_service import Table, Schema
-from .abstract_expression import AbstractExpression
+from .abstract_operator import AbstractOperator
 
 
 class SetOperationType(Enum):
@@ -14,7 +14,7 @@ class TableSchemaDoesNotMatchException(Exception):
     pass
 
 
-class AbstractSetExpression(AbstractExpression):
+class AbstractSetOperator(AbstractOperator, ABC):
 
     def __init__(self, table1_reference, table2_reference):
         super().__init__()
@@ -27,7 +27,7 @@ class AbstractSetExpression(AbstractExpression):
         self.table2_reference.explain(rows, indent + 2)
 
 
-class Union(AbstractSetExpression):
+class Union(AbstractSetOperator):
     """
     Represents a union operation
     result can be retrieved with get_result method
@@ -57,7 +57,7 @@ class Union(AbstractSetExpression):
         return "Union"
 
 
-class Intersect(AbstractSetExpression):
+class Intersect(AbstractSetOperator):
     """
     Represents an intersect operation
     result can be retrieved with get_result method
@@ -87,7 +87,7 @@ class Intersect(AbstractSetExpression):
         return "Intersect"
 
 
-class Except(AbstractSetExpression):
+class Except(AbstractSetOperator):
     """
     Represents a difference operation
     result can be retrieved with get_result method

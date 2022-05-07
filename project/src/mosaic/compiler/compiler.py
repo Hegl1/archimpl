@@ -4,23 +4,22 @@ The compiler takes the AST produced by the parser and turns it into an
 execution plan.
 """
 
-from mosaic.expressions.disjunctive_expression import DisjunctiveExpression
-from mosaic.expressions.conjunctive_expression import ConjunctiveExpression
-from parsimonious.exceptions import VisitationError
+from mosaic.compiler.expressions.disjunctive_expression import DisjunctiveExpression
+from mosaic.compiler.expressions.conjunctive_expression import ConjunctiveExpression
 from parsimonious.nodes import NodeVisitor
 
-from mosaic.expressions.literal_expression import LiteralExpression
-from mosaic.expressions.nested_loops_join import JoinType, NestedLoopsJoin
-from mosaic.expressions.ordering_expression import OrderingExpression
-from mosaic.expressions.table_scan import TableScan
-from mosaic.expressions.arithmetic_operation_expression import ArithmeticOperationExpression, ArithmeticOperator
-from mosaic.expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
-from mosaic.expressions.column_expression import ColumnExpression
-from mosaic.expressions.projection import Projection
-from mosaic.expressions.selection import Selection
-from mosaic.expressions.hash_distinct import HashDistinct
-from mosaic.expressions.explain import Explain
-from mosaic.expressions.set_expression import SetOperationType, Union, Intersect, Except
+from mosaic.compiler.expressions.literal_expression import LiteralExpression
+from mosaic.compiler.operators.nested_loops_join_operators import JoinType, NestedLoopsJoin
+from mosaic.compiler.operators.ordering_operator import OrderingOperator
+from mosaic.compiler.operators.table_scan_operator import TableScan
+from mosaic.compiler.expressions.arithmetic_operation_expression import ArithmeticOperationExpression, ArithmeticOperator
+from mosaic.compiler.expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
+from mosaic.compiler.expressions.column_expression import ColumnExpression
+from mosaic.compiler.operators.projection_operator import Projection
+from mosaic.compiler.operators.selection_operator import Selection
+from mosaic.compiler.operators.hash_distinct_operator import HashDistinct
+from mosaic.compiler.expressions.explain import Explain
+from mosaic.compiler.operators.set_operators import SetOperationType, Union, Intersect, Except
 
 class QueryExecutionError(Exception):
     pass
@@ -246,10 +245,10 @@ class ASTVisitor(NodeVisitor):
         else:
             return [visited_children[0]]
 
-    def visit_aggregate_list(self, node, visited_children): # pragma: no cover
+    def visit_aggregate_list(self, node, visited_children):
         pass
 
-    def visit_aggregate_column(self, node, visited_children): # pragma: no cover
+    def visit_aggregate_column(self, node, visited_children):
         # Example:
         # name = visited_children[0]
         # aggregate_function = visited_children[3]
@@ -281,7 +280,7 @@ class ASTVisitor(NodeVisitor):
 
         return Selection(input_node, condition)
 
-    def visit_aggregate_function(self, node, visited_children): # pragma: no cover
+    def visit_aggregate_function(self, node, visited_children):
         function_name = node.text.strip().lower()
 
         # Example:
@@ -297,7 +296,7 @@ class ASTVisitor(NodeVisitor):
         #     return AggregateFunction.COUNT
         pass
 
-    def visit_grouping(self, node, visited_children): # pragma: no cover
+    def visit_grouping(self, node, visited_children):
         # Example:
         # children = visited_children[0]
 
@@ -317,7 +316,7 @@ class ASTVisitor(NodeVisitor):
         pass
 
     def visit_ordering(self, node, visited_children):
-        return OrderingExpression(visited_children[2], visited_children[3])
+        return OrderingOperator(visited_children[2], visited_children[3])
 
     def visit_relation_reference(self, node, visited_children):
         # If there are two children, we have a simple reference.
@@ -342,10 +341,10 @@ class ASTVisitor(NodeVisitor):
         elif operator == "except":
             return SetOperationType.EXCEPT
 
-    def visit_join_operator(self, node, visited_children): # pragma: no cover
+    def visit_join_operator(self, node, visited_children):
         pass
 
-    def visit_natural_join_operator(self, node, visited_children): # pragma: no cover
+    def visit_natural_join_operator(self, node, visited_children):
         pass
 
     def visit_cross_join_operator(self, node, visited_children):

@@ -1,8 +1,8 @@
 from .abstract_computation_expression import AbstractComputationExpression
-from ..table_service import Schema
+from mosaic.table_service import Schema
 
 
-class ConjunctiveExpression(AbstractComputationExpression):
+class DisjunctiveExpression(AbstractComputationExpression):
     def __init__(self, value):
         super().__init__()
 
@@ -15,14 +15,14 @@ class ConjunctiveExpression(AbstractComputationExpression):
             else:
                 result = comparative.get_result()
 
-            if not result:
-                return 0
+            if result:
+                return 1
 
-        return 1
+        return 0
 
     def replace_all_column_names_by_fqn(self, schema: Schema):
         for v in self.value:
             v.replace_all_column_names_by_fqn(schema)
 
     def __str__(self):
-        return "(" + " and ".join([str(comparative) for comparative in self.value]) + ")"
+        return "(" + " or ".join([str(comparative) for comparative in self.value]) + ")"

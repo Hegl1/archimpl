@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from .abstract_expression import AbstractExpression
 
+
 class AbstractComputationExpression(AbstractExpression):
     """
     Class that represents a AbstractExpression, but calculates the result
