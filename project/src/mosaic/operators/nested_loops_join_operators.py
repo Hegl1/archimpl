@@ -1,7 +1,6 @@
 from enum import Enum
-
 from mosaic.table_service import Table, Schema
-from .abstract_expression import AbstractExpression
+from mosaic.expressions.abstract_expression import AbstractExpression
 
 
 class JoinType(Enum):

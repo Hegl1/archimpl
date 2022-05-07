@@ -1,6 +1,5 @@
-from .abstract_expression import AbstractExpression
+from mosaic.expressions.abstract_expression import AbstractExpression
 from mosaic import table_service
-from mosaic.table_service import Table
 
 
 class TableScan(AbstractExpression):

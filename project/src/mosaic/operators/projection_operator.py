@@ -1,8 +1,8 @@
-from .abstract_expression import AbstractExpression
-from .arithmetic_operation_expression import ArithmeticOperationExpression
-from .abstract_computation_expression import AbstractComputationExpression
-from .literal_expression import LiteralExpression
-from .comparative_operation_expression import ComparativeOperationExpression
+from mosaic.expressions.abstract_expression import AbstractExpression
+from mosaic.expressions.arithmetic_operation_expression import ArithmeticOperationExpression
+from mosaic.expressions.abstract_computation_expression import AbstractComputationExpression
+from mosaic.expressions.literal_expression import LiteralExpression
+from mosaic.expressions.comparative_operation_expression import ComparativeOperationExpression
 from mosaic.table_service import Table, get_schema_type, Schema, SchemaType
 
 

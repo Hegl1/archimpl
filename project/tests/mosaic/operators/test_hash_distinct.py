@@ -1,7 +1,8 @@
-from mosaic.expressions.table_scan import TableScan
+from mosaic.operators.table_scan_operator import TableScan
 from mosaic.expressions.column_expression import ColumnExpression
-from mosaic.expressions.projection import Projection
-from mosaic.expressions.hash_distinct import HashDistinct
+from mosaic.operators.projection_operator import Projection
+from mosaic.operators.hash_distinct_operator import HashDistinct
+
 
 def test_distinct_one_column():
     table_scan = TableScan("#columns")

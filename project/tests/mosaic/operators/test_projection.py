@@ -1,6 +1,6 @@
-from mosaic.expressions.table_scan import TableScan
+from mosaic.operators.table_scan_operator import TableScan
 from mosaic.expressions.column_expression import ColumnExpression
-from mosaic.expressions.projection import Projection, InvalidAliasException
+from mosaic.operators.projection_operator import Projection, InvalidAliasException
 from mosaic import table_service
 from mosaic.table_service import Table
 from mosaic.table_service import TableIndexException

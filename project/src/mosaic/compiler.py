@@ -10,17 +10,17 @@ from parsimonious.exceptions import VisitationError
 from parsimonious.nodes import NodeVisitor
 
 from mosaic.expressions.literal_expression import LiteralExpression
-from mosaic.expressions.nested_loops_join import JoinType, NestedLoopsJoin
-from mosaic.expressions.ordering_expression import OrderingExpression
-from mosaic.expressions.table_scan import TableScan
+from mosaic.operators.nested_loops_join_operators import JoinType, NestedLoopsJoin
+from mosaic.operators.ordering_operator import OrderingExpression
+from mosaic.operators.table_scan_operator import TableScan
 from mosaic.expressions.arithmetic_operation_expression import ArithmeticOperationExpression, ArithmeticOperator
 from mosaic.expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
 from mosaic.expressions.column_expression import ColumnExpression
-from mosaic.expressions.projection import Projection
-from mosaic.expressions.selection import Selection
-from mosaic.expressions.hash_distinct import HashDistinct
+from mosaic.operators.projection_operator import Projection
+from mosaic.operators.selection_operator import Selection
+from mosaic.operators.hash_distinct_operator import HashDistinct
 from mosaic.expressions.explain import Explain
-from mosaic.expressions.set_expression import SetOperationType, Union, Intersect, Except
+from mosaic.operators.set_operators import SetOperationType, Union, Intersect, Except
 
 class QueryExecutionError(Exception):
     pass
