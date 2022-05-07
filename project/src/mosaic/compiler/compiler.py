@@ -246,10 +246,10 @@ class ASTVisitor(NodeVisitor):
         else:
             return [visited_children[0]]
 
-    def visit_aggregate_list(self, node, visited_children): # pragma: no cover
+    def visit_aggregate_list(self, node, visited_children):
         pass
 
-    def visit_aggregate_column(self, node, visited_children): # pragma: no cover
+    def visit_aggregate_column(self, node, visited_children):
         # Example:
         # name = visited_children[0]
         # aggregate_function = visited_children[3]
@@ -281,7 +281,7 @@ class ASTVisitor(NodeVisitor):
 
         return Selection(input_node, condition)
 
-    def visit_aggregate_function(self, node, visited_children): # pragma: no cover
+    def visit_aggregate_function(self, node, visited_children):
         function_name = node.text.strip().lower()
 
         # Example:
@@ -297,7 +297,7 @@ class ASTVisitor(NodeVisitor):
         #     return AggregateFunction.COUNT
         pass
 
-    def visit_grouping(self, node, visited_children): # pragma: no cover
+    def visit_grouping(self, node, visited_children):
         # Example:
         # children = visited_children[0]
 
@@ -342,10 +342,10 @@ class ASTVisitor(NodeVisitor):
         elif operator == "except":
             return SetOperationType.EXCEPT
 
-    def visit_join_operator(self, node, visited_children): # pragma: no cover
+    def visit_join_operator(self, node, visited_children):
         pass
 
-    def visit_natural_join_operator(self, node, visited_children): # pragma: no cover
+    def visit_natural_join_operator(self, node, visited_children):
         pass
 
     def visit_cross_join_operator(self, node, visited_children):
