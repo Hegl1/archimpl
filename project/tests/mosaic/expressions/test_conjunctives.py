@@ -1,7 +1,7 @@
-from mosaic.expressions.column_expression import ColumnExpression
-from mosaic.expressions.conjunctive_expression import ConjunctiveExpression
-from mosaic.expressions.literal_expression import LiteralExpression
-from mosaic.expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
+from mosaic.compiler.expressions.column_expression import ColumnExpression
+from mosaic.compiler.expressions.conjunctive_expression import ConjunctiveExpression
+from mosaic.compiler.expressions.literal_expression import LiteralExpression
+from mosaic.compiler.expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
 import comparative_helper
 
 

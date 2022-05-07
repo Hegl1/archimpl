@@ -1,7 +1,7 @@
-from mosaic.expressions.arithmetic_operation_expression import ArithmeticOperationExpression
-from mosaic.expressions.abstract_computation_expression import AbstractComputationExpression
-from mosaic.expressions.literal_expression import LiteralExpression
-from mosaic.expressions.comparative_operation_expression import ComparativeOperationExpression
+from mosaic.compiler.expressions.arithmetic_operation_expression import ArithmeticOperationExpression
+from mosaic.compiler.expressions.abstract_computation_expression import AbstractComputationExpression
+from mosaic.compiler.expressions.literal_expression import LiteralExpression
+from mosaic.compiler.expressions.comparative_operation_expression import ComparativeOperationExpression
 from mosaic.table_service import Table, get_schema_type, Schema, SchemaType
 from .abstract_operator import AbstractOperator
 

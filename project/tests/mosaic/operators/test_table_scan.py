@@ -1,4 +1,4 @@
-from mosaic.operators.table_scan_operator import TableScan
+from mosaic.compiler.operators.table_scan_operator import TableScan
 from mosaic.table_service import Table
 from mosaic import table_service
 from mosaic.table_service import TableNotFoundException

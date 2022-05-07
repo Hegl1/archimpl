@@ -1,14 +1,14 @@
-from mosaic.operators.table_scan_operator import TableScan
-from mosaic.expressions.column_expression import ColumnExpression
-from mosaic.operators.projection_operator import Projection, InvalidAliasException
+from mosaic.compiler.operators.table_scan_operator import TableScan
+from mosaic.compiler.expressions.column_expression import ColumnExpression
+from mosaic.compiler.operators.projection_operator import Projection, InvalidAliasException
 from mosaic import table_service
 from mosaic.table_service import Table
 from mosaic.table_service import TableIndexException
-from mosaic.expressions.arithmetic_operation_expression import ArithmeticOperationExpression, ArithmeticOperator, \
+from mosaic.compiler.expressions.arithmetic_operation_expression import ArithmeticOperationExpression, ArithmeticOperator, \
     IncompatibleOperationException
-from mosaic.expressions.literal_expression import LiteralExpression
+from mosaic.compiler.expressions.literal_expression import LiteralExpression
 from mosaic.table_service import SchemaType
-from mosaic.expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
+from mosaic.compiler.expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
 import pytest
 
 

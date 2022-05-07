@@ -1,6 +1,6 @@
-from mosaic.expressions.column_expression import ColumnExpression
-from mosaic.expressions.literal_expression import LiteralExpression
-from mosaic.expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator, IncompatibleOperandTypesException
+from mosaic.compiler.expressions.column_expression import ColumnExpression
+from mosaic.compiler.expressions.literal_expression import LiteralExpression
+from mosaic.compiler.expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator, IncompatibleOperandTypesException
 import pytest
 import comparative_helper
 

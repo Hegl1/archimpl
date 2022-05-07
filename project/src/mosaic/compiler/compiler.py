@@ -4,23 +4,22 @@ The compiler takes the AST produced by the parser and turns it into an
 execution plan.
 """
 
-from mosaic.expressions.disjunctive_expression import DisjunctiveExpression
-from mosaic.expressions.conjunctive_expression import ConjunctiveExpression
-from parsimonious.exceptions import VisitationError
+from mosaic.compiler.expressions.disjunctive_expression import DisjunctiveExpression
+from mosaic.compiler.expressions.conjunctive_expression import ConjunctiveExpression
 from parsimonious.nodes import NodeVisitor
 
-from mosaic.expressions.literal_expression import LiteralExpression
-from mosaic.operators.nested_loops_join_operators import JoinType, NestedLoopsJoin
-from mosaic.operators.ordering_operator import OrderingExpression
-from mosaic.operators.table_scan_operator import TableScan
-from mosaic.expressions.arithmetic_operation_expression import ArithmeticOperationExpression, ArithmeticOperator
-from mosaic.expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
-from mosaic.expressions.column_expression import ColumnExpression
-from mosaic.operators.projection_operator import Projection
-from mosaic.operators.selection_operator import Selection
-from mosaic.operators.hash_distinct_operator import HashDistinct
-from mosaic.expressions.explain import Explain
-from mosaic.operators.set_operators import SetOperationType, Union, Intersect, Except
+from mosaic.compiler.expressions.literal_expression import LiteralExpression
+from mosaic.compiler.operators.nested_loops_join_operators import JoinType, NestedLoopsJoin
+from mosaic.compiler.operators.ordering_operator import OrderingExpression
+from mosaic.compiler.operators.table_scan_operator import TableScan
+from mosaic.compiler.expressions.arithmetic_operation_expression import ArithmeticOperationExpression, ArithmeticOperator
+from mosaic.compiler.expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
+from mosaic.compiler.expressions.column_expression import ColumnExpression
+from mosaic.compiler.operators.projection_operator import Projection
+from mosaic.compiler.operators.selection_operator import Selection
+from mosaic.compiler.operators.hash_distinct_operator import HashDistinct
+from mosaic.compiler.expressions.explain import Explain
+from mosaic.compiler.operators.set_operators import SetOperationType, Union, Intersect, Except
 
 class QueryExecutionError(Exception):
     pass
