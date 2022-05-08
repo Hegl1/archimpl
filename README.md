@@ -1,5 +1,8 @@
 # VU Architektur und Implementierung von Datenbanksystemen
 
+[![pipeline status](https://git.uibk.ac.at/csaw5351/archimpl-team3/badges/main/pipeline.svg)](https://git.uibk.ac.at/csaw5351/archimpl-team3/-/commits/main)&nbsp;
+[![coverage report](https://git.uibk.ac.at/csaw5351/archimpl-team3/badges/main/coverage.svg)](https://git.uibk.ac.at/csaw5351/archimpl-team3/-/commits/main)
+
 ## Team
 - Gründlinger Diana
 - Huber Marcel
@@ -49,3 +52,10 @@ This defines the changed component/part of the project. E.g. `storage`
 ### Short summary
 
 Shortly describe the changes and **reference related issues**. E.g. `added possibility to remove users (#2)` where `#2` references the issue with the id 2
+
+### Skip Tests
+
+To skip tests include the following at the end of the commit message:
+`[skip-tests]` 
+
+Example: `docs(readme): updated readme [skip-tests]`

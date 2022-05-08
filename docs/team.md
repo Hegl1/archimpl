@@ -27,8 +27,7 @@ We have no fixed responsibilities yet.
 
 ![workflow image](./workflow.png)
 
-### Branch naming conventions
-- Task branches: `task-<number>`
-- Milestone branches: `milestone-<number>`
-    - Feature branches: `feature-<name>`
-- Fix branches: `fix-<name>`
+### Branch naming
+Create branches inside the issue using GitLab's "Create branch" feature
+
+Example-name: `66-refactor-compiler`

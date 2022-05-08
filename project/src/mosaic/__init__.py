@@ -3,3 +3,7 @@
 __author__ = """DBIS"""
 __email__ = 'maximilian.mayerl@uibk.ac.at'
 __version__ = '0.1.0'
+
+from mosaic import table_service
+
+table_service.initialize()

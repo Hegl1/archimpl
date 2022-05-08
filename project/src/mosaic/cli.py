@@ -1,8 +1,12 @@
 import click
 import sys
 import traceback
+import os
 from mosaic import table_service
 from mosaic import query_executor
+from prompt_toolkit import PromptSession
+from prompt_toolkit.history import FileHistory
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 
 
 class CliErrorMessageException(Exception):
@@ -23,6 +27,14 @@ def _print_command_help():
     click.echo("<query> \t\t\t executes a query that needs to be terminated by \";\"")
 
 
+def _print_results(results, printTime = True):
+    for result, execution_time in results:
+        click.echo(result)
+
+        if printTime:
+            click.echo(f"Executed query in {execution_time:0.3f} ms.\n")
+
+
 def _execute_query_file_from_command(user_in):
     """
     Function that parses the \\execute <file_name> command and calls the regular execute function with the resulting
@@ -32,14 +44,15 @@ def _execute_query_file_from_command(user_in):
     if len(split_string) != 2:
         raise CliErrorMessageException("Wrong usage of \\execute. See \\help for further detail")
     else:
-        query_executor.execute_query_file(split_string[1])
+        results = query_executor.execute_query_file(split_string[1])
+        _print_results(results)
 
 
 def _execute_command(user_in):
     """
     Function that executes a command entered by the user.
     """
-    if user_in[-1] == ';':
+    if user_in.endswith(';'):
         raise CliErrorMessageException("Do not use \";\" at the end of commands!")
     elif user_in == "\\help" or user_in == "\\h":
         _print_command_help()
@@ -53,14 +66,29 @@ def _execute_command(user_in):
         raise CliErrorMessageException("Unknown command entered. See \\help for a list of available commands.")
 
 
-def _multi_line_loop(user_in):
+def _get_prompt_session():
+    """
+    Function that returns a prompt session with the proper history
+    """
+    command_history = FileHistory(os.path.expanduser("~/archimpl_history"))
+    return PromptSession(history=command_history, auto_suggest=AutoSuggestFromHistory())
+
+
+def _get_prompt_input(prompt_symbol, prompt_session):
+    """
+    Helper function that returns the result of prompt_session.prompt.
+    Useful for mocking in unit tests.
+    """
+    return prompt_session.prompt(prompt_symbol)
+
+
+def _multi_line_loop(user_in, prompt_session):
     """
     Helper function to allow for multiline input.
     Concatenates every new input line with the previous input and returns it.
     """
-    while user_in[-1] != ';':
-        click.echo(">   ", nl=False)
-        user_in += " " + input()
+    while not user_in.endswith(';'):
+        user_in += " " + _get_prompt_input(">   ", prompt_session)
     return user_in
 
 
@@ -69,24 +97,53 @@ def _main_loop():
     Function that represents the main interaction with the user.
     Distinguishes between queries and commands and also handles wrong input.
     """
+    session = _get_prompt_session()
     while True:
         try:
-            click.echo(">>> ", nl=False)
-            user_in = input()
+            user_in = _get_prompt_input(">>> ", session)
             if user_in == '':
                 continue
-            elif user_in[0] == "\\":
+            elif user_in.startswith("\\"):
                 _execute_command(user_in)
             else:
-                if user_in[-1] != ';':
-                    user_in = _multi_line_loop(user_in)
-                query_executor.execute_query(user_in)
+                if not user_in.endswith(";"):
+                    user_in = _multi_line_loop(user_in, session)
+
+                results = query_executor.execute_query(user_in)
+                _print_results(results)
         except CliErrorMessageException as e:
             click.secho("Error: " + str(e), fg='red')
         except Exception:
             # handle not expected exceptions by printing the stacktrace and continue
             tb = traceback.format_exc()
             click.secho(tb, fg='red')
+
+
+def _load_initial_data(data_directory):
+    """
+    Function that loads the initial data at cli startup based on the provided data directory.
+    """
+    try:
+        not_loaded = table_service.load_tables_from_directory(data_directory)
+        if len(not_loaded) > 0:
+            click.secho("Error: Following files could not be loaded: ", fg="red")
+            for file in not_loaded:
+                click.secho(f"\t{file[0]} ({file[1]})", fg="red")
+    except table_service.NoTableLoadedException:
+        click.secho("Error: No table file could be loaded.", fg="red")
+        sys.exit(1)
+
+
+def _execute_initial_query_file(query_file_path):
+    """
+    Function that is used to load and execute a query file upon program startup.
+    """
+    try:
+        results = query_executor.execute_query_file(query_file_path)
+        _print_results(results)
+    except CliErrorMessageException as e:
+        click.secho("Error: " + str(e), fg='red')
+    sys.exit(0)
 
 
 @click.command()
@@ -98,21 +155,9 @@ def main(data_directory, query_file):
     """
     Function that executes on program startup. Loads initial data and optionally executes a query file.
     """
-    try:
-        not_loaded = table_service.load_tables_from_directory(data_directory)
-        if len(not_loaded) > 0:
-            click.secho("Error: Following files could not be loaded: ", fg="red")
-            for file in not_loaded:
-                click.secho(f"\t{file}", fg="red")
-        click.echo(f"Data loaded from \"{data_directory}\"\n")
-    except table_service.NoTableLoadedException:
-        click.secho("Error: No table file could be loaded.", fg="red")
-        sys.exit(1)
+    _load_initial_data(data_directory)
     if query_file is not None:
-        try:
-            query_executor.execute_query_file(query_file)
-        except CliErrorMessageException as e:
-            click.secho("Error: " + str(e), fg='red')
-        sys.exit(0)
+        _execute_initial_query_file(query_file)
+    click.echo(f"Data loaded from \"{data_directory}\"\n")
     click.secho("Welcome to Mosaic!\n", fg="green")
     _main_loop()
