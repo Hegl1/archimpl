@@ -4,8 +4,8 @@ from .abstract_expression import AbstractExpression
 
 class AbstractComputationExpression(AbstractExpression):
     """
-    Class that represents a AbstractExpression, but calculates the result
-    for each row individually, by passing the table and the row_index to the get_result function
+    Class that represents an AbstractExpression, but calculates the result for each row of a table individually,
+    by passing the table and the row_index as parameters to the get_result function.
     """
 
     @abstractmethod

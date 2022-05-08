@@ -3,6 +3,10 @@ from mosaic.table_service import Table, SchemaType, Schema
 
 
 class Explain(AbstractExpression):
+    """
+    Class that represents the explain operator.
+    It is used to explain the execution plan of a query.
+    """
 
     def __init__(self, execution_plan: AbstractExpression):
         super().__init__()

@@ -3,6 +3,10 @@ from .abstract_operator import AbstractOperator
 
 
 class Selection(AbstractOperator):
+    """
+    Class that represents a selection operation.
+    It returns a table which only contains records which fulfill the given condition.
+    """
     def __init__(self, table_reference, condition):
         super().__init__()
         self.table_reference = table_reference

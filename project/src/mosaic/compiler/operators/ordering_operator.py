@@ -4,9 +4,8 @@ from .abstract_operator import AbstractOperator
 
 class OrderingOperator(AbstractOperator):
     """
-    Represents an ordering operation
-    result can be retrieved with get_result method
-    an explanation of the operation is created in the explain method
+    Class that represents an ordering operation.
+    In this implementation the sorted() function of python is used for sorting which has a complexity of O(n log n).
     """
 
     def __init__(self, column_list, table_reference):

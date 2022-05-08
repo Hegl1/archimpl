@@ -3,6 +3,9 @@ from mosaic.table_service import Schema
 
 
 class ConjunctiveExpression(AbstractComputationExpression):
+    """
+    Class that represents a conjunction.
+    """
     def __init__(self, value):
         super().__init__()
 
@@ -21,6 +24,10 @@ class ConjunctiveExpression(AbstractComputationExpression):
         return 1
 
     def replace_all_column_names_by_fqn(self, schema: Schema):
+        """
+        Recursively replaces all occurrences of column names in the expression by the respective fully qualified
+        column names based on the given schema of a table.
+        """
         for v in self.value:
             v.replace_all_column_names_by_fqn(schema)
 

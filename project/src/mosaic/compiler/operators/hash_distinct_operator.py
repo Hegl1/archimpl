@@ -3,6 +3,10 @@ from .abstract_operator import AbstractOperator
 
 
 class HashDistinct(AbstractOperator):
+    """
+    Class that represents a "distinct" operation.
+    It is used for duplicate elimination and here is implemented in a hash-based way.
+    """
     def __init__(self, table):
         super().__init__()
 

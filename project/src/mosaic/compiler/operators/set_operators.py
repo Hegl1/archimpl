@@ -29,7 +29,8 @@ class AbstractSetOperator(AbstractOperator, ABC):
 
 class Union(AbstractSetOperator):
     """
-    Represents a union operation
+    Represents a union operation.
+    It returns a table containing all records from two given tables without removing duplicates.
     result can be retrieved with get_result method
     an explanation of the operation is created in the explain method
     """
@@ -59,7 +60,8 @@ class Union(AbstractSetOperator):
 
 class Intersect(AbstractSetOperator):
     """
-    Represents an intersect operation
+    Represents an intersect operation.
+    It returns a table which only contains records that appear in both given tables.
     result can be retrieved with get_result method
     an explanation of the operation is created in the explain method
     """
@@ -89,7 +91,8 @@ class Intersect(AbstractSetOperator):
 
 class Except(AbstractSetOperator):
     """
-    Represents a difference operation
+    Represents a difference operation.
+    It returns a table which only contains records that appear in the first table but not in the second table.
     result can be retrieved with get_result method
     an explanation of the operation is created in the explain method
     """

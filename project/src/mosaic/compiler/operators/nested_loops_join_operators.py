@@ -10,9 +10,14 @@ class JoinType(Enum):
 
 class NestedLoopsJoin(AbstractOperator):
     """
-    Represents a join operation
-    result can be retrieved with get_result method
-    an explanation of the operation is created in the explain method
+    Class that represents a join operation.
+    It supports several kinds of joins, e.g. cross, outer, inner join etc.
+    The resulting table can be retrieved with the get_result method.
+    This class has the following properties:
+    table1_reference and table2_reference: the two tables to be joined
+    join_type: the join type
+    condition: the condition for the join (optional)
+    is_natural: boolean expressing if a join is natural
     """
 
     def __init__(self, table1_reference, table2_reference, join_type, condition, is_natural):

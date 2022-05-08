@@ -11,7 +11,6 @@ class AbstractExpression(AbstractCompileNode):
         """
         Computes the result for this expression-node and returns it.
         For that it calls the compute nodes of the child-nodes recursively.
-        Returns a Table-Object
         """
         pass
 

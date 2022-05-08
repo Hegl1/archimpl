@@ -18,6 +18,13 @@ class IncompatibleOperandTypesException(Exception):
 
 
 class ComparativeOperationExpression(AbstractComputationExpression):
+    """
+    Class that represents a comparison operation.
+    This class has the following properties:
+    left: the left operand
+    right: the right operand
+    operator: the comparison operator
+    """
     def __init__(self, left, operator, right):
         super().__init__()
 
@@ -62,6 +69,10 @@ class ComparativeOperationExpression(AbstractComputationExpression):
         return expression.get_result()
 
     def replace_all_column_names_by_fqn(self, schema: Schema):
+        """
+        Recursively replaces all occurrences of column names in the expression by the respective fully qualified
+        column names based on the given schema of a table.
+        """
         self.left.replace_all_column_names_by_fqn(schema)
         self.right.replace_all_column_names_by_fqn(schema)
 

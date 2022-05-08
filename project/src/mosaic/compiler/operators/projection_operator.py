@@ -11,6 +11,10 @@ class InvalidAliasException(Exception):
 
 
 class Projection(AbstractOperator):
+    """
+    Class that represents a projection operation.
+    It returns a table which only contains columns which match the given attributes list.
+    """
     def __init__(self, column_references, table_reference):
         super().__init__()
 
