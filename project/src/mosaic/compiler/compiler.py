@@ -13,7 +13,7 @@ from mosaic.compiler.expressions.comparative_operation_expression import Compara
     ComparativeOperator
 from mosaic.compiler.expressions.conjunctive_expression import ConjunctiveExpression
 from mosaic.compiler.expressions.disjunctive_expression import DisjunctiveExpression
-from mosaic.compiler.expressions.explain import Explain
+from mosaic.compiler.operators.explain import Explain
 from mosaic.compiler.expressions.literal_expression import LiteralExpression
 from mosaic.compiler.operators.hash_distinct_operator import HashDistinct
 from mosaic.compiler.operators.nested_loops_join_operators import JoinType, NestedLoopsJoin

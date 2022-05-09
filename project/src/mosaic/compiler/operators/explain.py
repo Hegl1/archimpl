@@ -1,16 +1,21 @@
+from abc import ABC
+
 from mosaic.table_service import Table, SchemaType, Schema
-from .abstract_expression import AbstractExpression
+from mosaic.compiler.operators.abstract_operator import AbstractOperator
 
 
-class Explain(AbstractExpression):
+class Explain(AbstractOperator, ABC):
     """
     Class that represents the explain operator.
     It is used to explain the execution plan of a query.
     """
 
-    def __init__(self, execution_plan: AbstractExpression):
+    def __init__(self, execution_plan: AbstractOperator):
         super().__init__()
         self.execution_plan = execution_plan
+
+    def get_schema(self):
+        pass
 
     def get_result(self):
         rows = []
@@ -18,7 +23,7 @@ class Explain(AbstractExpression):
         schema = Schema("Execution_plan", ["Operator"], [SchemaType.VARCHAR])
         return Table(schema, rows)
 
-    def __str__(self):  # pragma: no cover
+    def __str__(self):
         return "Explain"
 
     def explain(self, rows, indent):
