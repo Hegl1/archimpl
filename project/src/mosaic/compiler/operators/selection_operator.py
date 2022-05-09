@@ -1,6 +1,7 @@
 from mosaic.table_service import Table, Schema
 from .abstract_operator import AbstractOperator
 from ..expressions.abstract_computation_expression import AbstractComputationExpression
+from ..expressions.column_expression import ColumnExpression
 
 
 class Selection(AbstractOperator):
@@ -21,6 +22,8 @@ class Selection(AbstractOperator):
         for i, record in enumerate(table.records):
             if isinstance(self.condition, AbstractComputationExpression):
                 condition_result = self.condition.get_result(table, i)
+            elif isinstance(self.condition, ColumnExpression):
+                condition_result = table[i, self.condition.get_result()]
             else:
                 condition_result = self.condition.get_result()
             if condition_result:
