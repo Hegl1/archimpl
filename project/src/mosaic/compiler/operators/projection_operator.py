@@ -1,7 +1,7 @@
-from mosaic.compiler.expressions.arithmetic_operation_expression import ArithmeticOperationExpression
 from mosaic.compiler.expressions.abstract_computation_expression import AbstractComputationExpression
-from mosaic.compiler.expressions.literal_expression import LiteralExpression
+from mosaic.compiler.expressions.arithmetic_operation_expression import ArithmeticOperationExpression
 from mosaic.compiler.expressions.comparative_operation_expression import ComparativeOperationExpression
+from mosaic.compiler.expressions.literal_expression import LiteralExpression
 from mosaic.table_service import Table, get_schema_type, Schema, SchemaType
 from .abstract_operator import AbstractOperator
 
@@ -15,6 +15,7 @@ class Projection(AbstractOperator):
     Class that represents a projection operation.
     It returns a table which only contains columns which match the given attributes list.
     """
+
     def __init__(self, column_references, table_reference):
         super().__init__()
 
@@ -63,7 +64,7 @@ class Projection(AbstractOperator):
                 elif isinstance(column_reference, ComparativeOperationExpression):
                     schema_types.append(SchemaType.INT)
                 else:
-                    schema_types.append(SchemaType.NULL) # TODO: maybe refactor
+                    schema_types.append(SchemaType.NULL)  # TODO: maybe refactor
             elif isinstance(column_reference, LiteralExpression):
                 column_value = column_reference
 

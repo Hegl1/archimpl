@@ -1,5 +1,6 @@
 from mosaic.table_service import Table, Schema
 from .abstract_operator import AbstractOperator
+from ..expressions.abstract_computation_expression import AbstractComputationExpression
 
 
 class Selection(AbstractOperator):
@@ -7,6 +8,7 @@ class Selection(AbstractOperator):
     Class that represents a selection operation.
     It returns a table which only contains records which fulfill the given condition.
     """
+
     def __init__(self, table_reference, condition):
         super().__init__()
         self.table_reference = table_reference
@@ -17,8 +19,13 @@ class Selection(AbstractOperator):
         result = []
 
         for i, record in enumerate(table.records):
-            if self.condition.get_result(table, i):
+            if isinstance(self.condition, AbstractComputationExpression):
+                condition_result = self.condition.get_result(table, i)
+            else:
+                condition_result = self.condition.get_result()
+            if condition_result:
                 result.append(record)
+
         schema = Schema(table.table_name, table.schema.column_names, table.schema.column_types)
 
         return Table(schema, result)

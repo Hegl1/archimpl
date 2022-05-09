@@ -1,6 +1,7 @@
-from .abstract_computation_expression import AbstractComputationExpression
 from enum import Enum
-from mosaic.table_service import SchemaType, get_schema_type, Schema
+
+from mosaic.table_service import Schema
+from .abstract_computation_expression import AbstractComputationExpression
 from .column_expression import ColumnExpression
 
 
@@ -25,6 +26,7 @@ class ComparativeOperationExpression(AbstractComputationExpression):
     right: the right operand
     operator: the comparison operator
     """
+
     def __init__(self, left, operator, right):
         super().__init__()
 
@@ -38,7 +40,8 @@ class ComparativeOperationExpression(AbstractComputationExpression):
         right_operand = self._get_operand(
             table, row_index, expression=self.right)
 
-        if (left_operand is None or right_operand is None) and self.operator not in [ComparativeOperator.EQUAL, ComparativeOperator.NOT_EQUAL]:
+        if (left_operand is None or right_operand is None) and self.operator not in [ComparativeOperator.EQUAL,
+                                                                                     ComparativeOperator.NOT_EQUAL]:
             return 0
 
         try:

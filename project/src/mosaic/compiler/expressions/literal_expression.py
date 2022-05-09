@@ -1,5 +1,5 @@
-from .abstract_expression import AbstractExpression
 from mosaic.table_service import Schema
+from .abstract_expression import AbstractExpression
 
 
 class LiteralExpression(AbstractExpression):
@@ -7,6 +7,7 @@ class LiteralExpression(AbstractExpression):
     Class that represents a literal.
     It is used to represent e.g. int, float, varchar or NULL values/literals.
     """
+
     def __init__(self, value):
         super().__init__()
 

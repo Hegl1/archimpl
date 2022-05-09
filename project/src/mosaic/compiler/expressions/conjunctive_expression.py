@@ -1,11 +1,12 @@
-from .abstract_computation_expression import AbstractComputationExpression
 from mosaic.table_service import Schema
+from .abstract_computation_expression import AbstractComputationExpression
 
 
 class ConjunctiveExpression(AbstractComputationExpression):
     """
     Class that represents a conjunction.
     """
+
     def __init__(self, value):
         super().__init__()
 

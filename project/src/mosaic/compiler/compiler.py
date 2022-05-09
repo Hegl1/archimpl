@@ -4,25 +4,29 @@ The compiler takes the AST produced by the parser and turns it into an
 execution plan.
 """
 
-from mosaic.compiler.expressions.disjunctive_expression import DisjunctiveExpression
-from mosaic.compiler.expressions.conjunctive_expression import ConjunctiveExpression
 from parsimonious.nodes import NodeVisitor
 
+from mosaic.compiler.expressions.arithmetic_operation_expression import ArithmeticOperationExpression, \
+    ArithmeticOperator
+from mosaic.compiler.expressions.column_expression import ColumnExpression
+from mosaic.compiler.expressions.comparative_operation_expression import ComparativeOperationExpression, \
+    ComparativeOperator
+from mosaic.compiler.expressions.conjunctive_expression import ConjunctiveExpression
+from mosaic.compiler.expressions.disjunctive_expression import DisjunctiveExpression
+from mosaic.compiler.expressions.explain import Explain
 from mosaic.compiler.expressions.literal_expression import LiteralExpression
+from mosaic.compiler.operators.hash_distinct_operator import HashDistinct
 from mosaic.compiler.operators.nested_loops_join_operators import JoinType, NestedLoopsJoin
 from mosaic.compiler.operators.ordering_operator import OrderingOperator
-from mosaic.compiler.operators.table_scan_operator import TableScan
-from mosaic.compiler.expressions.arithmetic_operation_expression import ArithmeticOperationExpression, ArithmeticOperator
-from mosaic.compiler.expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
-from mosaic.compiler.expressions.column_expression import ColumnExpression
 from mosaic.compiler.operators.projection_operator import Projection
 from mosaic.compiler.operators.selection_operator import Selection
-from mosaic.compiler.operators.hash_distinct_operator import HashDistinct
-from mosaic.compiler.expressions.explain import Explain
 from mosaic.compiler.operators.set_operators import SetOperationType, Union, Intersect, Except
+from mosaic.compiler.operators.table_scan_operator import TableScan
+
 
 class QueryExecutionError(Exception):
     pass
+
 
 ###########################################################
 # Visitor for traversing the AST.
@@ -91,13 +95,13 @@ class ASTVisitor(NodeVisitor):
             for operator, right in visited_children[1]:
                 if operator == '*':
                     left = ArithmeticOperationExpression(left,
-                                                     ArithmeticOperator.TIMES,
-                                                     right)
+                                                         ArithmeticOperator.TIMES,
+                                                         right)
                     break
                 elif operator == '/':
                     left = ArithmeticOperationExpression(left,
-                                                     ArithmeticOperator.DIVIDE,
-                                                     right)
+                                                         ArithmeticOperator.DIVIDE,
+                                                         right)
                     break
 
             return left
@@ -118,13 +122,13 @@ class ASTVisitor(NodeVisitor):
             for operator, right in visited_children[1]:
                 if operator == '+':
                     left = ArithmeticOperationExpression(left,
-                                                     ArithmeticOperator.ADD,
-                                                     right)
+                                                         ArithmeticOperator.ADD,
+                                                         right)
                     break
                 elif operator == '-':
                     left = ArithmeticOperationExpression(left,
-                                                     ArithmeticOperator.SUBTRACT,
-                                                     right)
+                                                         ArithmeticOperator.SUBTRACT,
+                                                         right)
                     break
 
             return left
@@ -145,33 +149,33 @@ class ASTVisitor(NodeVisitor):
             for operator, right in visited_children[1]:
                 if operator == '=':
                     left = ComparativeOperationExpression(left,
-                                                     ComparativeOperator.EQUAL,
-                                                     right)
+                                                          ComparativeOperator.EQUAL,
+                                                          right)
                     break
                 elif operator == '!=':
                     left = ComparativeOperationExpression(left,
-                                                     ComparativeOperator.NOT_EQUAL,
-                                                     right)
+                                                          ComparativeOperator.NOT_EQUAL,
+                                                          right)
                     break
                 elif operator == '<':
                     left = ComparativeOperationExpression(left,
-                                                     ComparativeOperator.SMALLER,
-                                                     right)
+                                                          ComparativeOperator.SMALLER,
+                                                          right)
                     break
                 elif operator == '<=':
                     left = ComparativeOperationExpression(left,
-                                                     ComparativeOperator.SMALLER_EQUAL,
-                                                     right)
+                                                          ComparativeOperator.SMALLER_EQUAL,
+                                                          right)
                     break
                 elif operator == '>':
                     left = ComparativeOperationExpression(left,
-                                                     ComparativeOperator.GREATER,
-                                                     right)
+                                                          ComparativeOperator.GREATER,
+                                                          right)
                     break
                 elif operator == '>=':
                     left = ComparativeOperationExpression(left,
-                                                     ComparativeOperator.GREATER_EQUAL,
-                                                     right)
+                                                          ComparativeOperator.GREATER_EQUAL,
+                                                          right)
                     break
 
             return left
@@ -412,9 +416,11 @@ class ASTVisitor(NodeVisitor):
     def generic_visit(self, node, visited_children):
         return visited_children
 
+
 # Compile
 
 _visitor = ASTVisitor()
+
 
 def compile(ast):
     return _visitor.visit(ast)

@@ -1,4 +1,4 @@
-from mosaic import cli # pragma: no cover
+from mosaic import cli  # pragma: no cover
 
-if __name__ == '__main__': # pragma: no cover
+if __name__ == '__main__':  # pragma: no cover
     cli.main()

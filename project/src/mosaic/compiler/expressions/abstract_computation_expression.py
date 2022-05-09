@@ -1,4 +1,5 @@
 from abc import abstractmethod
+
 from .abstract_expression import AbstractExpression
 
 
@@ -9,7 +10,7 @@ class AbstractComputationExpression(AbstractExpression):
     """
 
     @abstractmethod
-    def get_result(self, table, row_index): # pragma: no cover
+    def get_result(self, table, row_index):  # pragma: no cover
         """
         Computes the result for this expression-node for the given table and the row with the given index.
         For that it calls the compute nodes of the child-nodes recursively.

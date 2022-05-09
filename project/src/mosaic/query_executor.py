@@ -1,9 +1,9 @@
 from time import perf_counter_ns
-from mosaic import parser
+
 from mosaic import cli
+from mosaic import parser
 from mosaic.compiler import compiler
 from mosaic.table_service import TableNotFoundException
-from mosaic.table_service import TableIndexException
 
 
 def execute_query(user_in):

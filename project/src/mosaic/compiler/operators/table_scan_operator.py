@@ -6,6 +6,7 @@ class TableScan(AbstractOperator):
     """
     Class that represents a table scan.
     """
+
     def __init__(self, table_name, alias=None):
         super().__init__()
 

@@ -1,12 +1,14 @@
-import click
+import os
 import sys
 import traceback
-import os
-from mosaic import table_service
-from mosaic import query_executor
+
+import click
 from prompt_toolkit import PromptSession
-from prompt_toolkit.history import FileHistory
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.history import FileHistory
+
+from mosaic import query_executor
+from mosaic import table_service
 
 
 class CliErrorMessageException(Exception):
@@ -27,7 +29,7 @@ def _print_command_help():
     click.echo("<query> \t\t\t executes a query that needs to be terminated by \";\"")
 
 
-def _print_results(results, printTime = True):
+def _print_results(results, printTime=True):
     for result, execution_time in results:
         click.echo(result)
 

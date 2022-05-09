@@ -1,5 +1,6 @@
 from abc import ABC
 from enum import Enum
+
 from mosaic.table_service import Table, Schema
 from .abstract_operator import AbstractOperator
 

@@ -1,7 +1,8 @@
-from copy import copy, deepcopy
 import os
-import tabulate
+from copy import deepcopy
 from enum import Enum
+
+import tabulate
 
 
 class SchemaType(Enum):
@@ -23,6 +24,7 @@ class Schema:
         column_names: [str] - the FQN of the columns. Position in the list matters
         column_types: [SchemaType] - the type of the corresponding column
         """
+
     def __init__(self, table_name, column_names, column_types):
         self.table_name = table_name
         self.column_names = column_names

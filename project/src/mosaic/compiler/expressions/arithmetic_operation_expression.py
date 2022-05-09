@@ -1,7 +1,9 @@
+from enum import Enum
+
+from mosaic.table_service import SchemaType, get_schema_type, Schema
 from .abstract_computation_expression import AbstractComputationExpression
 from .column_expression import ColumnExpression
-from mosaic.table_service import SchemaType, get_schema_type, Schema
-from enum import Enum
+
 
 class ArithmeticOperator(Enum):
     TIMES = "*"
@@ -23,6 +25,7 @@ class ArithmeticOperationExpression(AbstractComputationExpression):
     right: the right operand
     operator: the arithmetic operator
     """
+
     def __init__(self, left, operator, right):
         super().__init__()
 
@@ -34,8 +37,8 @@ class ArithmeticOperationExpression(AbstractComputationExpression):
         """
         Returns the result for a table and the given row (with the given index)
         """
-        left_operand = self._get_operand(table, row_index, expression = self.left)
-        right_operand = self._get_operand(table, row_index, expression = self.right)
+        left_operand = self._get_operand(table, row_index, expression=self.left)
+        right_operand = self._get_operand(table, row_index, expression=self.right)
 
         if left_operand is None or right_operand is None:
             return None

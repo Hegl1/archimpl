@@ -1,11 +1,12 @@
-from .abstract_expression import AbstractExpression
 from mosaic.table_service import Schema
+from .abstract_expression import AbstractExpression
 
 
 class ColumnExpression(AbstractExpression):
     """
     Class that represents a column name.
     """
+
     def __init__(self, value):
         super().__init__()
 

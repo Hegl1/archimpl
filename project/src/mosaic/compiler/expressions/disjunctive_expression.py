@@ -1,11 +1,12 @@
-from .abstract_computation_expression import AbstractComputationExpression
 from mosaic.table_service import Schema
+from .abstract_computation_expression import AbstractComputationExpression
 
 
 class DisjunctiveExpression(AbstractComputationExpression):
     """
     Class that represents a disjunction.
     """
+
     def __init__(self, value):
         super().__init__()
 
