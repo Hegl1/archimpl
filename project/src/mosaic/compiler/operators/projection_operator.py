@@ -1,6 +1,8 @@
 from mosaic.compiler.expressions.abstract_computation_expression import AbstractComputationExpression
 from mosaic.compiler.expressions.arithmetic_operation_expression import ArithmeticOperationExpression
 from mosaic.compiler.expressions.comparative_operation_expression import ComparativeOperationExpression
+from mosaic.compiler.expressions.conjunctive_expression import ConjunctiveExpression
+from mosaic.compiler.expressions.disjunctive_expression import DisjunctiveExpression
 from mosaic.compiler.expressions.literal_expression import LiteralExpression
 from mosaic.table_service import Table, get_schema_type, Schema, SchemaType
 from .abstract_operator import AbstractOperator
@@ -61,10 +63,12 @@ class Projection(AbstractOperator):
 
                 if isinstance(column_reference, ArithmeticOperationExpression):
                     schema_types.append(column_reference.get_schema_type(old_schema))
-                elif isinstance(column_reference, ComparativeOperationExpression):
+                elif isinstance(column_reference, ComparativeOperationExpression) or \
+                        isinstance(column_reference, ConjunctiveExpression) or \
+                        isinstance(column_reference, DisjunctiveExpression):
                     schema_types.append(SchemaType.INT)
                 else:
-                    schema_types.append(SchemaType.NULL)  # TODO: maybe refactor
+                    schema_types.append(SchemaType.NULL)
             elif isinstance(column_reference, LiteralExpression):
                 column_value = column_reference
 
