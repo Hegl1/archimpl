@@ -15,7 +15,6 @@ def execute_query(user_in):
     results = []
 
     for query in user_in.split(";"):
-        start_execution = perf_counter_ns()
 
         # strip to allow chaining of multiple queries in a line
         query = query.strip()
@@ -28,6 +27,9 @@ def execute_query(user_in):
 
             try:
                 result_expression = compiler.compile(ast.ast)
+
+                start_execution = perf_counter_ns()
+
                 result = result_expression.get_result()
 
                 end_execution = perf_counter_ns()
