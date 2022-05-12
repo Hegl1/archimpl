@@ -32,6 +32,11 @@ class HashDistinct(AbstractOperator):
     def get_schema(self):
         return self.table.get_schema()
 
+    def simplify(self):
+        self.table = self.table.simplify()
+
+        return self
+
     def __str__(self):
         return f"HashDistinct"
 

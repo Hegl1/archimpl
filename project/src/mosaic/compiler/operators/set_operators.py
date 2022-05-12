@@ -27,6 +27,12 @@ class AbstractSetOperator(AbstractOperator, ABC):
         self.table1_reference.explain(rows, indent + 2)
         self.table2_reference.explain(rows, indent + 2)
 
+    def simplify(self):
+        self.table1_reference = self.table1_reference.simplify()
+        self.table2_reference = self.table2_reference.simplify()
+
+        return self
+
 
 class Union(AbstractSetOperator):
     """

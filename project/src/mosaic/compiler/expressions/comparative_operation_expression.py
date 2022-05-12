@@ -2,6 +2,7 @@ from enum import Enum
 
 from mosaic.table_service import Schema
 from .abstract_computation_expression import AbstractComputationExpression
+from .literal_expression import LiteralExpression
 from .column_expression import ColumnExpression
 
 
@@ -40,6 +41,9 @@ class ComparativeOperationExpression(AbstractComputationExpression):
         right_operand = self._get_operand(
             table, row_index, expression=self.right)
 
+        return self._compute(left_operand, right_operand)
+
+    def _compute(self, left_operand, right_operand):
         if (left_operand is None or right_operand is None) and self.operator not in [ComparativeOperator.EQUAL,
                                                                                      ComparativeOperator.NOT_EQUAL]:
             return 0
@@ -70,6 +74,15 @@ class ComparativeOperationExpression(AbstractComputationExpression):
             return table[row_index, expression.get_result()]
 
         return expression.get_result()
+
+    def simplify(self):
+        self.left = self.left.simplify()
+        self.right = self.right.simplify()
+
+        if isinstance(self.left, LiteralExpression) and isinstance(self.right, LiteralExpression):
+            return LiteralExpression(self._compute(self.left.get_result(), self.right.get_result()))
+
+        return self
 
     def replace_all_column_names_by_fqn(self, schema: Schema):
         """
