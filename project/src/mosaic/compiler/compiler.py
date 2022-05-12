@@ -16,7 +16,8 @@ from mosaic.compiler.expressions.disjunctive_expression import DisjunctiveExpres
 from mosaic.compiler.operators.explain import Explain
 from mosaic.compiler.expressions.literal_expression import LiteralExpression
 from mosaic.compiler.operators.hash_distinct_operator import HashDistinct
-from mosaic.compiler.operators.nested_loops_join_operators import JoinType, NestedLoopsJoin
+from mosaic.compiler.operators.nested_loops_join_operators import NestedLoopsJoin
+from mosaic.compiler.operators.abstract_join_operator import JoinType
 from mosaic.compiler.operators.ordering_operator import OrderingOperator
 from mosaic.compiler.operators.projection_operator import Projection
 from mosaic.compiler.operators.selection_operator import Selection
