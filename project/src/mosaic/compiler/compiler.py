@@ -22,6 +22,8 @@ from mosaic.compiler.operators.projection_operator import Projection
 from mosaic.compiler.operators.selection_operator import Selection
 from mosaic.compiler.operators.set_operators import SetOperationType, Union, Intersect, Except
 from mosaic.compiler.operators.table_scan_operator import TableScan
+from mosaic.compiler.operators.hash_aggregate_operator import AggregateFunction
+from mosaic.compiler.operators.hash_aggregate_operator import HashAggregate
 
 
 class QueryExecutionError(Exception):
@@ -250,16 +252,14 @@ class ASTVisitor(NodeVisitor):
             return [visited_children[0]]
 
     def visit_aggregate_list(self, node, visited_children):
-        pass
+        return visited_children
 
     def visit_aggregate_column(self, node, visited_children):
-        # Example:
-        # name = visited_children[0]
-        # aggregate_function = visited_children[3]
-        # expression = visited_children[7]
+        name = visited_children[0]
+        aggregate_function = visited_children[3]
+        expression = visited_children[7]
 
-        # return (name, aggregate_function, expression)
-        pass
+        return (name, aggregate_function, expression)
 
     ####################
     # Commands
@@ -286,37 +286,33 @@ class ASTVisitor(NodeVisitor):
 
     def visit_aggregate_function(self, node, visited_children):
         function_name = node.text.strip().lower()
-
-        # Example:
-        # if function_name == 'sum':
-        #     return AggregateFunction.SUM
-        # elif function_name == 'avg':
-        #     return AggregateFunction.AVG
-        # elif function_name == 'min':
-        #     return AggregateFunction.MIN
-        # elif function_name == 'max':
-        #     return AggregateFunction.MAX
-        # elif function_name == 'count':
-        #     return AggregateFunction.COUNT
-        pass
+        if function_name == 'sum':
+            return AggregateFunction.SUM
+        elif function_name == 'avg':
+            return AggregateFunction.AVG
+        elif function_name == 'min':
+            return AggregateFunction.MIN
+        elif function_name == 'max':
+            return AggregateFunction.MAX
+        elif function_name == 'count':
+            return AggregateFunction.COUNT
 
     def visit_grouping(self, node, visited_children):
-        # Example:
-        # children = visited_children[0]
+        children = visited_children[0]
 
-        # # If there are seven children, we have group columns.
-        # if len(children) == 7:
-        #     group_columns = children[2]
-        #     aggregate_columns = children[5]
-        #     input_node = children[6]
+        # If there are seven children, we have group columns.
+        if len(children) == 7:
+            group_columns = children[2]
+            aggregate_columns = children[5]
+            input_node = children[6]
 
-        #     return HashAggregate(input_node, group_columns, aggregate_columns)
-        # # Otherwise, we want to compute aggregates over the super group.
-        # else:
-        #     aggregate_columns = children[4]
-        #     input_node = children[5]
+            return HashAggregate(input_node, group_columns, aggregate_columns)
+        # Otherwise, we want to compute aggregates over the super group.
+        else:
+            aggregate_columns = children[4]
+            input_node = children[5]
 
-        #     return HashAggregate(input_node, [], aggregate_columns)
+            return HashAggregate(input_node, [], aggregate_columns)
         pass
 
     def visit_ordering(self, node, visited_children):
