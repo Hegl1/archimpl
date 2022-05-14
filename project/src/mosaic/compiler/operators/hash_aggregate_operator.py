@@ -37,7 +37,7 @@ class HashAggregate(AbstractOperator, ABC):
         self.aggregations = aggregations
 
     def get_schema(self):
-        return self.table_reference.get_schema()
+        return self.build_schema()
 
     def group_columns(self):
         table = self.table_reference.get_result()
@@ -123,8 +123,14 @@ class HashAggregate(AbstractOperator, ABC):
         return Table(schema, records)
 
     def __str__(self):
-        schema = self.get_schema()
-        return f"Aggregation(...)"
+        groups = []
+        aggregates = []
+        for aggregate in self.aggregations:
+            aggregates.append(f"{aggregate[1].value}({aggregate[2].value})")
+        for group in self.group_names:
+            groups.append(group[1].value)
+
+        return f"Aggregation(groups=[{', '.join(groups)}],aggregates=[{', '.join(aggregates)}])"
 
     def explain(self, rows, indent):
         super().explain(rows, indent)
