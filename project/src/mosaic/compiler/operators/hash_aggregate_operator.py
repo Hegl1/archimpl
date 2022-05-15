@@ -56,8 +56,6 @@ def extract(aggregations):
         else:
             aggregation = None
 
-    print(clean_aggregations)
-
     return clean_aggregations
 
 
@@ -158,12 +156,13 @@ class HashAggregate(AbstractOperator, ABC):
         return Table(schema, records)
 
     def __str__(self):
+        schema = self.table_reference.get_schema()
         groups = []
         aggregates = []
         for aggregate in self.aggregations:
-            aggregates.append(f"{aggregate[1].value}({aggregate[2].value})")
+            aggregates.append(f"{aggregate[1].value}({schema.get_fully_qualified_column_name(aggregate[2].value)}) -> {aggregate[0]}")
         for group in self.group_names:
-            groups.append(group[1].value)
+            groups.append(schema.get_fully_qualified_column_name(group[1].value))
 
         return f"Aggregation(groups=[{', '.join(groups)}],aggregates=[{', '.join(aggregates)}])"
 
