@@ -28,23 +28,52 @@ def aggregate_schema_type(aggregation_function, current_schema):
         return current_schema
 
 
+def aggregate(aggregation_function, to_aggregate):
+    if aggregation_function == AggregateFunction.AVG:
+        result = sum(to_aggregate) / len(to_aggregate)
+    elif aggregation_function == AggregateFunction.COUNT:
+        result = len(to_aggregate)
+    elif aggregation_function == AggregateFunction.MAX:
+        result = max(to_aggregate)
+    elif aggregation_function == AggregateFunction.MIN:
+        result = min(to_aggregate)
+    elif aggregation_function == AggregateFunction.SUM:
+        result = sum(to_aggregate)
+
+    return result
+
+
+def extract(aggregations):
+    clean_aggregations = []
+    aggregation = aggregations[0]
+    while(isinstance(aggregation,list)):
+        if (isinstance(aggregation[0],list)):
+            aggregation = aggregation[0]
+            continue
+        clean_aggregations.append(aggregation[0])
+        if len(aggregation) == 3:
+            aggregation = aggregation[2]
+        else:
+            aggregation = None
+
+    print(clean_aggregations)
+
+    return clean_aggregations
+
+
 class HashAggregate(AbstractOperator, ABC):
 
     def __init__(self, table_referece, group_names, aggregations):
         super().__init__()
         self.table_reference = table_referece
         self.group_names = group_names
-        self.aggregations = aggregations
+        self.aggregations = extract(aggregations)
 
     def get_schema(self):
         return self.build_schema()
 
     def group_columns(self):
         table = self.table_reference.get_result()
-
-        if not self.group_names:
-            # TODO using super group
-            pass
 
         group_table = {}
 
@@ -60,34 +89,36 @@ class HashAggregate(AbstractOperator, ABC):
 
         return group_table
 
-    def calculate_aggregations(self, groups):
+    def calculate_aggregations(self, groups=None):
         table = self.table_reference.get_result()
         rows = []
-        for grouped_keys, group in groups.items():
-            row = list(grouped_keys)
+        if groups:
+            for grouped_keys, group in groups.items():
+                row = list(grouped_keys)
+                for aggregation in self.aggregations:
+                    aggregation_function = aggregation[1]
+                    aggregated_column_index = table.get_column_index(
+                        aggregation[2].value)
+
+                    to_aggregate = [group_row[aggregated_column_index]
+                                    for group_row in group]
+
+                    result = aggregate(aggregation_function, to_aggregate)
+
+                    row.append(result)
+
+                rows.append(row)
+
+        else:
+            rows.append([])
             for aggregation in self.aggregations:
                 aggregation_function = aggregation[1]
-                aggregated_column_index = table.get_column_index(
-                    aggregation[2].value)
 
-                to_aggregate = [group_row[aggregated_column_index]
-                                for group_row in group]
+                to_aggregate = table[:, aggregation[2].value]
 
-                if aggregation_function == AggregateFunction.AVG:
-                    result = sum(to_aggregate) / len(to_aggregate)
-                elif aggregation_function == AggregateFunction.COUNT:
-                    result = len(to_aggregate)
-                elif aggregation_function == AggregateFunction.MAX:
-                    result = max(to_aggregate)
-                elif aggregation_function == AggregateFunction.MIN:
-                    result = min(to_aggregate)
-                elif aggregation_function == AggregateFunction.SUM:
-                    result = sum(to_aggregate)
+                result = aggregate(aggregation_function, to_aggregate)
 
-                row.append(result)
-
-            rows.append(row)
-
+                rows[0].append(result)
         return rows
 
     def build_schema(self):
@@ -111,11 +142,15 @@ class HashAggregate(AbstractOperator, ABC):
         return Schema(old_schema.table_name, column_names, column_types)
 
     def get_result(self):
-        # groups
-        groups = self.group_columns()
 
-        # calculate aggregations
-        records = self.calculate_aggregations(groups)
+        if self.group_names:
+            # group
+            groups = self.group_columns()
+
+            # calculate aggregations
+            records = self.calculate_aggregations(groups)
+        else:
+            records = self.calculate_aggregations()
 
         # calculate schema
         schema = self.build_schema()
