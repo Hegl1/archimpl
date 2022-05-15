@@ -5,7 +5,8 @@ from unittest import result
 from mosaic.compiler.operators.abstract_operator import AbstractOperator
 from mosaic.table_service import Schema, SchemaType, Table
 
-
+class VarcharAggregateException(Exception):
+    pass
 class AggregateFunction(Enum):
     SUM = "SUM"
     AVG = "AVG"
@@ -15,7 +16,9 @@ class AggregateFunction(Enum):
 
 
 def aggregate_schema_type(aggregation_function, current_schema):
-    # TODO: handle varchar error
+    if current_schema == SchemaType.VARCHAR and aggregation_function != AggregateFunction.COUNT:
+        raise VarcharAggregateException("Varchar can only be aggregated with count")
+
     if aggregation_function == AggregateFunction.AVG:
         SchemaType.FLOAT
     elif aggregation_function == AggregateFunction.COUNT:
@@ -141,6 +144,9 @@ class HashAggregate(AbstractOperator, ABC):
 
     def get_result(self):
 
+         # calculate schema
+        schema = self.build_schema()
+
         if self.group_names:
             # group
             groups = self.group_columns()
@@ -150,8 +156,6 @@ class HashAggregate(AbstractOperator, ABC):
         else:
             records = self.calculate_aggregations()
 
-        # calculate schema
-        schema = self.build_schema()
 
         return Table(schema, records)
 
