@@ -20,13 +20,14 @@ class Selection(AbstractOperator):
         table = self.table_reference.get_result()
         result = []
 
+        schema = Schema(table.table_name, table.schema.column_names, table.schema.column_types)
+
         if isinstance(self.condition, LiteralExpression):
             result = self.condition.get_result()
 
             if result:
                 return table
             else:
-                schema = Schema(table.table_name, table.schema.column_names, table.schema.column_types)
                 return Table(schema, [])
 
         for i, record in enumerate(table.records):
@@ -38,8 +39,6 @@ class Selection(AbstractOperator):
                 condition_result = self.condition.get_result()
             if condition_result:
                 result.append(record)
-
-        schema = Schema(table.table_name, table.schema.column_names, table.schema.column_types)
 
         return Table(schema, result)
 
