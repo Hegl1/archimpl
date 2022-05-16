@@ -2,7 +2,9 @@ from enum import Enum
 from abc import abstractmethod
 from mosaic.table_service import Table, Schema
 from .abstract_operator import AbstractOperator
-
+from ..expressions.column_expression import ColumnExpression
+from ..expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
+from ..expressions.conjunctive_expression import ConjunctiveExpression
 
 class JoinType(Enum):
     CROSS = "cross"
@@ -34,16 +36,16 @@ class AbstractJoin(AbstractOperator):
     def _build_schema(self, schema1, schema2):
 
         self.check_table_names(schema1, schema2)
+        self.check_condition(schema1, schema2, self.condition)
         if self.is_natural and self.join_type != JoinType.CROSS:
             return self._get_natural_join_schema(schema1, schema2)
         else:
-            self.check_condition(schema1, schema2, self.condition)
-            joined_table_name = f"{schema1.table_name}_{self.join_type}_join_{schema2.table_name}"
+            joined_table_name = f"{schema1.table_name}_{self.join_type.value}_join_{schema2.table_name}"
             return Schema(joined_table_name, schema1.column_names + schema2.column_names,
                           schema1.column_types + schema2.column_types)
 
     def _get_natural_join_schema(self, schema1, schema2):
-        joined_table_name = f"{schema1.table_name}_natural_{self.join_type}_join_{schema2.table_name}"
+        joined_table_name = f"{schema1.table_name}_natural_{self.join_type.value}_join_{schema2.table_name}"
         schema2_col_names = []
         schema2_col_types = []
         for schema_name, schema_type in zip(schema2.column_names, schema2.column_types):
@@ -52,6 +54,30 @@ class AbstractJoin(AbstractOperator):
                 schema2_col_types.append(schema_type)
         return Schema(joined_table_name, schema1.column_names + schema2_col_names,
                       schema1.column_types + schema2_col_types)
+
+    def _build_natural_join_condition(self, schema1, schema2):
+        matching_pairs = self._find_matching_simple_column_names(schema1, schema2)
+        if len(matching_pairs) == 1:
+            # construct equivalence
+            return ComparativeOperationExpression(ColumnExpression(matching_pairs[0][0]),
+                                                  ComparativeOperator.EQUAL, ColumnExpression(matching_pairs[0][1]))
+        else:
+            # construct conjunctive
+            return ConjunctiveExpression([ComparativeOperationExpression(
+                ColumnExpression(pair[0]),
+                ComparativeOperator.EQUAL,
+                ColumnExpression(pair[1])) for pair in matching_pairs])
+
+    def _find_matching_simple_column_names(self, schema1, schema2):
+        matching_pairs = []
+        for name in schema1.column_names:
+            if schema1.get_simple_column_name(name) in schema2.get_simple_column_name_list():
+                matching_pairs.append(
+                    (name, schema2.get_fully_qualified_column_name(schema1.get_simple_column_name(name))))
+        return matching_pairs
+
+    def _build_null_record(self, num_entries):
+        return [None] * num_entries
 
     @abstractmethod
     def check_condition(self, schema1, schema2, condition):
@@ -68,11 +94,18 @@ class AbstractJoin(AbstractOperator):
         self.table2_reference.explain(rows, indent + 2)
 
 
-
-
 class ConditionNotValidException(Exception):
     pass
 
 
 class SelfJoinWithoutRenamingException(Exception):
     pass
+
+
+class JoinTypeNotSupportedException(Exception):
+    pass
+
+
+class JoinConditionNotSupportedException(Exception):
+    pass
+
