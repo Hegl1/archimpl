@@ -28,13 +28,24 @@ class AbstractJoin(AbstractOperator):
     def get_result(self):
         pass
 
+    @abstractmethod
+    def check_condition(self, schema1, schema2, condition):
+        """
+        Method that checks whether the join can be performed with the given condition and the given schemas.
+        """
+        pass
+
+    def check_table_names(self, schema1, schema2):
+        if schema1.table_name == schema2.table_name:
+            raise SelfJoinWithoutRenamingException(f"Table \"{schema1.table_name}\" can't be joined with itself "
+                                                   f"without renaming one of the occurrences")
+
     def get_schema(self):
         schema1 = self.table1_reference.get_schema()
         schema2 = self.table2_reference.get_schema()
         return self._build_schema(schema1, schema2)
 
     def _build_schema(self, schema1, schema2):
-
         self.check_table_names(schema1, schema2)
         self.check_condition(schema1, schema2, self.condition)
         if self.is_natural and self.join_type != JoinType.CROSS:
@@ -45,6 +56,12 @@ class AbstractJoin(AbstractOperator):
                           schema1.column_types + schema2.column_types)
 
     def _get_natural_join_schema(self, schema1, schema2):
+        """
+        Method that builds the schema for a natural join.
+        In case of a natural join, the "matching" column is only emitted once.
+        e.g: (hoeren.MatrNr, hoeren.VorlNr) natural join (pruefen.MatrNr, pruefen.Note)
+        yields (hoeren.MatrNr, hoeren.VorlNr, pruefen.Note)
+        """
         joined_table_name = f"{schema1.table_name}_natural_{self.join_type.value}_join_{schema2.table_name}"
         schema2_col_names = []
         schema2_col_types = []
@@ -56,8 +73,16 @@ class AbstractJoin(AbstractOperator):
                       schema1.column_types + schema2_col_types)
 
     def _build_natural_join_condition(self, schema1, schema2):
+        """
+        Method that builds the condition for a natural join based on the schemas of the join partners.
+        Returns either a ConjunctiveExpression or a ComparativeOperationExpression (in case of only one matching column)
+        If no matching pairs are found, None is returned and join type gets set to cross.
+        """
         matching_pairs = self._find_matching_simple_column_names(schema1, schema2)
-        if len(matching_pairs) == 1:
+        if len(matching_pairs) == 0:
+            self.join_type = JoinType.CROSS
+            return None
+        elif len(matching_pairs) == 1:
             # construct equivalence
             return ComparativeOperationExpression(ColumnExpression(matching_pairs[0][0]),
                                                   ComparativeOperator.EQUAL, ColumnExpression(matching_pairs[0][1]))
@@ -69,6 +94,10 @@ class AbstractJoin(AbstractOperator):
                 ColumnExpression(pair[1])) for pair in matching_pairs])
 
     def _find_matching_simple_column_names(self, schema1, schema2):
+        """
+        Finds matching simple column names between 2 schemas and returns a list of tuples of the corresponding
+        fully qualified names.
+        """
         matching_pairs = []
         for name in schema1.column_names:
             if schema1.get_simple_column_name(name) in schema2.get_simple_column_name_list():
@@ -77,16 +106,10 @@ class AbstractJoin(AbstractOperator):
         return matching_pairs
 
     def _build_null_record(self, num_entries):
+        """
+        Method that builds a null record based on the number of entries.
+        """
         return [None] * num_entries
-
-    @abstractmethod
-    def check_condition(self, schema1, schema2, condition):
-        pass
-
-    def check_table_names(self, schema1, schema2):
-        if schema1.table_name == schema2.table_name:
-            raise SelfJoinWithoutRenamingException(f"Table \"{schema1.table_name}\" can't be joined with itself "
-                                                   f"without renaming one of the occurrences")
 
     def explain(self, rows, indent):
         super().explain(rows, indent)
@@ -112,4 +135,3 @@ class JoinConditionNotSupportedException(Exception):
 
 class ErrorInJoinConditionException(Exception):
     pass
-
