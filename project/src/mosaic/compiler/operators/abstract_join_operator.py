@@ -6,11 +6,11 @@ from ..expressions.column_expression import ColumnExpression
 from ..expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
 from ..expressions.conjunctive_expression import ConjunctiveExpression
 
+
 class JoinType(Enum):
     CROSS = "cross"
     INNER = "inner"
     LEFT_OUTER = "left_outer"
-    # TODO add more join types as needed
 
 
 class AbstractJoin(AbstractOperator):
@@ -107,5 +107,9 @@ class JoinTypeNotSupportedException(Exception):
 
 
 class JoinConditionNotSupportedException(Exception):
+    pass
+
+
+class ErrorInJoinConditionException(Exception):
     pass
 
