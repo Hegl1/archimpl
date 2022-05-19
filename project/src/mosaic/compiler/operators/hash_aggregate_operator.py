@@ -5,8 +5,11 @@ from unittest import result
 from mosaic.compiler.operators.abstract_operator import AbstractOperator
 from mosaic.table_service import Schema, SchemaType, Table
 
+
 class VarcharAggregateException(Exception):
     pass
+
+
 class AggregateFunction(Enum):
     SUM = "SUM"
     AVG = "AVG"
@@ -17,7 +20,8 @@ class AggregateFunction(Enum):
 
 def aggregate_schema_type(aggregation_function, current_schema):
     if current_schema == SchemaType.VARCHAR and aggregation_function != AggregateFunction.COUNT:
-        raise VarcharAggregateException("Varchar can only be aggregated with count")
+        raise VarcharAggregateException(
+            "Varchar can only be aggregated with count")
 
     if aggregation_function == AggregateFunction.AVG:
         SchemaType.FLOAT
@@ -48,9 +52,9 @@ def aggregate(aggregation_function, to_aggregate):
 
 def extract(aggregations):
     clean_aggregations = []
-    aggregation = aggregations[0]
-    while(isinstance(aggregation,list)):
-        if (isinstance(aggregation[0],list)):
+    aggregation = aggregations
+    while(isinstance(aggregation, list)):
+        if (isinstance(aggregation[0], list)):
             aggregation = aggregation[0]
             continue
         clean_aggregations.append(aggregation[0])
@@ -120,6 +124,7 @@ class HashAggregate(AbstractOperator, ABC):
                 result = aggregate(aggregation_function, to_aggregate)
 
                 rows[0].append(result)
+
         return rows
 
     def build_schema(self):
@@ -144,9 +149,9 @@ class HashAggregate(AbstractOperator, ABC):
 
     def get_result(self):
 
-         # calculate schema
         schema = self.build_schema()
 
+        # calculate schema
         if self.group_names:
             # group
             groups = self.group_columns()
@@ -156,7 +161,6 @@ class HashAggregate(AbstractOperator, ABC):
         else:
             records = self.calculate_aggregations()
 
-
         return Table(schema, records)
 
     def __str__(self):
@@ -164,9 +168,11 @@ class HashAggregate(AbstractOperator, ABC):
         groups = []
         aggregates = []
         for aggregate in self.aggregations:
-            aggregates.append(f"{aggregate[1].value}({schema.get_fully_qualified_column_name(aggregate[2].value)}) -> {aggregate[0]}")
+            aggregates.append(
+                f"{aggregate[1].value}({schema.get_fully_qualified_column_name(aggregate[2].value)}) -> {aggregate[0]}")
         for group in self.group_names:
-            groups.append(schema.get_fully_qualified_column_name(group[1].value))
+            groups.append(
+                schema.get_fully_qualified_column_name(group[1].value))
 
         return f"Aggregation(groups=[{', '.join(groups)}],aggregates=[{', '.join(aggregates)}])"
 
