@@ -5,14 +5,14 @@ from mosaic.query_executor import execute_query
 
 def test_union_get_result():
     result, _ = execute_query("pi VorlNr as Vorgaenger voraussetzen union pi VorlNr vorlesungen;")[0]
-    assert len(result) == 17
+    assert len(result) == 18
 
 
 def test_intersect_get_result():
     result, _ = execute_query("pi VorlNr as Vorgaenger voraussetzen intersect pi VorlNr vorlesungen;")[0]
-    assert len(result) == 7
+    assert len(result) == 10
     result, _ = execute_query("pi VorlNr as Vorgaenger voraussetzen intersect pi VorlNr as gelesenVon vorlesungen;")[0]
-    assert len(result) == 0
+    assert len(result) == 2
 
 
 def test_except_get_result():

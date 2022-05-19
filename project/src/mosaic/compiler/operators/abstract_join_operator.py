@@ -25,11 +25,11 @@ class AbstractJoin(AbstractOperator):
         self.is_natural = is_natural
 
     @abstractmethod
-    def get_result(self):
+    def get_result(self): # pragma: no cover
         pass
 
     @abstractmethod
-    def check_condition(self, schema1, schema2, condition):
+    def check_condition(self, schema1, schema2, condition): # pragma: no cover
         """
         Method that checks whether the join can be performed with the given condition and the given schemas.
         """

@@ -87,8 +87,7 @@ class HashJoin(AbstractJoin):
                 not isinstance(condition.left, ColumnExpression) or \
                 condition.operator != ComparativeOperator.EQUAL:
             raise JoinConditionNotSupportedException("HashJoin only supports conjunctions of equalities or "
-                                                     "simple "
-                                                     "equalities")
+                                                     "simple equalities that only contain column references")
 
     def _check_comparative_condition_invalid_references(self, schema1, schema2, comparative):
         """
