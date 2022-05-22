@@ -57,7 +57,9 @@ def extract(aggregations):
         if (isinstance(aggregation[0], list)):
             aggregation = aggregation[0]
             continue
+
         clean_aggregations.append(aggregation[0])
+
         if len(aggregation) == 3:
             aggregation = aggregation[2]
         else:
@@ -82,11 +84,17 @@ class HashAggregate(AbstractOperator, ABC):
 
         group_table = {}
 
-        # create new table wit first in group:
-        column_indexes = [table.get_column_index(
+        # if no group names return hashmap
+        if not self.group_names:
+            return {"": table.records}
+
+        # get indexes of all group columns
+        grouping_columns = [table.get_column_index(
             group_name[1].value) for group_name in self.group_names]
+
+        # generate hashmap
         for row in table.records:
-            key = tuple(row[key_index] for key_index in column_indexes)
+            key = tuple(row[key_index] for key_index in grouping_columns)
             if key not in group_table:
                 group_table[key] = [row]
             else:
@@ -94,36 +102,24 @@ class HashAggregate(AbstractOperator, ABC):
 
         return group_table
 
-    def calculate_aggregations(self, groups=None):
+    def calculate_aggregations(self, groups):
         table = self.table_reference.get_result()
         rows = []
-        if groups:
-            for grouped_keys, group in groups.items():
-                row = list(grouped_keys)
-                for aggregation in self.aggregations:
-                    aggregation_function = aggregation[1]
-                    aggregated_column_index = table.get_column_index(
-                        aggregation[2].value)
-
-                    to_aggregate = [group_row[aggregated_column_index]
-                                    for group_row in group]
-
-                    result = aggregate(aggregation_function, to_aggregate)
-
-                    row.append(result)
-
-                rows.append(row)
-
-        else:
-            rows.append([])
+        for grouped_keys, group in groups.items():
+            row = list(grouped_keys)
             for aggregation in self.aggregations:
                 aggregation_function = aggregation[1]
+                aggregated_column_index = table.get_column_index(
+                    aggregation[2].value)
 
-                to_aggregate = table[:, aggregation[2].value]
+                to_aggregate = [group_row[aggregated_column_index]
+                                for group_row in group]
 
                 result = aggregate(aggregation_function, to_aggregate)
 
-                rows[0].append(result)
+                row.append(result)
+
+            rows.append(row)
 
         return rows
 
@@ -150,16 +146,8 @@ class HashAggregate(AbstractOperator, ABC):
     def get_result(self):
 
         schema = self.build_schema()
-
-        # calculate schema
-        if self.group_names:
-            # group
-            groups = self.group_columns()
-
-            # calculate aggregations
-            records = self.calculate_aggregations(groups)
-        else:
-            records = self.calculate_aggregations()
+        groups = self.group_columns()
+        records = self.calculate_aggregations(groups)
 
         return Table(schema, records)
 
