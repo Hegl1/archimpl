@@ -20,13 +20,12 @@ def test_cross_join():
 
 def test_table_self_join_without_renaming():
     table1 = TableScan("professoren")
-    join = NestedLoopsJoin(table1, table1, JoinType.CROSS, condition=None, is_natural=False)
     with pytest.raises(SelfJoinWithoutRenamingException):
-        join.get_result()
+        NestedLoopsJoin(table1, table1, JoinType.CROSS, condition=None, is_natural=False)
+
     table2 = TableScan("assistenten", "professoren")
-    join = NestedLoopsJoin(table1, table2, JoinType.CROSS, condition=None, is_natural=False)
     with pytest.raises(SelfJoinWithoutRenamingException):
-        join.get_result()
+        NestedLoopsJoin(table1, table2, JoinType.CROSS, condition=None, is_natural=False)
 
 
 def test_table_self_join_with_renaming():

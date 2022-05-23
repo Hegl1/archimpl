@@ -5,6 +5,7 @@ from .abstract_operator import AbstractOperator
 from ..expressions.column_expression import ColumnExpression
 from ..expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
 from ..expressions.conjunctive_expression import ConjunctiveExpression
+from ..compiler_exception import CompilerException
 
 
 class JoinType(Enum):
@@ -20,9 +21,16 @@ class AbstractJoin(AbstractOperator):
 
         self.table1_reference = table1_reference
         self.table2_reference = table2_reference
+        schema1 = self.table1_reference.get_schema()
+        schema2 = self.table2_reference.get_schema()
         self.join_type = join_type
-        self.condition = condition
         self.is_natural = is_natural
+        self.check_join_type()
+        if self.is_natural and self.join_type != JoinType.CROSS:
+            self.condition = self._build_natural_join_condition(schema1, schema2)
+        else:
+            self.condition = condition
+        self.schema = self._build_schema(schema1, schema2)
 
     @abstractmethod
     def get_result(self): # pragma: no cover
@@ -35,15 +43,17 @@ class AbstractJoin(AbstractOperator):
         """
         pass
 
+    @abstractmethod
+    def check_join_type(self): # pragma: no cover
+        pass
+
     def check_table_names(self, schema1, schema2):
         if schema1.table_name == schema2.table_name:
             raise SelfJoinWithoutRenamingException(f"Table \"{schema1.table_name}\" can't be joined with itself "
                                                    f"without renaming one of the occurrences")
 
     def get_schema(self):
-        schema1 = self.table1_reference.get_schema()
-        schema2 = self.table2_reference.get_schema()
-        return self._build_schema(schema1, schema2)
+        return self.schema
 
     def _build_schema(self, schema1, schema2):
         self.check_table_names(schema1, schema2)
@@ -81,6 +91,7 @@ class AbstractJoin(AbstractOperator):
         matching_pairs = self._find_matching_simple_column_names(schema1, schema2)
         if len(matching_pairs) == 0:
             self.join_type = JoinType.CROSS
+            self.check_join_type()
             return None
         elif len(matching_pairs) == 1:
             # construct equivalence
@@ -117,21 +128,21 @@ class AbstractJoin(AbstractOperator):
         self.table2_reference.explain(rows, indent + 2)
 
 
-class ConditionNotValidException(Exception):
+class ConditionNotValidException(CompilerException):
     pass
 
 
-class SelfJoinWithoutRenamingException(Exception):
+class SelfJoinWithoutRenamingException(CompilerException):
     pass
 
 
-class JoinTypeNotSupportedException(Exception):
+class JoinTypeNotSupportedException(CompilerException):
     pass
 
 
-class JoinConditionNotSupportedException(Exception):
+class JoinConditionNotSupportedException(CompilerException):
     pass
 
 
-class ErrorInJoinConditionException(Exception):
+class ErrorInJoinConditionException(CompilerException):
     pass

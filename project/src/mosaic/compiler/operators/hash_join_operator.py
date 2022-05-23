@@ -10,13 +10,6 @@ class HashJoin(AbstractJoin):
         table1 = self.table1_reference.get_result()
         table2 = self.table2_reference.get_result()
 
-        if self.is_natural and self.join_type != JoinType.CROSS:
-            self.condition = self._build_natural_join_condition(table1.schema, table2.schema)
-
-        if self.join_type == JoinType.CROSS:
-            raise JoinTypeNotSupportedException("Cross joins are not supported by Hashjoin")
-
-        result_schema = self._build_schema(table1.schema, table2.schema)
         result_records = []
         table1_hash = self._build_hash(table1, self.condition)
         used_keys = set()
@@ -26,7 +19,7 @@ class HashJoin(AbstractJoin):
         if self.join_type == JoinType.LEFT_OUTER:
             self._build_not_matching_records(table2, table1_hash, used_keys, result_records)
 
-        return Table(result_schema, result_records)
+        return Table(self.schema, result_records)
 
     def _build_matching_records(self, table2, table1_hash, used_keys, result_records):
         """
@@ -76,6 +69,10 @@ class HashJoin(AbstractJoin):
         else:
             self._check_comparative_condition_supported(condition)
             self._check_comparative_condition_invalid_references(schema1, schema2, condition)
+
+    def check_join_type(self):
+        if self.join_type == JoinType.CROSS:
+            raise JoinTypeNotSupportedException("Cross joins are not supported by Hashjoin")
 
     def _check_comparative_condition_supported(self, condition):
         """
