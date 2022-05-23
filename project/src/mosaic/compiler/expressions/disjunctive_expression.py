@@ -36,6 +36,8 @@ class DisjunctiveExpression(AbstractComputationExpression):
 
                 if result:
                     return LiteralExpression(1)
+            elif isinstance(condition, DisjunctiveExpression):
+                new_conditions += condition.conditions
             else:
                 new_conditions.append(condition)
 

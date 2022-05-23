@@ -36,6 +36,8 @@ class ConjunctiveExpression(AbstractComputationExpression):
 
                 if not result:
                     return LiteralExpression(0)
+            elif isinstance(condition, ConjunctiveExpression):
+                new_conditions += condition.conditions
             else:
                 new_conditions.append(condition)
 
