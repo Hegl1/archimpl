@@ -5,7 +5,7 @@ execution plan.
 """
 
 from parsimonious.nodes import NodeVisitor
-
+from mosaic.compiler.compiler_exception import CompilerException
 from mosaic.compiler.expressions.arithmetic_operation_expression import ArithmeticOperationExpression, \
     ArithmeticOperator
 from mosaic.compiler.expressions.column_expression import ColumnExpression
@@ -26,9 +26,6 @@ from mosaic.compiler.operators.set_operators import SetOperationType, Union, Int
 from mosaic.compiler.operators.table_scan_operator import TableScan
 
 
-class QueryExecutionError(Exception):
-    pass
-
 
 ###########################################################
 # Visitor for traversing the AST.
@@ -39,7 +36,7 @@ class ASTVisitor(NodeVisitor):
 
     # We define QueryExecutionError as an unwrapped exception,
     # so that parsimonious does not wrap it inside a VisitationError.
-    unwrapped_exceptions = (QueryExecutionError,)
+    unwrapped_exceptions = (CompilerException,)
 
     ####################
     # Literals

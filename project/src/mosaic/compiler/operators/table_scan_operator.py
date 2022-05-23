@@ -1,3 +1,4 @@
+from copy import deepcopy
 from mosaic import table_service
 from .abstract_operator import AbstractOperator
 
@@ -22,7 +23,7 @@ class TableScan(AbstractOperator):
         return table
 
     def get_schema(self):
-        schema = table_service.retrieve(self.table_name, makeCopy=False).schema
+        schema = deepcopy(table_service.retrieve(self.table_name, makeCopy=False).schema)
         if self.alias is not None:
             schema.rename(self.alias)
         return schema
