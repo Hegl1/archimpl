@@ -1,7 +1,6 @@
 from abc import ABC
 from copy import deepcopy
 from enum import Enum
-from unittest import result
 from mosaic.compiler.operators.abstract_operator import AbstractOperator
 from mosaic.table_service import Schema, SchemaType, Table
 
@@ -19,14 +18,14 @@ class AggregateFunction(Enum):
 
 
 def aggregate_schema_type(aggregation_function, current_schema):
-    if current_schema == SchemaType.VARCHAR and aggregation_function != AggregateFunction.COUNT:
+    if current_schema == SchemaType.VARCHAR and (aggregation_function == AggregateFunction.AVG or aggregation_function == AggregateFunction.SUM):
         raise VarcharAggregateException(
-            "Varchar can only be aggregated with count")
+            "Varchar can only be aggregated with count, min and max")
 
     if aggregation_function == AggregateFunction.AVG:
-        SchemaType.FLOAT
+        return SchemaType.FLOAT
     elif aggregation_function == AggregateFunction.COUNT:
-        SchemaType.INT
+        return SchemaType.INT
     elif aggregation_function == AggregateFunction.MAX:
         return current_schema
     elif aggregation_function == AggregateFunction.MIN:
@@ -77,9 +76,9 @@ class HashAggregate(AbstractOperator, ABC):
         self.aggregations = extract(aggregations)
 
     def get_schema(self):
-        return self.build_schema()
+        return self._build_schema()
 
-    def group_columns(self):
+    def _group_columns(self):
         table = self.table_reference.get_result()
 
         group_table = {}
@@ -102,7 +101,7 @@ class HashAggregate(AbstractOperator, ABC):
 
         return group_table
 
-    def calculate_aggregations(self, groups):
+    def _calculate_aggregations(self, groups):
         table = self.table_reference.get_result()
         rows = []
         for grouped_keys, group in groups.items():
@@ -123,7 +122,7 @@ class HashAggregate(AbstractOperator, ABC):
 
         return rows
 
-    def build_schema(self):
+    def _build_schema(self):
         old_table = self.table_reference.get_result()
         old_schema = self.table_reference.get_schema()
 
@@ -133,7 +132,7 @@ class HashAggregate(AbstractOperator, ABC):
         if self.group_names:
             column_names += [old_schema.get_fully_qualified_column_name(
                 group_name[1].value) for group_name in self.group_names]
-            column_types += [old_table.get_column_index(name)
+            column_types += [old_schema.column_types[old_table.get_column_index(name)] 
                              for name in column_names]
 
         column_names += [aggregation[0]
@@ -145,9 +144,9 @@ class HashAggregate(AbstractOperator, ABC):
 
     def get_result(self):
 
-        schema = self.build_schema()
-        groups = self.group_columns()
-        records = self.calculate_aggregations(groups)
+        schema = self._build_schema()
+        groups = self._group_columns()
+        records = self._calculate_aggregations(groups)
 
         return Table(schema, records)
 
