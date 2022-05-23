@@ -21,17 +21,13 @@ class NestedLoopsJoin(AbstractJoin):
         table1 = self.table1_reference.get_result()
         table2 = self.table2_reference.get_result()
 
-        self.check_table_names(table1.schema, table2.schema)
-        self.check_condition(table1.schema, table2.schema, self.condition)
-
         if self.join_type == JoinType.CROSS:
             joined_table_records = []
             for record1 in table1.records:
                 for record2 in table2.records:
                     joined_table_records.append(record1 + record2)
-            schema = self._build_schema(table1.schema, table2.schema)
 
-            return Table(schema, joined_table_records)
+            return Table(self.schema, joined_table_records)
         # TODO handle other join types correctly
         return None
 
@@ -44,4 +40,7 @@ class NestedLoopsJoin(AbstractJoin):
             return
         # TODO implement together with other join types
         # if we don't compare something with columns from both different tables, raise ConditionNotValidException
+        pass
+
+    def check_join_type(self):
         pass
