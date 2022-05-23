@@ -30,6 +30,9 @@ class Schema:
         self.column_names = column_names
         self.column_types = column_types
 
+    def get_simple_column_name_list(self):
+        return [self.get_simple_column_name(name) for name in self.column_names]
+
     def get_simple_column_name(self, column_name):
         """
         Transforms the FQN column name into a simple column name

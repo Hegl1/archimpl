@@ -16,8 +16,6 @@ def execute_query(user_in, optimize = False):
     results = []
 
     for query in user_in.split(";"):
-        start_execution = perf_counter_ns()
-
         # strip to allow chaining of multiple queries in a line
         query = query.strip()
 
@@ -32,6 +30,8 @@ def execute_query(user_in, optimize = False):
 
                 if optimize:
                     result_expression = optimizer.optimize(result_expression)
+
+                start_execution = perf_counter_ns()
 
                 result = result_expression.get_result()
 
