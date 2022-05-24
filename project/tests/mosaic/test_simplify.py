@@ -4,6 +4,8 @@ from mosaic.compiler.operators.hash_distinct_operator import HashDistinct
 from mosaic.compiler.operators.ordering_operator import OrderingOperator
 from mosaic.compiler.operators.selection_operator import Selection
 from mosaic.compiler.operators.set_operators import Union
+from mosaic.compiler.operators.nested_loops_join_operators import NestedLoopsJoin
+from mosaic.compiler.operators.abstract_join_operator import JoinType
 from mosaic.compiler.expressions.literal_expression import LiteralExpression
 from mosaic.compiler.expressions.column_expression import ColumnExpression
 from mosaic.compiler.expressions.conjunctive_expression import ConjunctiveExpression
@@ -116,6 +118,23 @@ def test_simplify_conjunctive():
     assert len(expression.conditions) == 2
 
 
+def test_simplify_flatten_conjunctive():
+    expression = ConjunctiveExpression([
+        ConjunctiveExpression([
+            ComparativeOperationExpression(LiteralExpression(123), ComparativeOperator.EQUAL, ColumnExpression("MatrNr")),
+            ComparativeOperationExpression(LiteralExpression(123), ComparativeOperator.EQUAL, ColumnExpression("VorlNr"))
+        ]),
+        ComparativeOperationExpression(LiteralExpression(124), ComparativeOperator.EQUAL, ColumnExpression("MatrNr")),
+    ])
+
+    expression = expression.simplify()
+
+    assert len(expression.conditions) == 3
+    assert isinstance(expression.conditions[0], ComparativeOperationExpression)
+    assert isinstance(expression.conditions[1], ComparativeOperationExpression)
+    assert isinstance(expression.conditions[2], ComparativeOperationExpression)
+
+
 def test_simplify_disjunctive_to_literal():
     expression = DisjunctiveExpression([LiteralExpression(1), LiteralExpression(0)])
 
@@ -154,6 +173,23 @@ def test_simplify_disjunctive():
     expression = expression.simplify()
 
     assert len(expression.conditions) == 2
+
+
+def test_simplify_flatten_disjunctive():
+    expression = DisjunctiveExpression([
+        DisjunctiveExpression([
+            ComparativeOperationExpression(LiteralExpression(123), ComparativeOperator.EQUAL, ColumnExpression("MatrNr")),
+            ComparativeOperationExpression(LiteralExpression(123), ComparativeOperator.EQUAL, ColumnExpression("VorlNr"))
+        ]),
+        ComparativeOperationExpression(LiteralExpression(124), ComparativeOperator.EQUAL, ColumnExpression("MatrNr")),
+    ])
+
+    expression = expression.simplify()
+
+    assert len(expression.conditions) == 3
+    assert isinstance(expression.conditions[0], ComparativeOperationExpression)
+    assert isinstance(expression.conditions[1], ComparativeOperationExpression)
+    assert isinstance(expression.conditions[2], ComparativeOperationExpression)
 
 
 def test_simplify_explain():
@@ -211,3 +247,17 @@ def test_simplify_union():
     assert isinstance(union, Union)
     assert isinstance(union.table2_reference, TableScan)
     assert union.table2_reference.table_name == "hoeren"
+
+
+def test_simplify_nested_loops_join():
+    table1 = TableScan("vorlesungen")
+    table2 = TableScan("voraussetzen")
+    comparative = ComparativeOperationExpression(ColumnExpression("vorlesungen.VorlNr"),
+                                                  ComparativeOperator.EQUAL,
+                                                  ColumnExpression("voraussetzen.Vorgaenger"))
+    conjunctive = ConjunctiveExpression([comparative, LiteralExpression(1)])
+    join = NestedLoopsJoin(table1, table2, JoinType.INNER, conjunctive, False)
+
+    join = join.simplify()
+
+    assert isinstance(join.condition, ComparativeOperationExpression)

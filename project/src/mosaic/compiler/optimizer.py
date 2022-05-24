@@ -50,9 +50,6 @@ def _selection_access_helper(node: AbstractCompileNode, selection_function):
     If the current node is a selection, the selection_function is called with the selection
     as parameter and the return value is returned.
     """
-    if isinstance(node, AbstractExpression):
-        return node
-
     if isinstance(node, Explain):
         node.execution_plan = _selection_access_helper(node.execution_plan, selection_function)
     elif isinstance(node, HashDistinct):
@@ -157,6 +154,7 @@ def _selection_push_down(selection: Selection):
         node = _selection_push_through_set_operator(selection, child_node)
 
     if node == selection:
+        node.table_reference = _selection_access_helper(node.table_reference, _selection_push_down)
         _pushed_down_selections.add(selection)
 
     return node
@@ -169,7 +167,10 @@ def _selection_push_through_projection(selection: Selection, projection: Project
     Returns the top-level node that contains the selection as child or the selection if
     push-through was not possible
     """
+    projection_schema = projection.get_schema()
+
     selection_columns = _get_comparative_columns(selection.condition)
+    fqn_selection_columns = [projection_schema.get_fully_qualified_column_name(column) for column in selection_columns]
     selection_columns_replacements = {}
 
     found_columns = set()
@@ -190,6 +191,11 @@ def _selection_push_through_projection(selection: Selection, projection: Project
 
                 if column in selection_columns:
                     found_columns.add(column)
+                else:
+                    fqn_column = projection_schema.get_fully_qualified_column_name(column)
+
+                    if fqn_column in fqn_selection_columns:
+                        found_columns.add(fqn_column)
 
     if set(selection_columns) != found_columns:
         # can't be pushed down, return selection

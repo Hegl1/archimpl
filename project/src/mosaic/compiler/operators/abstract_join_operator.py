@@ -122,6 +122,15 @@ class AbstractJoin(AbstractOperator):
         """
         return [None] * num_entries
 
+    def simplify(self):
+        self.table1_reference = self.table1_reference.simplify()
+        self.table2_reference = self.table2_reference.simplify()
+
+        if self.condition is not None:
+            self.condition = self.condition.simplify()
+
+        return self
+
     def explain(self, rows, indent):
         super().explain(rows, indent)
         self.table1_reference.explain(rows, indent + 2)

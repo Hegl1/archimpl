@@ -11,14 +11,15 @@ def refresh_loaded_tables():
 
 
 def _test_query(query, column_names, result_rows):
-    results = query_executor.execute_query(query)
+    for optimize in [True, False]:
+        results = query_executor.execute_query(query, optimize)
 
-    assert len(results) == 1
+        assert len(results) == 1
 
-    result, _ = results[0]
+        result, _ = results[0]
 
-    assert result.schema.column_names == column_names
-    assert len(result) == result_rows
+        assert result.schema.column_names == column_names
+        assert len(result) == result_rows
 
 
 @pytest.mark.parametrize(

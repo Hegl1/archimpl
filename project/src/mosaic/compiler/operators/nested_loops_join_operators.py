@@ -35,15 +35,6 @@ class NestedLoopsJoin(AbstractJoin):
         return f"NestedLoopsJoin(cross, natural={self.is_natural}, condition={self.condition})"
         # TODO does the condition already have to contain only fqn? yes?
 
-    def simplify(self):
-        self.table1_reference = self.table1_reference.simplify()
-        self.table2_reference = self.table2_reference.simplify()
-
-        if self.condition is not None:
-            self.condition = self.condition.simplify()
-
-        return self
-
     def check_condition(self, schema1, schema2, condition):
         if condition is None:
             return
