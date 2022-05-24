@@ -369,14 +369,14 @@ def test_optimizer_selection_push_down_projection_distinct_join():
     assert isinstance(node, Selection)
     assert isinstance(node.table_reference, Projection)
     assert isinstance(node.table_reference.table_reference, HashDistinct)
-    assert isinstance(node.table_reference.table_reference.table, Projection)
-    assert isinstance(node.table_reference.table_reference.table.table_reference, HashJoin)
-    assert isinstance(node.table_reference.table_reference.table.table_reference.table1_reference, TableScan)
-    assert isinstance(node.table_reference.table_reference.table.table_reference.table2_reference, Selection)
-    assert isinstance(node.table_reference.table_reference.table.table_reference.table2_reference.table_reference, Selection)
+    assert isinstance(node.table_reference.table_reference.table_reference, Projection)
+    assert isinstance(node.table_reference.table_reference.table_reference.table_reference, HashJoin)
+    assert isinstance(node.table_reference.table_reference.table_reference.table_reference.table1_reference, TableScan)
+    assert isinstance(node.table_reference.table_reference.table_reference.table_reference.table2_reference, Selection)
+    assert isinstance(node.table_reference.table_reference.table_reference.table_reference.table2_reference.table_reference, Selection)
 
-    selection1 = node.table_reference.table_reference.table.table_reference.table2_reference
-    selection2 = node.table_reference.table_reference.table.table_reference.table2_reference.table_reference
+    selection1 = node.table_reference.table_reference.table_reference.table_reference.table2_reference
+    selection2 = node.table_reference.table_reference.table_reference.table_reference.table2_reference.table_reference
 
     assert isinstance(selection1.condition.left, ColumnExpression)
     assert selection1.condition.left.value == "Name"

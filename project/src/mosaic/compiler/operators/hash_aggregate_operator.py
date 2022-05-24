@@ -85,9 +85,9 @@ def extract(aggregations):
 
 class HashAggregate(AbstractOperator, ABC):
 
-    def __init__(self, table_referece, group_names, aggregations):
+    def __init__(self, table_reference, group_names, aggregations):
         super().__init__()
-        self.table_reference = table_referece
+        self.table_reference = table_reference
         self.group_names = group_names
         self.aggregations = extract(aggregations)
 

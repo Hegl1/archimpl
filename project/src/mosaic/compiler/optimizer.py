@@ -16,6 +16,7 @@ from .operators.abstract_join_operator import AbstractJoin, JoinType
 from .operators.ordering_operator import OrderingOperator
 from .operators.projection_operator import Projection
 from .operators.set_operators import AbstractSetOperator
+from .operators.hash_aggregate_operator import HashAggregate
 
 
 def optimize(execution_plan: AbstractOperator):
@@ -39,6 +40,8 @@ def optimize(execution_plan: AbstractOperator):
     execution_plan = _selection_access_helper(execution_plan, _selection_push_down)
     execution_plan = _selection_access_helper(execution_plan, _join_selections)
 
+    # TODO: replace nested-loops-joins by best replacement join (if possible)
+
     return execution_plan
 
 
@@ -52,17 +55,13 @@ def _selection_access_helper(node: AbstractCompileNode, selection_function):
     """
     if isinstance(node, Explain):
         node.execution_plan = _selection_access_helper(node.execution_plan, selection_function)
-    elif isinstance(node, HashDistinct):
-        node.table = _selection_access_helper(node.table, selection_function)
     elif isinstance(node, (AbstractJoin, AbstractSetOperator)):
         node.table1_reference = _selection_access_helper(node.table1_reference, selection_function)
         node.table2_reference = _selection_access_helper(node.table2_reference, selection_function)
-    elif isinstance(node, (OrderingOperator, Projection)):
+    elif isinstance(node, (OrderingOperator, Projection, HashAggregate, HashDistinct)):
         node.table_reference = _selection_access_helper(node.table_reference, selection_function)
     elif isinstance(node, Selection):
         node = selection_function(node)
-
-    # TODO: include aggregation after merge
 
     return node
 
@@ -132,8 +131,8 @@ def _selection_push_down(selection: Selection):
     if isinstance(child_node, HashDistinct):
         node = child_node
 
-        selection.table_reference = child_node.table
-        child_node.table = _selection_access_helper(selection, _selection_push_down)
+        selection.table_reference = child_node.table_reference
+        child_node.table_reference = _selection_access_helper(selection, _selection_push_down)
     if isinstance(child_node, OrderingOperator):
         node = child_node
 
