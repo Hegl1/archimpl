@@ -7,6 +7,7 @@ from .expressions.column_expression import ColumnExpression
 from .expressions.conjunctive_expression import ConjunctiveExpression
 from .expressions.disjunctive_expression import DisjunctiveExpression
 from .expressions.comparative_operation_expression import ComparativeOperationExpression
+from .expressions.arithmetic_operation_expression import ArithmeticOperationExpression
 from .operators.abstract_operator import AbstractOperator
 from .operators.selection_operator import Selection
 from .operators.explain import Explain
@@ -18,6 +19,18 @@ from .operators.set_operators import AbstractSetOperator
 
 
 def optimize(execution_plan: AbstractOperator):
+    """
+    Function that optimizes the given execution plan by doing the following:
+
+    1. Simplification (simplify()-method)
+    2. Selection push-down
+        2.1 Split conjunctive selections into multiple
+        2.2 Selection push-down
+        2.3 Join consecutive selections to one conjunctive selection
+    3. Replace nested-loops-joins by best replacement join (if possible)
+
+    Returns the optimized execution plan
+    """
     execution_plan = execution_plan.simplify()
 
     # selection push-down
@@ -30,6 +43,13 @@ def optimize(execution_plan: AbstractOperator):
 
 
 def _selection_access_helper(node: AbstractCompileNode, selection_function):
+    """
+    Helper function to access the selection nodes recursively in the given node.
+    If the current node is not a selection, its child-operators are replaced by the
+    return value of the recursive call with the child-operator.
+    If the current node is a selection, the selection_function is called with the selection
+    as parameter and the return value is returned.
+    """
     if isinstance(node, AbstractExpression):
         return node
 
@@ -51,6 +71,10 @@ def _selection_access_helper(node: AbstractCompileNode, selection_function):
 
 
 def _split_selections(selection: Selection):
+    """
+    Splits the given selection into multiple selections (only conjunctive are split).
+    Returns the resulting top-level selection, that contains the other selections as children
+    """
     if isinstance(selection.condition, ConjunctiveExpression):
         conjunctive_conditions = selection.condition.conditions
         condition = conjunctive_conditions.pop(0)
@@ -67,6 +91,10 @@ def _split_selections(selection: Selection):
 
 
 def _join_selections(selection: Selection):
+    """
+    Joins consecutive selections for the given selection.
+    The resulting joined selection is returned (as conjunctive)
+    """
     if isinstance(selection.table_reference, Selection):
         child_selection = selection.table_reference
 
@@ -90,10 +118,14 @@ def _join_selections(selection: Selection):
     return selection
 
 
-_pushed_down_selections = set()
+_pushed_down_selections = set() # contains the selections, that have been pushed down as far as possible
 
 
 def _selection_push_down(selection: Selection):
+    """
+    Pushes down the given selection as far as possible and returns the top-level node
+    that should replace the selection
+    """
     if selection in _pushed_down_selections:
         return selection
 
@@ -131,35 +163,53 @@ def _selection_push_down(selection: Selection):
 
 
 def _selection_push_through_projection(selection: Selection, projection: Projection):
-    node = selection
-
+    """
+    Pushes the selection through the given projection by renaming the referenced columns
+    in the selection and swapping the both operators.
+    Returns the top-level node that contains the selection as child or the selection if
+    push-through was not possible
+    """
     selection_columns = _get_comparative_columns(selection.condition)
     selection_columns_replacements = {}
 
-    push_down = True
+    found_columns = set()
 
-    # TODO check that all selection_columns were found
     for alias, column_reference in projection.column_references:
-        if alias is not None and alias in selection_columns:
+        if alias is not None:
+            if alias in selection_columns:
+                found_columns.add(alias)
+
+                if isinstance(column_reference, ColumnExpression):
+                    selection_columns_replacements[alias] = column_reference.get_result()
+                else:
+                    # can't be pushed down, return selection
+                    return selection
+        else:
             if isinstance(column_reference, ColumnExpression):
-                selection_columns_replacements[alias] = column_reference.get_result()
-            else:
-                # can't be pushed down
-                push_down = False
-                break
+                column = column_reference.get_result()
 
-    if push_down:
-        _replace_comparative_columns(selection.condition, selection_columns_replacements)
+                if column in selection_columns:
+                    found_columns.add(column)
 
-        node = projection
+    if set(selection_columns) != found_columns:
+        # can't be pushed down, return selection
+        # will throw an exception on execution anyways
+        return selection
 
-        selection.table_reference = projection.table_reference
-        projection.table_reference = _selection_access_helper(selection, _selection_push_down)
+    _replace_comparative_columns(selection.condition, selection_columns_replacements)
 
-    return node
+    selection.table_reference = projection.table_reference
+    projection.table_reference = _selection_access_helper(selection, _selection_push_down)
+
+    return projection
 
 
 def _selection_push_through_join_operator(selection: Selection, join_operator: AbstractJoin):
+    """
+    Pushes the selection through the given join-operator by checking that the referenced columns
+    are fully-covered in only one side of the join and pushing it through there (see rules on slides).
+    Returns the top-level node that should replace the selection.
+    """
     node = selection
 
     selection_columns = _get_comparative_columns(selection.condition)
@@ -167,12 +217,19 @@ def _selection_push_through_join_operator(selection: Selection, join_operator: A
     table1_schema = join_operator.table1_reference.get_schema()
     table2_schema = join_operator.table2_reference.get_schema()
 
-    is_fully_covered_table1 = _is_condition_fully_covered_in_schema(selection_columns, table1_schema, table2_schema)
-    is_fully_covered_table2 = _is_condition_fully_covered_in_schema(selection_columns, table2_schema, table1_schema)
-
     if join_operator.is_natural and join_operator.join_type != JoinType.CROSS:
-        pass # TODO: implement for natural join
+        if _are_columns_fully_covered_in_both_schemas(selection_columns, table1_schema, table2_schema):
+            node = join_operator
+
+            table1_selection = Selection(join_operator.table1_reference, selection.condition)
+            table2_selection = Selection(join_operator.table2_reference, deepcopy(selection.condition))
+
+            join_operator.table1_reference = _selection_access_helper(table1_selection, _selection_push_down)
+            join_operator.table2_reference = _selection_access_helper(table2_selection, _selection_push_down)
     else:
+        is_fully_covered_table1 = _are_columns_fully_covered_in_first_schema(selection_columns, table1_schema, table2_schema)
+        is_fully_covered_table2 = _are_columns_fully_covered_in_first_schema(selection_columns, table2_schema, table1_schema)
+
         if is_fully_covered_table1:
             node = join_operator
 
@@ -188,6 +245,11 @@ def _selection_push_through_join_operator(selection: Selection, join_operator: A
 
 
 def _selection_push_through_set_operator(selection: Selection, set_operator: AbstractSetOperator):
+    """
+    Pushes the selection through the given set-operator by pushing it through the left relation
+    and renaming the columns and pushing it through the right relation.
+    Returns the set-operator that should replace the selection
+    """
     table1_schema = set_operator.table1_reference.get_schema()
     table2_schema = set_operator.table2_reference.get_schema()
 
@@ -209,13 +271,14 @@ def _selection_push_through_set_operator(selection: Selection, set_operator: Abs
 
 
 def _get_comparative_columns(expression):
+    """
+    Returns the columns referenced in the given expression (recursively).
+    """
     columns = []
 
-    if isinstance(expression, ComparativeOperationExpression):
-        if isinstance(expression.left, ColumnExpression):
-            columns.append(expression.left.get_result())
-        if isinstance(expression.right, ColumnExpression):
-            columns.append(expression.right.get_result())
+    if isinstance(expression, (ComparativeOperationExpression, ArithmeticOperationExpression)):
+        columns += _get_comparative_columns(expression.left)
+        columns += _get_comparative_columns(expression.right)
     elif isinstance(expression, (ConjunctiveExpression, DisjunctiveExpression)):
         for term in expression.conditions:
             columns += _get_comparative_columns(term)
@@ -226,21 +289,28 @@ def _get_comparative_columns(expression):
 
 
 def _replace_comparative_columns(expression, column_replacement):
-    if isinstance(expression, ComparativeOperationExpression):
-        if isinstance(expression.left, ColumnExpression):
-            if expression.left.get_result() in column_replacement:
-                expression.left.value = column_replacement[expression.left.value]
-        if isinstance(expression.right, ColumnExpression):
-            if expression.right.get_result() in column_replacement:
-                expression.right.value = column_replacement[expression.right.value]
+    """
+    Replaces the column-references in the given expression recursively.
+    For that it uses the column_replacement, where the key is the column-name that
+    should be replaced and the value with which it should be replaced
+    """
+    if isinstance(expression, (ComparativeOperationExpression, ArithmeticOperationExpression)):
+        _replace_comparative_columns(expression.left, column_replacement)
+        _replace_comparative_columns(expression.right, column_replacement)
     elif isinstance(expression, (ConjunctiveExpression, DisjunctiveExpression)):
         for term in expression.conditions:
             _replace_comparative_columns(term, column_replacement)
     elif isinstance(expression, ColumnExpression):
-        expression.value = column_replacement[expression.value]
+        if expression.value in column_replacement:
+            expression.value = column_replacement[expression.value]
 
 
-def _is_condition_fully_covered_in_schema(columns, schema1: Schema, schema2: Schema):
+def _are_columns_fully_covered_in_first_schema(columns, schema1: Schema, schema2: Schema):
+    """
+    Checks whether the given columns are only fully covered in the first schema.
+    This means it should only reference columns of the first schema, but none of the second one
+    (all referenced columns have to be inside the first schema).
+    """
     for column in columns:
         try:
             schema1.get_column_index(column)
@@ -252,4 +322,22 @@ def _is_condition_fully_covered_in_schema(columns, schema1: Schema, schema2: Sch
             return False
         except TableIndexException:
             pass
+    return True
+
+
+def _are_columns_fully_covered_in_both_schemas(columns, schema1: Schema, schema2: Schema):
+    """
+    Checks whether the given columns are fully covered in both schemas.
+    This means each referenced column has to be contained in the first and the second schema.
+    """
+    for column in columns:
+        try:
+            schema1.get_column_index(column)
+        except TableIndexException:
+            return False
+
+        try:
+            schema2.get_column_index(column)
+        except TableIndexException:
+            return False
     return True
