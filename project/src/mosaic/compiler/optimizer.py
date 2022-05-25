@@ -128,12 +128,7 @@ def _selection_push_down(selection: Selection):
     child_node = selection.table_reference
     node = selection
 
-    if isinstance(child_node, HashDistinct):
-        node = child_node
-
-        selection.table_reference = child_node.table_reference
-        child_node.table_reference = _selection_access_helper(selection, _selection_push_down)
-    if isinstance(child_node, OrderingOperator):
+    if isinstance(child_node, (HashDistinct, OrderingOperator)):
         node = child_node
 
         selection.table_reference = child_node.table_reference
@@ -222,29 +217,34 @@ def _selection_push_through_join_operator(selection: Selection, join_operator: A
     table1_schema = join_operator.table1_reference.get_schema()
     table2_schema = join_operator.table2_reference.get_schema()
 
+    is_fully_covered_table1 = False
+    is_fully_covered_table2 = False
+    table1_selection = selection
+    table2_selection = selection
+
     if join_operator.is_natural and join_operator.join_type != JoinType.CROSS:
         if _are_columns_fully_covered_in_both_schemas(selection_columns, table1_schema, table2_schema):
-            node = join_operator
+            is_fully_covered_table1 = True
+            is_fully_covered_table2 = True
 
             table1_selection = Selection(join_operator.table1_reference, selection.condition)
             table2_selection = Selection(join_operator.table2_reference, deepcopy(selection.condition))
 
-            join_operator.table1_reference = _selection_access_helper(table1_selection, _selection_push_down)
-            join_operator.table2_reference = _selection_access_helper(table2_selection, _selection_push_down)
-    else:
+    if not is_fully_covered_table1 and not is_fully_covered_table2:
         is_fully_covered_table1 = _are_columns_fully_covered_in_first_schema(selection_columns, table1_schema, table2_schema)
         is_fully_covered_table2 = _are_columns_fully_covered_in_first_schema(selection_columns, table2_schema, table1_schema)
 
-        if is_fully_covered_table1:
-            node = join_operator
+    if is_fully_covered_table1:
+        node = join_operator
 
-            selection.table_reference = join_operator.table1_reference
-            join_operator.table1_reference = _selection_access_helper(selection, _selection_push_down)
-        elif is_fully_covered_table2:
-            node = join_operator
+        table1_selection.table_reference = join_operator.table1_reference
+        join_operator.table1_reference = _selection_access_helper(table1_selection, _selection_push_down)
 
-            selection.table_reference = join_operator.table2_reference
-            join_operator.table2_reference = _selection_access_helper(selection, _selection_push_down)
+    if is_fully_covered_table2:
+        node = join_operator
+
+        table2_selection.table_reference = join_operator.table2_reference
+        join_operator.table2_reference = _selection_access_helper(table2_selection, _selection_push_down)
 
     return node
 
