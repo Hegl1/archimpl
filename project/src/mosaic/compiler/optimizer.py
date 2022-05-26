@@ -19,6 +19,9 @@ from .operators.set_operators import AbstractSetOperator
 from .operators.hash_aggregate_operator import HashAggregate
 
 
+_pushed_down_selections = set() # contains the selections, that have been pushed down as far as possible
+
+
 def optimize(execution_plan: AbstractOperator):
     """
     Function that optimizes the given execution plan by doing the following:
@@ -41,6 +44,9 @@ def optimize(execution_plan: AbstractOperator):
     execution_plan = _selection_access_helper(execution_plan, _join_selections)
 
     # TODO: replace nested-loops-joins by best replacement join (if possible)
+
+    global _pushed_down_selections
+    _pushed_down_selections = set()
 
     return execution_plan
 
@@ -114,9 +120,6 @@ def _join_selections(selection: Selection):
     return selection
 
 
-_pushed_down_selections = set() # contains the selections, that have been pushed down as far as possible
-
-
 def _selection_push_down(selection: Selection):
     """
     Pushes down the given selection as far as possible and returns the top-level node
@@ -163,7 +166,7 @@ def _selection_push_through_projection(selection: Selection, projection: Project
     """
     projection_schema = projection.get_schema()
 
-    selection_columns = _get_comparative_columns(selection.condition)
+    selection_columns = _get_condition_columns(selection.condition)
     fqn_selection_columns = [projection_schema.get_fully_qualified_column_name(column) for column in selection_columns]
     selection_columns_replacements = {}
 
@@ -196,7 +199,7 @@ def _selection_push_through_projection(selection: Selection, projection: Project
         # will throw an exception on execution anyways
         return selection
 
-    _replace_comparative_columns(selection.condition, selection_columns_replacements)
+    _replace_condition_columns(selection.condition, selection_columns_replacements)
 
     selection.table_reference = projection.table_reference
     projection.table_reference = _selection_access_helper(selection, _selection_push_down)
@@ -212,7 +215,7 @@ def _selection_push_through_join_operator(selection: Selection, join_operator: A
     """
     node = selection
 
-    selection_columns = _get_comparative_columns(selection.condition)
+    selection_columns = _get_condition_columns(selection.condition)
 
     table1_schema = join_operator.table1_reference.get_schema()
     table2_schema = join_operator.table2_reference.get_schema()
@@ -258,7 +261,7 @@ def _selection_push_through_set_operator(selection: Selection, set_operator: Abs
     table1_schema = set_operator.table1_reference.get_schema()
     table2_schema = set_operator.table2_reference.get_schema()
 
-    selection_columns = _get_comparative_columns(selection.condition)
+    selection_columns = _get_condition_columns(selection.condition)
     table_2_selection_columns_replacements = {}
 
     for column in selection_columns:
@@ -267,7 +270,7 @@ def _selection_push_through_set_operator(selection: Selection, set_operator: Abs
 
     table1_selection = Selection(set_operator.table1_reference, selection.condition)
     table2_selection = Selection(set_operator.table2_reference, deepcopy(selection.condition))
-    _replace_comparative_columns(table2_selection.condition, table_2_selection_columns_replacements)
+    _replace_condition_columns(table2_selection.condition, table_2_selection_columns_replacements)
 
     set_operator.table1_reference = _selection_access_helper(table1_selection, _selection_push_down)
     set_operator.table2_reference = _selection_access_helper(table2_selection, _selection_push_down)
@@ -275,36 +278,36 @@ def _selection_push_through_set_operator(selection: Selection, set_operator: Abs
     return set_operator
 
 
-def _get_comparative_columns(expression):
+def _get_condition_columns(expression):
     """
     Returns the columns referenced in the given expression (recursively).
     """
     columns = []
 
     if isinstance(expression, (ComparativeOperationExpression, ArithmeticOperationExpression)):
-        columns += _get_comparative_columns(expression.left)
-        columns += _get_comparative_columns(expression.right)
+        columns += _get_condition_columns(expression.left)
+        columns += _get_condition_columns(expression.right)
     elif isinstance(expression, (ConjunctiveExpression, DisjunctiveExpression)):
         for term in expression.conditions:
-            columns += _get_comparative_columns(term)
+            columns += _get_condition_columns(term)
     elif isinstance(expression, ColumnExpression):
         columns.append(expression.get_result())
 
     return columns
 
 
-def _replace_comparative_columns(expression, column_replacement):
+def _replace_condition_columns(expression, column_replacement):
     """
     Replaces the column-references in the given expression recursively.
     For that it uses the column_replacement, where the key is the column-name that
     should be replaced and the value with which it should be replaced
     """
     if isinstance(expression, (ComparativeOperationExpression, ArithmeticOperationExpression)):
-        _replace_comparative_columns(expression.left, column_replacement)
-        _replace_comparative_columns(expression.right, column_replacement)
+        _replace_condition_columns(expression.left, column_replacement)
+        _replace_condition_columns(expression.right, column_replacement)
     elif isinstance(expression, (ConjunctiveExpression, DisjunctiveExpression)):
         for term in expression.conditions:
-            _replace_comparative_columns(term, column_replacement)
+            _replace_condition_columns(term, column_replacement)
     elif isinstance(expression, ColumnExpression):
         if expression.value in column_replacement:
             expression.value = column_replacement[expression.value]
