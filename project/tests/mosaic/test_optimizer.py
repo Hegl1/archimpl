@@ -110,7 +110,7 @@ def test_optimizer_columns_not_fully_covered_in_both():
     assert not optimizer._are_columns_fully_covered_in_both_schemas(["test", "Name", "schema2.MatrNr"], schema1, schema2)
 
 
-def test_optimizer_get_comparative_columns():
+def test_optimizer_get_condition_columns():
     conjunctive = ConjunctiveExpression([
         ComparativeOperationExpression(
             ColumnExpression("MatrNr"),
@@ -124,7 +124,7 @@ def test_optimizer_get_comparative_columns():
         ColumnExpression("Raum")
     ])
 
-    columns = optimizer._get_comparative_columns(conjunctive)
+    columns = optimizer._get_condition_columns(conjunctive)
 
     assert len(columns) == 3
     assert "MatrNr" in columns
@@ -132,7 +132,7 @@ def test_optimizer_get_comparative_columns():
     assert "Raum" in columns
 
 
-def test_optimizer_replace_comparative_columns():
+def test_optimizer_replace_condition_columns():
     conjunctive = ConjunctiveExpression([
         ComparativeOperationExpression(
             ColumnExpression("MatrNr"),
@@ -151,7 +151,7 @@ def test_optimizer_replace_comparative_columns():
         "Name": "nm"
     }
 
-    optimizer._replace_comparative_columns(conjunctive, column_replacement)
+    optimizer._replace_condition_columns(conjunctive, column_replacement)
 
     conjunctive.conditions[0].left.value == "hoeren.MatrNr"
     conjunctive.conditions[0].right.right == "nm"
