@@ -46,18 +46,17 @@ class Schema:
         """
         Transforms a column name to a FQN column name
         """
-        if column_name in self.column_names:
-            return column_name
 
-        if "." in column_name:
-            return column_name
-
-        found_columns = list(filter(lambda column: column.endswith(f".{column_name}"), self.column_names))
+        found_columns = list(filter(lambda column: column.endswith(f".{column_name}")
+                                                   or column == column_name, self.column_names))
 
         if len(found_columns) > 1:
             raise AmbiguousColumnException(f"Column \"{column_name}\" is ambiguous in table \"{self.table_name}\"")
         elif len(found_columns) == 1:
             return found_columns[0]
+
+        if len(found_columns) == 0 and "." in column_name:
+            return column_name
 
         return f"{self.table_name}.{column_name}"
 
