@@ -106,6 +106,12 @@ class Projection(AbstractOperator):
 
         return data
 
+    def simplify(self):
+        self.column_references = [(alias, column_ref.simplify()) for alias, column_ref in self.column_references]
+        self.table_reference = self.table_reference.simplify()
+
+        return self
+
     def __str__(self):
         new_schema = self.get_schema()
         old_schema = self.table_reference.get_schema()

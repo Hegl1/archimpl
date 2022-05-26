@@ -18,7 +18,6 @@ def test_nested_comparisons():
 
     nested_compare = ComparativeOperationExpression(
         comparative_operation, ComparativeOperator.EQUAL, comparative_operation2)
-    print(nested_compare)
     sum, entries = comparative_helper.evaluate(nested_compare)
     assert (sum == (entries - 2))
 

@@ -63,7 +63,7 @@ class HashJoin(AbstractJoin):
 
     def check_condition(self, schema1, schema2, condition):
         if isinstance(condition, ConjunctiveExpression):
-            for comparative in condition.value:
+            for comparative in condition.conditions:
                 self._check_comparative_condition_supported(comparative)
                 self._check_comparative_condition_invalid_references(schema1, schema2, comparative)
         else:
@@ -128,7 +128,7 @@ class HashJoin(AbstractJoin):
         if isinstance(condition, ComparativeOperationExpression):
             columns.append(self._get_join_column_index_from_comparative(relation.schema, condition))
         else:
-            for comparative_condition in condition.value:
+            for comparative_condition in condition.conditions:
                 columns.append(self._get_join_column_index_from_comparative(relation.schema, comparative_condition))
         return columns
 

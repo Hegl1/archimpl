@@ -25,6 +25,11 @@ class OrderingOperator(AbstractOperator):
     def get_schema(self):
         return self.table_reference.get_schema()
 
+    def simplify(self):
+        self.table_reference = self.table_reference.simplify()
+
+        return self
+
     def __str__(self):
         schema = self.get_schema()
         column_name_strings = [schema.get_fully_qualified_column_name(str(column)) for column in self.column_list]

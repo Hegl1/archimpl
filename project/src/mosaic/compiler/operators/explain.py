@@ -23,6 +23,11 @@ class Explain(AbstractOperator, ABC):
         schema = Schema("Execution_plan", ["Operator"], [SchemaType.VARCHAR])
         return Table(schema, rows)
 
+    def simplify(self):
+        self.execution_plan = self.execution_plan.simplify()
+
+        return self
+
     def __str__(self):
         return "Explain"
 
