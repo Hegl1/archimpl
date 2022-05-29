@@ -16,70 +16,76 @@ class MergeJoin(AbstractJoin):
 
         # TODO: check if tables are sorted
 
-        records = self._build_matching_records(table1, table2)
+        result_records = self._build_matching_records(table1, table2)
 
-        return Table(self.schema, records)
+        if self.join_type == JoinType.LEFT_OUTER:
+            self._build_not_matching_records(table1, table2)
 
-    def _build_matching_records(self, table1, table2):
-        table1_referenced_column_indices = self._get_join_column_indices(table1, self.condition)
-        table2_referenced_column_indices = self._get_join_column_indices(table2, self.condition)
+        return Table(self.schema, result_records)
+
+    def _build_matching_records(self, left_table, right_table):
+        left_table_referenced_column_indices = self._get_join_column_indices(left_table, self.condition)
+        right_table_referenced_column_indices = self._get_join_column_indices(right_table, self.condition)
         records = []
 
-        record_index1 = 0
-        record_index2 = 0
+        left_record_index = 0
+        right_record_index = 0
 
-        while record_index1 < len(table1.records) and record_index2 < len(table2.records):
+        while left_record_index < len(left_table.records) and right_record_index < len(right_table.records):
 
-            merge_condition = self._compare_records(table1.records[record_index1], table2.records[record_index2],
-                                                    table1_referenced_column_indices, table2_referenced_column_indices)
+            merge_condition = self._compare_records(left_table.records[left_record_index], right_table.records[right_record_index],
+                                                    left_table_referenced_column_indices, right_table_referenced_column_indices)
 
             if merge_condition == 0:
 
-                cross_joined_records, next_record_index1, next_record_index2 = \
-                    self._cross_join_duplicates(table1, table2, record_index1, record_index2,
-                                                table1_referenced_column_indices, table2_referenced_column_indices)
+                cross_joined_records, left_next_record_index, right_next_record_index = \
+                    self._build_record(left_table, right_table, left_record_index, right_record_index,
+                                       left_table_referenced_column_indices, right_table_referenced_column_indices)
 
                 for record in cross_joined_records:
                     records.append(record)
 
-                record_index1 = next_record_index1
-                record_index2 = next_record_index2
+                left_record_index = left_next_record_index
+                right_record_index = right_next_record_index
 
             elif merge_condition == 1:
-                record_index1 += 1
-
+                left_record_index += 1
             else:
-                record_index2 += 1
+                right_record_index += 1
 
         return records
 
-    def _cross_join_duplicates(self, table1, table2, sub_record_start_index1, sub_record_start_index2,
-                               table1_referenced_column_indices, table2_referenced_column_indices):
+    def _build_not_matching_records(self, table1, table2):
+        pass
 
-        reference1 = self._get_referenced_values(table1, sub_record_start_index1, table1_referenced_column_indices)
-        reference2 = self._get_referenced_values(table2, sub_record_start_index2, table2_referenced_column_indices)
+    def _build_record(self, left_table, right_table, left_sub_record_start_index, right_sub_record_start_index,
+                      left_table_referenced_column_indices, right_table_referenced_column_indices):
 
-        record_end_index1 = sub_record_start_index1 + 1
-        record_end_index2 = sub_record_start_index2 + 1
+        left_reference = self._get_referenced_values(left_table, left_sub_record_start_index, left_table_referenced_column_indices)
+        right_reference = self._get_referenced_values(right_table, right_sub_record_start_index, right_table_referenced_column_indices)
 
-        for record_index1 in range(sub_record_start_index1, len(table1.records)):
-            if self._get_referenced_values(table1, record_index1, table1_referenced_column_indices) != reference1:
-                record_end_index1 = record_index1
+        left_record_end_index = left_sub_record_start_index + 1
+        right_record_end_index = right_sub_record_start_index + 1
+
+        for left_record_index in range(left_sub_record_start_index, len(left_table.records)):
+            if self._get_referenced_values(left_table, left_record_index, left_table_referenced_column_indices) != left_reference:
+                left_record_end_index = left_record_index
                 break
 
-        for record_index2 in range(sub_record_start_index2, len(table2.records)):
-            if self._get_referenced_values(table2, record_index2, table2_referenced_column_indices) != reference2:
-                record_end_index2 = record_index2
+        for right_record_index in range(right_sub_record_start_index, len(right_table.records)):
+            if self._get_referenced_values(right_table, right_record_index, right_table_referenced_column_indices) != right_reference:
+                right_record_end_index = right_record_index
                 break
 
-        records1 = table1.records[sub_record_start_index1:record_end_index1]
-        records2 = table2.records[sub_record_start_index2:record_end_index2]
+        left_records = left_table.records[left_sub_record_start_index:left_record_end_index]
+        right_records = right_table.records[right_sub_record_start_index:right_record_end_index]
 
         cross_product_record = []
-        for element in itertools.product(records1, records2):
-            cross_product_record.append(element[0] + element[1])
+        for left_record, right_record in itertools.product(left_records, right_records):
 
-        return cross_product_record, record_end_index1, record_end_index2
+            cross_product_record.append(left_record + right_record)
+
+        return cross_product_record, left_record_end_index, right_record_end_index
 
     def _get_referenced_values(self, table, record_index, table1_referenced_column_indices):
         return list(map(table.records[record_index].__getitem__, table1_referenced_column_indices))
