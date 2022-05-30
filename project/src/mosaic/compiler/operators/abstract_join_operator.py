@@ -143,7 +143,7 @@ class AbstractJoin(AbstractOperator):
         if isinstance(condition, ComparativeOperationExpression):
             columns.append(self._get_join_column_index_from_comparative(relation.schema, condition))
         else:
-            for comparative_condition in condition.value:
+            for comparative_condition in condition.conditions:
                 columns.append(self._get_join_column_index_from_comparative(relation.schema, comparative_condition))
         return columns
 
