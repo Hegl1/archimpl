@@ -1,6 +1,7 @@
 import pytest
 from mosaic import cli
 from mosaic import table_service
+from mosaic.compiler import optimizer
 from unittest.mock import patch
 from io import StringIO
 from click.testing import CliRunner
@@ -77,6 +78,16 @@ def test_execute_command_quit(mock_out):
 
 
 @mock_stdout
+def test_execute_command_optimize(mock_out):
+    cli._execute_command("\\optimize")
+    function_output = mock_out.getvalue()
+    assert "Optimizer was enabled" in function_output
+    cli._execute_command("\\optimize")
+    function_output = mock_out.getvalue()
+    assert "Optimizer was disabled" in function_output
+
+
+@mock_stdout
 def test_load_initial_data(mock_out):
     cli._load_initial_data("./tests/testdata/")
     function_output = mock_out.getvalue()
@@ -115,6 +126,12 @@ def test_main_query_file():
     result = runner.invoke(cli.main, ["--data-directory", "./tests/testdata/", "--query-file", "./tests/mosaic/testqueries/valid_query.mql"])
     assert "MatrNr" in result.output
     assert "studenten" in result.output
+
+
+def test_main_optimize():
+    runner = CliRunner()
+    result = runner.invoke(cli.main, ["--data-directory", "./tests/testdata/", "--optimize"])
+    assert "Optimizer is enabled" in result.output
 
 
 @mock_stdout

@@ -9,27 +9,35 @@ def refresh_loaded_tables():
     table_service.load_tables_from_directory("./tests/testdata/")
 
 
-def test_execute_query():
+@pytest.mark.parametrize(
+    'optimized',
+    [False,True],
+)
+def test_execute_query(optimized):
     try:
-        assert len(query_executor.execute_query("#tables;")) == 1
-        assert len(query_executor.execute_query("#tables; #tables;")) == 2
+        assert len(query_executor.execute_query("#tables;", optimized)) == 1
+        assert len(query_executor.execute_query("#tables; #tables;", optimized)) == 2
 
-        table_result = query_executor.execute_query("studenten;")
+        table_result = query_executor.execute_query("studenten;", optimized)
         assert len(table_result) == 1
         assert len(table_result[0]) == 2
         assert table_result[0][1] < 10
-        assert len(query_executor.execute_query("pi studenten.MatrNr studenten;")) == 1
+        assert len(query_executor.execute_query("pi studenten.MatrNr studenten;", optimized)) == 1
     except Exception:
         assert False, "Exception raised despite valid input"
     with pytest.raises(cli.CliErrorMessageException):
-       query_executor.execute_query("tableNotFound;")
+       query_executor.execute_query("tableNotFound;", optimized)
     with pytest.raises(cli.CliErrorMessageException):
-        query_executor.execute_query("this is no valid query;")
+        query_executor.execute_query("this is no valid query;", optimized)
 
 
-def test_execute_query_file():
+@pytest.mark.parametrize(
+    'optimized',
+    [False,True],
+)
+def test_execute_query_file(optimized):
     try:
-       assert len(query_executor.execute_query_file("./tests/mosaic/testqueries/valid_query.mql")) == 2
+       assert len(query_executor.execute_query_file("./tests/mosaic/testqueries/valid_query.mql", optimized)) == 2
     except Exception as e:
        assert False, f"Exception raised despite valid query file: {e}"
 
