@@ -21,25 +21,53 @@ class NestedLoopsJoin(AbstractJoin):
         table1 = self.table1_reference.get_result()
         table2 = self.table2_reference.get_result()
 
-        if self.join_type == JoinType.CROSS:
-            joined_table_records = []
-            for record1 in table1.records:
-                for record2 in table2.records:
-                    joined_table_records.append(record1 + record2)
+        remaining_column_indices = []
+        if self.is_natural:
+            remaining_column_indices = self.get_remaining_column_indices(table2.schema)
 
-            return Table(self.schema, joined_table_records)
-        # TODO handle other join types correctly
-        return None
+        joined_table_records = []
+        aux_schema = Schema("aux_table", table1.schema.column_names + table2.schema.column_names,
+                            table1.schema.column_types + table2.schema.column_types)
+        aux_table = Table(aux_schema, [])
+
+        for record1 in table1.records:
+            found_match = False
+            for record2 in table2.records:
+                if self.is_natural and self.join_type is not JoinType.CROSS:
+                    record2_reduced = [record2[i] for i in remaining_column_indices]
+                    new_record = record1 + record2_reduced
+                    aux_table.records = [record1 + record2]
+                else:
+                    new_record = record1 + record2
+                    aux_table.records = [new_record]
+
+                if self.join_type == JoinType.CROSS or self.condition.get_result(aux_table, 0):
+                    found_match = True
+                    joined_table_records.append(new_record)
+
+            if self.join_type == JoinType.LEFT_OUTER and not found_match:
+                if self.is_natural:
+                    joined_table_records.append(record1 + self._build_null_record(len(remaining_column_indices)))
+                else:
+                    joined_table_records.append(record1 + self._build_null_record(len(table2.schema.column_names)))
+
+        return Table(self.schema, joined_table_records)
+
+    def get_remaining_column_indices(self, schema2):
+        """
+        Returns a list of values corresponding to the indices of the columns than remain in the schema after the join.
+        Used for creation of tuples in a natural join.
+        """
+        remaining_indices = []
+        for i, column_name in enumerate(schema2.column_names):
+            if column_name in self.schema.column_names:
+                remaining_indices.append(i)
+        return remaining_indices
 
     def __str__(self):
-        return f"NestedLoopsJoin(cross, natural={self.is_natural}, condition={self.condition})"
-        # TODO does the condition already have to contain only fqn? yes?
+        return f"NestedLoopsJoin({self.join_type.value}, natural={self.is_natural}, condition={self.condition})"
 
     def check_condition(self, schema1, schema2, condition):
-        if condition is None:
-            return
-        # TODO implement together with other join types
-        # if we don't compare something with columns from both different tables, raise ConditionNotValidException
         pass
 
     def check_join_type(self):

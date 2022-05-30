@@ -207,6 +207,6 @@ def test_hashjoin_explain():
     result = expl.get_result()
     assert len(result) == 3
     assert "HashJoin" in result.records[0][0]
-    assert "left=True" in result.records[0][0]
+    assert "left_outer" in result.records[0][0]
     assert "condition=(studenten.Name = assistenten.Name)" in result.records[0][0]
     assert "natural=True" in result.records[0][0]

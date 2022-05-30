@@ -1,7 +1,6 @@
 from .abstract_join_operator import *
 from ..expressions.column_expression import ColumnExpression
 from ..expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
-from ...table_service import TableIndexException
 
 
 class HashJoin(AbstractJoin):
@@ -86,17 +85,6 @@ class HashJoin(AbstractJoin):
             raise JoinConditionNotSupportedException("HashJoin only supports conjunctions of equalities or "
                                                      "simple equalities that only contain column references")
 
-    def _check_comparative_condition_invalid_references(self, schema1, schema2, comparative):
-        """
-        Checks whether the equalities in comparative always contain exactly one column reference of one table
-        and column names not being ambiguous.
-        Throws an exception if the condition is invalid.
-        e.g:    hoeren join hoeren.MatrNr = pruefen.MatrNr pruefen -> is valid
-                hoeren MatrNr = pruefen.MatrNr pruefen -> invalid
-        """
-        self._get_join_column_index_from_comparative(schema1, comparative)
-        self._get_join_column_index_from_comparative(schema2, comparative)
-
     def _build_hash(self, relation, condition):
         """
         Builds a hash table of all rows of the given relation based on the join condition.
@@ -118,46 +106,5 @@ class HashJoin(AbstractJoin):
         """
         return tuple([record[reference] for reference in reference_list])
 
-    def _get_join_column_indices(self, relation, condition):
-        """
-        Returns a list of values corresponding to the equivalences used in the condition.
-        i.e. hoeren.MatrNr = pruefen.MatrNr and hoeren.VorlNr = pruefen.VorlNr
-            -> (0, 1) (indices for the left relation.)
-        """
-        columns = []
-        if isinstance(condition, ComparativeOperationExpression):
-            columns.append(self._get_join_column_index_from_comparative(relation.schema, condition))
-        else:
-            for comparative_condition in condition.conditions:
-                columns.append(self._get_join_column_index_from_comparative(relation.schema, comparative_condition))
-        return columns
-
-    def _get_join_column_index_from_comparative(self, schema, comparative):
-        """
-        Method that checks whether the schema reference is left or right in the comparative
-        and returns the column index of that reference for the schema.
-        If no reference is found or the schema gets referenced more than once in the comparative,
-        an exception is thrown.
-        """
-        left = None
-        right = None
-        try:
-            left = schema.get_column_index(comparative.left.get_result())
-        except TableIndexException:
-            pass
-        try:
-            right = schema.get_column_index(comparative.right.get_result())
-        except TableIndexException:
-            pass
-
-        if left is not None and right is not None:
-            raise ErrorInJoinConditionException("Column of one table found in both sides of join condition")
-        elif left is not None:
-            return left
-        elif right is not None:
-            return right
-        else:
-            raise ErrorInJoinConditionException("No table reference found in join condition")
-
     def __str__(self):
-        return f"HashJoin(natural={self.is_natural}, condition={self.condition}, left={self.join_type == JoinType.LEFT_OUTER})"
+        return f"HashJoin({self.join_type.value}, natural={self.is_natural}, condition={self.condition})"
