@@ -97,11 +97,10 @@ class HashAggregate(AbstractOperator, ABC):
     def get_schema(self):
         return self._build_schema()
 
-    def _get_key(self,grouping_columns,row,table,index):
+    def _get_key(self, grouping_columns, row, table, index):
         key_list = []
         for group_column in grouping_columns:
             if isinstance(group_column, AbstractComputationExpression):
-                print(group_column.get_result(table, index))
                 key_list.append(group_column.get_result(table, index))
             elif isinstance(group_column, LiteralExpression):
                 key_list.append(group_column.get_result())
@@ -127,17 +126,18 @@ class HashAggregate(AbstractOperator, ABC):
 
         grouping_columns = []
 
-        for (_,group_name) in self.group_names:
+        for (_, group_name) in self.group_names:
             if isinstance(group_name, AbstractComputationExpression) or isinstance(group_name, LiteralExpression):
                 grouping_columns.append(group_name)
             else:
-                grouping_columns.append(table.get_column_index(group_name.value))
+                grouping_columns.append(
+                    table.get_column_index(group_name.value))
 
         # generate dictionary
         for (index, row) in enumerate(table.records):
             # get indexes of all group columns
-            key = self._get_key(grouping_columns,row,table,index)
-            
+            key = self._get_key(grouping_columns, row, table, index)
+
             if key not in group_table:
                 group_table[key] = [row]
             else:
@@ -185,8 +185,8 @@ class HashAggregate(AbstractOperator, ABC):
         old_table = self.table_reference.get_result()
         old_schema = self.table_reference.get_schema()
 
-
-        column_names, column_types,_ = build_schema(self.group_names,old_schema)
+        column_names, column_types, _ = build_schema(
+            self.group_names, old_schema)
 
         column_names += [aggregation[0]
                          for aggregation in self.aggregations]
@@ -208,15 +208,16 @@ class HashAggregate(AbstractOperator, ABC):
         return Table(schema, records)
 
     def __str__(self):
-        schema = self.table_reference.get_schema()
+        table_schema = self.table_reference.get_schema()
+        aggregate_schema = self.get_schema()
         groups = []
         aggregates = []
         for aggregate in self.aggregations:
             aggregates.append(
-                f"{aggregate[1].value}({schema.get_fully_qualified_column_name(aggregate[2].value)}) -> {aggregate[0]}")
-        for group in self.group_names:
+                f"{aggregate[1].value}({table_schema.get_fully_qualified_column_name(aggregate[2].value)}) -> {aggregate[0]}")
+        for i, (_, column_ref) in enumerate(self.group_names):
             groups.append(
-                schema.get_fully_qualified_column_name(group[1].value))
+                (f"{aggregate_schema.column_names[i]}={str(column_ref)}"))
 
         return f"Aggregation(groups=[{', '.join(groups)}],aggregates=[{', '.join(aggregates)}])"
 
