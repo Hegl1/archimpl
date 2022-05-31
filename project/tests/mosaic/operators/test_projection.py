@@ -1,7 +1,8 @@
 from mosaic.compiler.operators.table_scan_operator import TableScan
 from mosaic.compiler.expressions.column_expression import ColumnExpression
-from mosaic.compiler.operators.projection_operator import Projection, InvalidAliasException
+from mosaic.compiler.operators.projection_operator import Projection
 from mosaic import table_service
+from mosaic.compiler.alias_schema_builder import InvalidAliasException
 from mosaic.table_service import Table
 from mosaic.table_service import TableIndexException
 from mosaic.compiler.expressions.arithmetic_operation_expression import ArithmeticOperationExpression, ArithmeticOperator, \

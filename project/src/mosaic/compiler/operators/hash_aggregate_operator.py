@@ -2,6 +2,7 @@ from abc import ABC
 from copy import deepcopy
 from enum import Enum
 from mosaic.compiler.operators.abstract_operator import AbstractOperator
+from mosaic.compiler.alias_schema_builder import build_schema
 from mosaic.table_service import Schema, SchemaType, Table
 
 
@@ -163,15 +164,8 @@ class HashAggregate(AbstractOperator, ABC):
         old_table = self.table_reference.get_result()
         old_schema = self.table_reference.get_schema()
 
-        column_names = []
-        column_types = []
 
-        # get selected columns
-        if self.group_names:
-            column_names += [old_schema.get_fully_qualified_column_name(
-                group_name[1].value) for group_name in self.group_names]
-            column_types += [old_schema.column_types[old_table.get_column_index(name)] 
-                             for name in column_names]
+        column_names, column_types,_ = build_schema(self.group_names,old_schema)
 
         column_names += [aggregation[0]
                          for aggregation in self.aggregations]
