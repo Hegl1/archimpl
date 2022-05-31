@@ -33,8 +33,10 @@ class MergeJoin(AbstractJoin):
 
         while left_record_index < len(left_table.records) and right_record_index < len(right_table.records):
 
-            merge_condition = self._compare_records(left_table.records[left_record_index], right_table.records[right_record_index],
-                                                    left_table_referenced_column_indices, right_table_referenced_column_indices)
+            merge_condition = self._compare_records(left_table.records[left_record_index],
+                                                    right_table.records[right_record_index],
+                                                    left_table_referenced_column_indices,
+                                                    right_table_referenced_column_indices)
 
             if merge_condition == 0:
 
@@ -54,7 +56,8 @@ class MergeJoin(AbstractJoin):
 
             elif merge_condition == 1 or right_table_finished:
                 if self.join_type == JoinType.LEFT_OUTER:
-                    records.append(left_table.records[left_record_index] + self._build_null_record(len(right_table.records[right_record_index])))
+                    records.append(left_table.records[left_record_index] + self._build_null_record(
+                        len(right_table.records[right_record_index])))
 
                 left_record_index += 1
 
@@ -72,19 +75,23 @@ class MergeJoin(AbstractJoin):
     def _build_record(self, left_table, right_table, left_sub_record_start_index, right_sub_record_start_index,
                       left_table_referenced_column_indices, right_table_referenced_column_indices):
 
-        left_reference = self._get_referenced_values(left_table, left_sub_record_start_index, left_table_referenced_column_indices)
-        right_reference = self._get_referenced_values(right_table, right_sub_record_start_index, right_table_referenced_column_indices)
+        left_reference = self._get_referenced_values(left_table, left_sub_record_start_index,
+                                                     left_table_referenced_column_indices)
+        right_reference = self._get_referenced_values(right_table, right_sub_record_start_index,
+                                                      right_table_referenced_column_indices)
 
         left_record_end_index = left_sub_record_start_index + 1
         right_record_end_index = right_sub_record_start_index + 1
 
         for left_record_index in range(left_sub_record_start_index, len(left_table.records)):
-            if self._get_referenced_values(left_table, left_record_index, left_table_referenced_column_indices) != left_reference:
+            if self._get_referenced_values(left_table, left_record_index,
+                                           left_table_referenced_column_indices) != left_reference:
                 left_record_end_index = left_record_index
                 break
 
         for right_record_index in range(right_sub_record_start_index, len(right_table.records)):
-            if self._get_referenced_values(right_table, right_record_index, right_table_referenced_column_indices) != right_reference:
+            if self._get_referenced_values(right_table, right_record_index,
+                                           right_table_referenced_column_indices) != right_reference:
                 right_record_end_index = right_record_index
                 break
 
