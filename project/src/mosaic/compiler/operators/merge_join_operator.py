@@ -12,6 +12,8 @@ class MergeJoin(AbstractJoin):
         left_table = self.table1_reference.get_result()
         right_table = self.table2_reference.get_result()
 
+        # TODO: check if tables are properly sorted
+
         result_records = self._build_matching_records(left_table, right_table)
 
         return Table(self.schema, result_records)
