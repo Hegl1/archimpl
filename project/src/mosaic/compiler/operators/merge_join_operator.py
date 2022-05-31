@@ -27,6 +27,10 @@ class MergeJoin(AbstractJoin):
         left_record_index = 0
         right_record_index = 0
 
+        print(f"len(left_table.records): {len(left_table.records)}")
+        print(f"len(right_table.records): {len(right_table.records)}\n")
+        right_table_finished = False
+
         while left_record_index < len(left_table.records) and right_record_index < len(right_table.records):
 
             merge_condition = self._compare_records(left_table.records[left_record_index], right_table.records[right_record_index],
@@ -42,12 +46,23 @@ class MergeJoin(AbstractJoin):
                     records.append(record)
 
                 left_record_index = left_next_record_index
-                right_record_index = right_next_record_index
 
-            elif merge_condition == 1:
+                if self.join_type == JoinType.LEFT_OUTER:
+                    right_record_index = min(len(right_table.records) - 1, right_next_record_index)
+                else:
+                    right_record_index = right_next_record_index
+
+            elif merge_condition == 1 or right_table_finished:
+                if self.join_type == JoinType.LEFT_OUTER:
+                    records.append(left_table.records[left_record_index] + self._build_null_record(len(right_table.records[right_record_index])))
+
                 left_record_index += 1
+
             else:
-                right_record_index += 1
+                if self.join_type == JoinType.LEFT_OUTER and right_record_index >= 5:
+                    right_table_finished = True
+                else:
+                    right_record_index += 1
 
         return records
 
