@@ -14,9 +14,6 @@ class MergeJoin(AbstractJoin):
 
         result_records = self._build_matching_records(left_table, right_table)
 
-        if self.join_type == JoinType.LEFT_OUTER:
-            self._build_not_matching_records(left_table, right_table)
-
         return Table(self.schema, result_records)
 
     def _build_matching_records(self, left_table, right_table):
@@ -31,26 +28,15 @@ class MergeJoin(AbstractJoin):
 
         while left_record_index < len(left_table.records) and right_record_index < len(right_table.records):
 
-            merge_condition = self._compare_records(left_table.records[left_record_index],
-                                                    right_table.records[right_record_index],
-                                                    left_table_referenced_column_indices,
-                                                    right_table_referenced_column_indices)
+            merge_condition = \
+                self._compare_records(left_table.records[left_record_index], right_table.records[right_record_index],
+                                      left_table_referenced_column_indices, right_table_referenced_column_indices)
 
             if merge_condition == 0:
-
-                cross_joined_records, left_next_record_index, right_next_record_index = \
-                    self._build_record(left_table, right_table, left_record_index, right_record_index,
-                                       left_table_referenced_column_indices, right_table_referenced_column_indices)
-
-                for record in cross_joined_records:
-                    records.append(record)
-
-                left_record_index = left_next_record_index
-
-                if self.join_type == JoinType.LEFT_OUTER:
-                    right_record_index = min(len(right_table.records) - 1, right_next_record_index)
-                else:
-                    right_record_index = right_next_record_index
+                left_record_index, right_record_index = \
+                    self._insert_matching_records(records, left_table, right_table, left_record_index,
+                                                  right_record_index, left_table_referenced_column_indices,
+                                                  right_table_referenced_column_indices)
 
             elif merge_condition == 1 or right_table_finished:
                 if self.join_type == JoinType.LEFT_OUTER:
@@ -67,8 +53,24 @@ class MergeJoin(AbstractJoin):
 
         return records
 
-    def _build_not_matching_records(self, table1, table2):
-        pass
+    def _insert_matching_records(self, records, left_table, right_table, left_record_index, right_record_index,
+                                 left_table_referenced_column_indices, right_table_referenced_column_indices):
+
+        cross_joined_records, left_next_record_index, right_next_record_index = \
+            self._build_record(left_table, right_table, left_record_index, right_record_index,
+                               left_table_referenced_column_indices, right_table_referenced_column_indices)
+
+        for record in cross_joined_records:
+            records.append(record)
+
+        left_record_index = left_next_record_index
+
+        if self.join_type == JoinType.LEFT_OUTER:
+            right_record_index = min(len(right_table.records) - 1, right_next_record_index)
+        else:
+            right_record_index = right_next_record_index
+
+        return left_record_index, right_record_index
 
     def _build_record(self, left_table, right_table, left_sub_record_start_index, right_sub_record_start_index,
                       left_table_referenced_column_indices, right_table_referenced_column_indices):
