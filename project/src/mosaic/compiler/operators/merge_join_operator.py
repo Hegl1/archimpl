@@ -27,8 +27,6 @@ class MergeJoin(AbstractJoin):
         left_record_index = 0
         right_record_index = 0
 
-        print(f"len(left_table.records): {len(left_table.records)}")
-        print(f"len(right_table.records): {len(right_table.records)}\n")
         right_table_finished = False
 
         while left_record_index < len(left_table.records) and right_record_index < len(right_table.records):
