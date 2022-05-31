@@ -1,8 +1,6 @@
 import itertools
-from operator import itemgetter
 
 from .abstract_join_operator import *
-from .nested_loops_join_operators import NestedLoopsJoin
 from ..expressions.column_expression import ColumnExpression
 from ..expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
 from ...table_service import TableIndexException
@@ -11,15 +9,13 @@ from ...table_service import TableIndexException
 class MergeJoin(AbstractJoin):
 
     def get_result(self):
-        table1 = self.table1_reference.get_result()
-        table2 = self.table2_reference.get_result()
+        left_table = self.table1_reference.get_result()
+        right_table = self.table2_reference.get_result()
 
-        # TODO: check if tables are sorted
-
-        result_records = self._build_matching_records(table1, table2)
+        result_records = self._build_matching_records(left_table, right_table)
 
         if self.join_type == JoinType.LEFT_OUTER:
-            self._build_not_matching_records(table1, table2)
+            self._build_not_matching_records(left_table, right_table)
 
         return Table(self.schema, result_records)
 
@@ -81,9 +77,17 @@ class MergeJoin(AbstractJoin):
         right_records = right_table.records[right_sub_record_start_index:right_record_end_index]
 
         cross_product_record = []
-        for left_record, right_record in itertools.product(left_records, right_records):
 
-            cross_product_record.append(left_record + right_record)
+        for left_record, right_record in itertools.product(left_records, right_records):
+            if not self.is_natural:
+                cross_product_record.append(left_record + right_record)
+            else:
+                index_to_exclude = self._get_join_column_indices(right_table, self.condition)
+                new_record = []
+                for i, target in enumerate(right_record):
+                    if i not in index_to_exclude:
+                        new_record.append(target)
+                cross_product_record.append(left_record + new_record)
 
         return cross_product_record, left_record_end_index, right_record_end_index
 
@@ -93,7 +97,7 @@ class MergeJoin(AbstractJoin):
     def _compare_records(self, tuple1, tuple2, table1_referenced_column_indices, table2_referenced_column_indices):
         match = 0
 
-        for column_index1, column_index2 in zip(table1_referenced_column_indices, table2_referenced_column_indices):#
+        for column_index1, column_index2 in zip(table1_referenced_column_indices, table2_referenced_column_indices):
             if tuple1[column_index1] == tuple2[column_index2]:
                 continue
             elif tuple1[column_index1] < tuple2[column_index2]:
