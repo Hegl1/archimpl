@@ -37,8 +37,8 @@ class Schema:
         """
         Transforms the FQN column name into a simple column name
         """
-        if column_name.startswith(self.table_name + "."):
-            column_name = column_name[len(self.table_name) + 1:]  # remove FQN
+        if "." in column_name:
+            column_name = column_name.split(".")[1]  # remove FQN
 
         return column_name
 
