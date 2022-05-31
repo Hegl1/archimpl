@@ -26,7 +26,7 @@ class NestedLoopsJoin(AbstractJoin):
             remaining_column_indices = self.get_remaining_column_indices(table2.schema)
 
         joined_table_records = []
-        aux_schema = Schema("aux_table", table1.schema.column_names + table2.schema.column_names,
+        aux_schema = Schema(f"{table1.schema.table_name}_join_{table2.schema.table_name}", table1.schema.column_names + table2.schema.column_names,
                             table1.schema.column_types + table2.schema.column_types)
         aux_table = Table(aux_schema, [])
 
