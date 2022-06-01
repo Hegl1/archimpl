@@ -4,6 +4,8 @@ from enum import Enum
 
 import tabulate
 
+from mosaic.compiler.compiler_exception import CompilerException
+
 
 class SchemaType(Enum):
     """
@@ -130,7 +132,7 @@ class TableIndexException(Exception):
     pass
 
 
-class TableNotFoundException(Exception):
+class TableNotFoundException(CompilerException):
     pass
 
 
