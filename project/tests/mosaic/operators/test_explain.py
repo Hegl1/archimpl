@@ -156,5 +156,5 @@ def test_explain_disjunctive():
 def test_explain_aggregate():
     result,_ = execute_query('explain gamma Rang aggregate Anzahl as count(PersNr) professoren;')[0]
     assert len(result) == 2
-    assert result[0][0] == "-->Aggregation(groups=[professoren.Rang],aggregates=[COUNT(professoren.PersNr) -> Anzahl])"
+    assert result[0][0] == "-->Aggregation(groups=[professoren.Rang=Rang],aggregates=[COUNT(professoren.PersNr) -> Anzahl])"
     assert result[1][0] == "---->TableScan(professoren)"
