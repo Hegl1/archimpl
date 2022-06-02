@@ -19,7 +19,8 @@ from .operators.set_operators import AbstractSetOperator
 from .operators.hash_aggregate_operator import HashAggregate
 
 
-_pushed_down_selections = set() # contains the selections, that have been pushed down as far as possible
+# contains the selections, that have been pushed down as far as possible
+_pushed_down_selections = set()
 
 
 def optimize(execution_plan: AbstractOperator):
@@ -38,11 +39,15 @@ def optimize(execution_plan: AbstractOperator):
     execution_plan = execution_plan.simplify()
 
     # selection push-down
-    execution_plan = _selection_access_helper(execution_plan, _split_selections)
-    execution_plan = _selection_access_helper(execution_plan, _selection_push_down)
-    execution_plan = _selection_access_helper(execution_plan, _join_selections)
+    execution_plan = _node_access_helper(
+        execution_plan, _split_selections, Selection)
+    execution_plan = _node_access_helper(
+        execution_plan, _selection_push_down, Selection)
+    execution_plan = _node_access_helper(
+        execution_plan, _join_selections, Selection)
 
-    # TODO: replace nested-loops-joins by best replacement join (if possible)
+    # replace nested-loops-joins by best replacement join
+    #execution_plan = _join_access_helper(execution_plan)
 
     global _pushed_down_selections
     _pushed_down_selections = set()
@@ -50,7 +55,7 @@ def optimize(execution_plan: AbstractOperator):
     return execution_plan
 
 
-def _selection_access_helper(node: AbstractCompileNode, selection_function):
+def _node_access_helper(node: AbstractCompileNode, selection_function, searched_node_class):
     """
     Helper function to access the selection nodes recursively in the given node.
     If the current node is not a selection, its child-operators are replaced by the
@@ -58,15 +63,19 @@ def _selection_access_helper(node: AbstractCompileNode, selection_function):
     If the current node is a selection, the selection_function is called with the selection
     as parameter and the return value is returned.
     """
-    if isinstance(node, Explain):
-        node.execution_plan = _selection_access_helper(node.execution_plan, selection_function)
-    elif isinstance(node, (AbstractJoin, AbstractSetOperator)):
-        node.table1_reference = _selection_access_helper(node.table1_reference, selection_function)
-        node.table2_reference = _selection_access_helper(node.table2_reference, selection_function)
-    elif isinstance(node, (OrderingOperator, Projection, HashAggregate, HashDistinct)):
-        node.table_reference = _selection_access_helper(node.table_reference, selection_function)
-    elif isinstance(node, Selection):
+    if isinstance(node, searched_node_class):
         node = selection_function(node)
+    elif isinstance(node, Explain):
+        node.execution_plan = _node_access_helper(
+            node.execution_plan, selection_function, Selection)
+    elif isinstance(node, (AbstractJoin, AbstractSetOperator)):
+        node.table1_reference = _node_access_helper(
+            node.table1_reference, selection_function, Selection)
+        node.table2_reference = _node_access_helper(
+            node.table2_reference, selection_function, Selection)
+    elif isinstance(node, (OrderingOperator, Projection, HashAggregate, HashDistinct, Selection)):
+        node.table_reference = _node_access_helper(
+            node.table_reference, selection_function, Selection)
 
     return node
 
@@ -83,10 +92,12 @@ def _split_selections(selection: Selection):
         conjunctive_expression = ConjunctiveExpression(conjunctive_conditions)
         conjunctive_expression = conjunctive_expression.simplify()
 
-        selection.table_reference = Selection(selection.table_reference, conjunctive_expression)
+        selection.table_reference = Selection(
+            selection.table_reference, conjunctive_expression)
         selection.condition = condition
 
-    selection.table_reference = _selection_access_helper(selection.table_reference, _split_selections)
+    selection.table_reference = _node_access_helper(
+        selection.table_reference, _split_selections, Selection)
     return selection
 
 
@@ -113,7 +124,8 @@ def _join_selections(selection: Selection):
 
         selection = _join_selections(selection)
 
-    selection.table_reference = _selection_access_helper(selection.table_reference, _join_selections)
+    selection.table_reference = _node_access_helper(
+        selection.table_reference, _join_selections, Selection)
 
     return selection
 
@@ -133,14 +145,16 @@ def _selection_push_down(selection: Selection):
         node = child_node
 
         selection.table_reference = child_node.table_reference
-        child_node.table_reference = _selection_access_helper(selection, _selection_push_down)
+        child_node.table_reference = _node_access_helper(
+            selection, _selection_push_down, Selection)
     elif isinstance(child_node, Selection):
         node = child_node
 
         selection.table_reference = child_node.table_reference
-        child_node.table_reference = _selection_access_helper(selection, _selection_push_down)
+        child_node.table_reference = _node_access_helper(
+            selection, _selection_push_down, Selection)
 
-        node = _selection_access_helper(node, _selection_push_down)
+        node = _node_access_helper(node, _selection_push_down, Selection)
     elif isinstance(child_node, Projection):
         node = _selection_push_through_projection(selection, child_node)
     elif isinstance(child_node, AbstractJoin):
@@ -149,7 +163,8 @@ def _selection_push_down(selection: Selection):
         node = _selection_push_through_set_operator(selection, child_node)
 
     if node == selection:
-        node.table_reference = _selection_access_helper(node.table_reference, _selection_push_down)
+        node.table_reference = _node_access_helper(
+            node.table_reference, _selection_push_down, Selection)
         _pushed_down_selections.add(selection)
 
     return node
@@ -166,7 +181,8 @@ def _selection_push_through_projection(selection: Selection, projection: Project
     child_schema = projection.table_reference.get_schema()
 
     selection_columns = _get_condition_columns(selection.condition)
-    fqn_selection_columns = [projection_schema.get_fully_qualified_column_name(column) for column in selection_columns]
+    fqn_selection_columns = [projection_schema.get_fully_qualified_column_name(
+        column) for column in selection_columns]
     selection_columns_replacements = {}
 
     found_columns = set()
@@ -177,7 +193,8 @@ def _selection_push_through_projection(selection: Selection, projection: Project
                 found_columns.add(alias)
 
                 if isinstance(column_reference, ColumnExpression):
-                    selection_columns_replacements[alias] = column_reference.get_result()
+                    selection_columns_replacements[alias] = column_reference.get_result(
+                    )
                 else:
                     # can't be pushed down, return selection
                     return selection
@@ -186,16 +203,19 @@ def _selection_push_through_projection(selection: Selection, projection: Project
                 column = column_reference.get_result()
 
                 if column in selection_columns:
-                    found_columns.add(projection_schema.get_fully_qualified_column_name(column))
+                    found_columns.add(
+                        projection_schema.get_fully_qualified_column_name(column))
                 elif column in fqn_selection_columns:
                     simple_column = child_schema.get_simple_column_name(column)
                     if simple_column in selection_columns:
                         selection_columns_replacements[simple_column] = column
                         found_columns.add(column)
                     else:
-                        raise Exception("Unexpected exception in selection push through projection")
+                        raise Exception(
+                            "Unexpected exception in selection push through projection")
                 else:
-                    fqn_column = projection_schema.get_fully_qualified_column_name(column)
+                    fqn_column = projection_schema.get_fully_qualified_column_name(
+                        column)
 
                     if fqn_column in fqn_selection_columns:
                         selection_columns_replacements[column] = fqn_column
@@ -206,10 +226,12 @@ def _selection_push_through_projection(selection: Selection, projection: Project
         # will throw an exception on execution anyways
         return selection
 
-    _replace_condition_columns(selection.condition, selection_columns_replacements)
+    _replace_condition_columns(
+        selection.condition, selection_columns_replacements)
 
     selection.table_reference = projection.table_reference
-    projection.table_reference = _selection_access_helper(selection, _selection_push_down)
+    projection.table_reference = _node_access_helper(
+        selection, _selection_push_down, Selection)
 
     return projection
 
@@ -237,24 +259,30 @@ def _selection_push_through_join_operator(selection: Selection, join_operator: A
             is_fully_covered_table1 = True
             is_fully_covered_table2 = True
 
-            table1_selection = Selection(join_operator.table1_reference, selection.condition)
-            table2_selection = Selection(join_operator.table2_reference, deepcopy(selection.condition))
+            table1_selection = Selection(
+                join_operator.table1_reference, selection.condition)
+            table2_selection = Selection(
+                join_operator.table2_reference, deepcopy(selection.condition))
 
     if not is_fully_covered_table1 and not is_fully_covered_table2:
-        is_fully_covered_table1 = _are_columns_fully_covered_in_first_schema(selection_columns, table1_schema, table2_schema)
-        is_fully_covered_table2 = _are_columns_fully_covered_in_first_schema(selection_columns, table2_schema, table1_schema)
+        is_fully_covered_table1 = _are_columns_fully_covered_in_first_schema(
+            selection_columns, table1_schema, table2_schema)
+        is_fully_covered_table2 = _are_columns_fully_covered_in_first_schema(
+            selection_columns, table2_schema, table1_schema)
 
     if is_fully_covered_table1:
         node = join_operator
 
         table1_selection.table_reference = join_operator.table1_reference
-        join_operator.table1_reference = _selection_access_helper(table1_selection, _selection_push_down)
+        join_operator.table1_reference = _node_access_helper(
+            table1_selection, _selection_push_down, Selection)
 
     if is_fully_covered_table2:
         node = join_operator
 
         table2_selection.table_reference = join_operator.table2_reference
-        join_operator.table2_reference = _selection_access_helper(table2_selection, _selection_push_down)
+        join_operator.table2_reference = _node_access_helper(
+            table2_selection, _selection_push_down, Selection)
 
     return node
 
@@ -273,14 +301,20 @@ def _selection_push_through_set_operator(selection: Selection, set_operator: Abs
 
     for column in selection_columns:
         simple_name = table1_schema.get_simple_column_name(column)
-        table_2_selection_columns_replacements[column] = table2_schema.get_fully_qualified_column_name(simple_name)
+        table_2_selection_columns_replacements[column] = table2_schema.get_fully_qualified_column_name(
+            simple_name)
 
-    table1_selection = Selection(set_operator.table1_reference, selection.condition)
-    table2_selection = Selection(set_operator.table2_reference, deepcopy(selection.condition))
-    _replace_condition_columns(table2_selection.condition, table_2_selection_columns_replacements)
+    table1_selection = Selection(
+        set_operator.table1_reference, selection.condition)
+    table2_selection = Selection(
+        set_operator.table2_reference, deepcopy(selection.condition))
+    _replace_condition_columns(
+        table2_selection.condition, table_2_selection_columns_replacements)
 
-    set_operator.table1_reference = _selection_access_helper(table1_selection, _selection_push_down)
-    set_operator.table2_reference = _selection_access_helper(table2_selection, _selection_push_down)
+    set_operator.table1_reference = _node_access_helper(
+        table1_selection, _selection_push_down, Selection)
+    set_operator.table2_reference = _node_access_helper(
+        table2_selection, _selection_push_down, Selection)
 
     return set_operator
 
