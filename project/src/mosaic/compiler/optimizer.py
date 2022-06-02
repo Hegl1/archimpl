@@ -1,4 +1,7 @@
 from copy import deepcopy
+from mosaic.compiler.expressions.abstract_computation_expression import AbstractComputationExpression
+from mosaic.compiler.operators import hash_join_operator
+from mosaic.compiler.operators.hash_join_operator import HashJoin
 
 from mosaic.table_service import Schema, TableIndexException
 from .abstract_compile_node import AbstractCompileNode
@@ -12,7 +15,7 @@ from .operators.abstract_operator import AbstractOperator
 from .operators.selection_operator import Selection
 from .operators.explain import Explain
 from .operators.hash_distinct_operator import HashDistinct
-from .operators.abstract_join_operator import AbstractJoin, JoinType
+from .operators.abstract_join_operator import AbstractJoin, JoinConditionNotSupportedException, JoinType, JoinTypeNotSupportedException
 from .operators.ordering_operator import OrderingOperator
 from .operators.projection_operator import Projection
 from .operators.set_operators import AbstractSetOperator
@@ -47,7 +50,8 @@ def optimize(execution_plan: AbstractOperator):
         execution_plan, _join_selections, Selection)
 
     # replace nested-loops-joins by best replacement join
-    #execution_plan = _join_access_helper(execution_plan)
+    execution_plan = _node_access_helper(
+        execution_plan, _select_optimal_join, AbstractJoin)
 
     global _pushed_down_selections
     _pushed_down_selections = set()
@@ -55,27 +59,47 @@ def optimize(execution_plan: AbstractOperator):
     return execution_plan
 
 
-def _node_access_helper(node: AbstractCompileNode, selection_function, searched_node_class):
+def _select_optimal_join(join: AbstractJoin):
+
+    optimal_join = join
+
+    if join.check_join_type != JoinType.CROSS and hash_join_operator.is_comparative_condition_supported(join.condition):
+        try:
+            optimal_join = HashJoin(join.table1_reference, join.table2_reference,
+                                    join.join_type, join.condition, join.is_natural)
+        except JoinTypeNotSupportedException:
+            optimal_join = join
+
+    #TODO check if it's optimal to replace with merge join
+
+    optimal_join.table1_reference = _node_access_helper(
+        optimal_join.table1_reference, _select_optimal_join, AbstractJoin)
+    optimal_join.table2_reference = _node_access_helper(
+        optimal_join.table2_reference, _select_optimal_join, AbstractJoin)
+    return optimal_join
+
+
+def _node_access_helper(node: AbstractCompileNode, function, searched_node_class):
     """
-    Helper function to access the selection nodes recursively in the given node.
-    If the current node is not a selection, its child-operators are replaced by the
+    Helper function to access the nodes of the specified class recursively in the given node.
+    If the current node is not of the specified class, its child-operators are replaced by the
     return value of the recursive call with the child-operator.
-    If the current node is a selection, the selection_function is called with the selection
-    as parameter and the return value is returned.
+    If the current node is of the specified class, the given function is called with the node
+    as parameter and it's return value is returned.
     """
     if isinstance(node, searched_node_class):
-        node = selection_function(node)
+        node = function(node)
     elif isinstance(node, Explain):
         node.execution_plan = _node_access_helper(
-            node.execution_plan, selection_function, Selection)
+            node.execution_plan, function, searched_node_class)
     elif isinstance(node, (AbstractJoin, AbstractSetOperator)):
         node.table1_reference = _node_access_helper(
-            node.table1_reference, selection_function, Selection)
+            node.table1_reference, function, searched_node_class)
         node.table2_reference = _node_access_helper(
-            node.table2_reference, selection_function, Selection)
+            node.table2_reference, function, searched_node_class)
     elif isinstance(node, (OrderingOperator, Projection, HashAggregate, HashDistinct, Selection)):
         node.table_reference = _node_access_helper(
-            node.table_reference, selection_function, Selection)
+            node.table_reference, function, searched_node_class)
 
     return node
 
