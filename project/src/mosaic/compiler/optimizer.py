@@ -38,7 +38,6 @@ def optimize(execution_plan: AbstractOperator):
     execution_plan = execution_plan.simplify()
 
     # selection push-down
-
     execution_plan = _selection_access_helper(execution_plan, _split_selections)
     execution_plan = _selection_access_helper(execution_plan, _selection_push_down)
     execution_plan = _selection_access_helper(execution_plan, _join_selections)
@@ -88,7 +87,6 @@ def _split_selections(selection: Selection):
         selection.condition = condition
 
     selection.table_reference = _selection_access_helper(selection.table_reference, _split_selections)
-
     return selection
 
 
@@ -165,6 +163,7 @@ def _selection_push_through_projection(selection: Selection, projection: Project
     push-through was not possible
     """
     projection_schema = projection.get_schema()
+    child_schema = projection.table_reference.get_schema()
 
     selection_columns = _get_condition_columns(selection.condition)
     fqn_selection_columns = [projection_schema.get_fully_qualified_column_name(column) for column in selection_columns]
@@ -187,14 +186,22 @@ def _selection_push_through_projection(selection: Selection, projection: Project
                 column = column_reference.get_result()
 
                 if column in selection_columns:
-                    found_columns.add(column)
+                    found_columns.add(projection_schema.get_fully_qualified_column_name(column))
+                elif column in fqn_selection_columns:
+                    simple_column = child_schema.get_simple_column_name(column)
+                    if simple_column in selection_columns:
+                        selection_columns_replacements[simple_column] = column
+                        found_columns.add(column)
+                    else:
+                        raise Exception("Unexpected exception in selection push through projection")
                 else:
                     fqn_column = projection_schema.get_fully_qualified_column_name(column)
 
                     if fqn_column in fqn_selection_columns:
+                        selection_columns_replacements[column] = fqn_column
                         found_columns.add(fqn_column)
 
-    if set(selection_columns) != found_columns:
+    if set(fqn_selection_columns) != found_columns:
         # can't be pushed down, return selection
         # will throw an exception on execution anyways
         return selection

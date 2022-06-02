@@ -81,3 +81,14 @@ def test_optimizer_selection_push_down_complex():
     assert result[7][0] == "------------>TableScan(professoren)"
 
     _check_query_result_same_optimization(query)
+
+
+def test_optimizer_selection_push_through_projection_fqn():
+    query = 'sigma Name > "K" (pi professoren.Name (pi professoren.Name, professoren.Rang (professoren cross join assistenten)));'
+    result = _execute_query(f"explain {query}")
+    assert result[0][0] == "-->Projection(columns=[professoren.Name=professoren.Name])"
+    assert result[1][0] == "---->Projection(columns=[professoren.Name=professoren.Name, professoren.Rang=professoren.Rang])"
+    assert result[2][0] == "------>NestedLoopsJoin(cross, natural=True, condition=None)"
+    assert result[3][0] == '-------->Selection(condition=(professoren.Name > "K"))'
+    assert result[4][0] == "---------->TableScan(professoren)"
+    assert result[5][0] == "-------->TableScan(assistenten)"
