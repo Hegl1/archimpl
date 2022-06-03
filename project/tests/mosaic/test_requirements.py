@@ -79,3 +79,96 @@ def test_ambiguous_column_name():
 )
 def test_milestone_2_query(query, column_names, result_rows):
     _test_query(query, column_names, result_rows)
+
+
+# Milestone 3 queries
+
+
+@pytest.mark.parametrize(
+    'query,column_names,result_rows',
+    [
+        ('pi PersNr, Name professoren join professoren.PersNr = assistenten.Boss pi PersNr, Name, Boss assistenten;', ['professoren.PersNr', 'professoren.Name', 'assistenten.PersNr', 'assistenten.Name', 'assistenten.Boss'], 6),
+        ('pi PersNr, Name professoren left join professoren.PersNr = assistenten.Boss pi PersNr, Name, Boss assistenten;', ['professoren.PersNr', 'professoren.Name', 'assistenten.PersNr', 'assistenten.Name', 'assistenten.Boss'], 9),
+        ('pi VorlNr, Titel vorlesungen natural join pi VorlNr, MatrNr, Note pruefen;', ['vorlesungen.VorlNr', 'vorlesungen.Titel', 'pruefen.MatrNr', 'pruefen.Note'], 3),
+        ('pi VorlNr, Titel vorlesungen natural left join pi VorlNr, MatrNr, Note pruefen;', ['vorlesungen.VorlNr', 'vorlesungen.Titel', 'pruefen.MatrNr', 'pruefen.Note'], 10),
+        ('gamma Rang aggregate Anzahl as count(PersNr) professoren;', ['professoren.Rang', 'Anzahl'], 2),
+        ('studenten natural join hoeren;', ['studenten.MatrNr', 'studenten.Name', 'studenten.Semester', 'hoeren.VorlNr'], 10),
+        ('studenten natural left join hoeren;', ['studenten.MatrNr', 'studenten.Name', 'studenten.Semester', 'hoeren.VorlNr'], 14),
+        ('studenten left join studenten.MatrNr = hoeren.MatrNr hoeren;', ['studenten.MatrNr', 'studenten.Name', 'studenten.Semester', 'hoeren.MatrNr', 'hoeren.VorlNr'], 14),
+        ('gamma Semester aggregate Anzahl as count(MatrNr) studenten;', ['studenten.Semester', 'Anzahl'], 7),
+        ('gamma aggregate AvgSemester as avg(Semester), MinSemester as min(Semester), MaxSemester as max(Semester) studenten;', ['AvgSemester', 'MinSemester', 'MaxSemester'], 1),
+        ('sigma studenten.MatrNr = hoeren.MatrNr (studenten cross join hoeren);', ['studenten.MatrNr', 'studenten.Name', 'studenten.Semester', 'hoeren.MatrNr', 'hoeren.VorlNr'], 10),
+        ('(pi studenten.MatrNr, Name, Semester, VorlNr sigma studenten.MatrNr = hoeren.MatrNr (studenten cross join hoeren)) except (studenten natural join hoeren);', ['studenten.MatrNr', 'studenten.Name', 'studenten.Semester', 'hoeren.VorlNr'], 0),
+        ('((pi VorlNr sigma MatrNr = 29120 hoeren) intersect (pi VorlNr sigma gelesenVon = 2125 vorlesungen)) natural join vorlesungen;', ['hoeren.VorlNr', 'vorlesungen.Titel', 'vorlesungen.SWS', 'vorlesungen.gelesenVon'], 2)
+    ],
+)
+def test_milestone_3_query(query, column_names, result_rows):
+    _test_query(query, column_names, result_rows)
+
+
+@pytest.mark.parametrize(
+    'query,result_not_optimized,result_optimized',
+    [
+        ('explain sigma Rang = "C3" and Raum > "200" and SWS = 3 (professoren join PersNr = gelesenVon vorlesungen);',
+         [['-->Selection(condition=((professoren.Rang = "C3") AND (professoren.Raum > "200") AND (vorlesungen.SWS = 3)))'],
+          ['---->NestedLoopsJoin(inner, natural=False, condition=(professoren.PersNr = vorlesungen.gelesenVon))'],
+          ['------>TableScan(professoren)'],
+          ['------>TableScan(vorlesungen)']],
+         [['-->NestedLoopsJoin(inner, natural=False, condition=(professoren.PersNr = vorlesungen.gelesenVon))'],
+          ['---->Selection(condition=((professoren.Rang = "C3") AND (professoren.Raum > "200")))'],
+          ['------>TableScan(professoren)'],
+          ['---->Selection(condition=(vorlesungen.SWS = 3))'],
+          ['------>TableScan(vorlesungen)']]),
+        ('explain sigma Name > "K" (pi Name professoren union pi Name studenten);',
+         [['-->Selection(condition=(professoren.Name > "K"))'],
+          ['---->Union'],
+          ['------>Projection(columns=[professoren.Name=professoren.Name])'],
+          ['-------->TableScan(professoren)'],
+          ['------>Projection(columns=[studenten.Name=studenten.Name])'],
+          ['-------->TableScan(studenten)']],
+         [['-->Union'],
+          ['---->Projection(columns=[professoren.Name=professoren.Name])'],
+          ['------>Selection(condition=(professoren.Name > "K"))'],
+          ['-------->TableScan(professoren)'],
+          ['---->Projection(columns=[studenten.Name=studenten.Name])'],
+          ['------>Selection(condition=(studenten.Name > "K"))'],
+          ['-------->TableScan(studenten)']])
+    ],
+)
+def test_milestone_3_optimize_query(query, result_not_optimized, result_optimized):
+    _test_explain_optimize_query(query, result_not_optimized, result_optimized)
+
+
+def _test_explain_optimize_query(query, result_not_optimized, result_optimized):
+    for optimize in [True, False]:
+        results = query_executor.execute_query(query, optimize)
+
+        assert len(results) == 1
+        result, _ = results[0]
+        assert len(result.schema.column_names) == 1
+
+        if optimize:
+            assert result.records == result_optimized
+        else:
+            assert result.records == result_not_optimized
+
+
+# Milestone 3 speedup tests - disable if needed to save time when running tests
+
+@pytest.mark.parametrize(
+    'query',
+    [
+        ('sigma studenten.Name = "Theophrastos" and vorlesungen.SWS = 4 and professoren.Name = "Sokrates" and assistenten.Name = "Platon" (studenten cross join vorlesungen cross join professoren cross join assistenten cross join pruefen cross join voraussetzen cross join hoeren);'),
+        ('sigma Name > "K" ((pi studenten.Name (sigma studenten.Name = "Theophrastos" and vorlesungen.SWS = 4 and professoren.Name = "Sokrates" and assistenten.Name = "Platon" (studenten cross join vorlesungen cross join professoren cross join assistenten cross join pruefen cross join voraussetzen cross join hoeren))) union (pi Name professoren));')
+    ],
+)
+def test_milestone_3_optimize_query_execution_time(query):
+    _test_optimize_query_execution_time(query)
+
+
+def _test_optimize_query_execution_time(query):
+    times = [0, 0]
+    for i, optimize in enumerate([True, False]):
+        result, execution_time = query_executor.execute_query(query, optimize)[0]
+        times[i] = execution_time
+    assert times[1] / times[0] > 1000
