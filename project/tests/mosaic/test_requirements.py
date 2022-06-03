@@ -79,3 +79,31 @@ def test_ambiguous_column_name():
 )
 def test_milestone_2_query(query, column_names, result_rows):
     _test_query(query, column_names, result_rows)
+
+
+# Milestone 3 queries
+
+
+@pytest.mark.parametrize(
+    'query,column_names,result_rows',
+    [
+        ('pi PersNr, Name professoren join professoren.PersNr = assistenten.Boss pi PersNr, Name, Boss assistenten;', ['professoren.PersNr', 'professoren.Name', 'assistenten.PersNr', 'assistenten.Name', 'assistenten.Boss'], 6),
+        ('pi PersNr, Name professoren left join professoren.PersNr = assistenten.Boss pi PersNr, Name, Boss assistenten;', ['professoren.PersNr', 'professoren.Name', 'assistenten.PersNr', 'assistenten.Name', 'assistenten.Boss'], 9),
+        ('pi VorlNr, Titel vorlesungen natural join pi VorlNr, MatrNr, Note pruefen;', ['vorlesungen.VorlNr', 'vorlesungen.Titel', 'pruefen.MatrNr', 'pruefen.Note'], 3),
+        ('pi VorlNr, Titel vorlesungen natural left join pi VorlNr, MatrNr, Note pruefen;', ['vorlesungen.VorlNr', 'vorlesungen.Titel', 'pruefen.MatrNr', 'pruefen.Note'], 10),
+        ('gamma Rang aggregate Anzahl as count(PersNr) professoren;', ['professoren.Rang', 'Anzahl'], 2),
+        ('studenten natural join hoeren;', ['studenten.MatrNr', 'studenten.Name', 'studenten.Semester', 'hoeren.VorlNr'], 10),
+        ('studenten natural left join hoeren;', ['studenten.MatrNr', 'studenten.Name', 'studenten.Semester', 'hoeren.VorlNr'], 14),
+        ('studenten left join studenten.MatrNr = hoeren.MatrNr hoeren;', ['studenten.MatrNr', 'studenten.Name', 'studenten.Semester', 'hoeren.MatrNr', 'hoeren.VorlNr'], 14),
+        ('gamma Semester aggregate Anzahl as count(MatrNr) studenten;', ['studenten.Semester', 'Anzahl'], 7),
+        ('gamma aggregate AvgSemester as avg(Semester), MinSemester as min(Semester), MaxSemester as max(Semester) studenten;', ['AvgSemester', 'MinSemester', 'MaxSemester'], 1),
+        ('sigma studenten.MatrNr = hoeren.MatrNr (studenten cross join hoeren);', ['studenten.MatrNr', 'studenten.Name', 'studenten.Semester', 'hoeren.MatrNr', 'hoeren.VorlNr'], 10),
+        ('(pi studenten.MatrNr, Name, Semester, VorlNr sigma studenten.MatrNr = hoeren.MatrNr (studenten cross join hoeren)) except (studenten natural join hoeren);', ['studenten.MatrNr', 'studenten.Name', 'studenten.Semester', 'hoeren.VorlNr'], 0),
+        ('((pi VorlNr sigma MatrNr = 29120 hoeren) intersect (pi VorlNr sigma gelesenVon = 2125 vorlesungen)) natural join vorlesungen;', ['hoeren.VorlNr', 'vorlesungen.Titel', 'vorlesungen.SWS', 'vorlesungen.gelesenVon'], 2)
+    ],
+)
+def test_milestone_3_query(query, column_names, result_rows):
+    _test_query(query, column_names, result_rows)
+
+
+
