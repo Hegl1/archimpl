@@ -47,4 +47,4 @@ def test_explain():
     conjunctive = ConjunctiveExpression(
         [comparative_operation, comparative_operation_two])
     assert str(
-        conjunctive) == f'(({column2} > {comparison_number}) and ("{comparison_string}" = {column}))'
+        conjunctive) == f'(({column2} > {comparison_number}) AND ("{comparison_string}" = {column}))'

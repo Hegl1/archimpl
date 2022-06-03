@@ -106,4 +106,69 @@ def test_milestone_3_query(query, column_names, result_rows):
     _test_query(query, column_names, result_rows)
 
 
+@pytest.mark.parametrize(
+    'query,result_not_optimized,result_optimized',
+    [
+        ('explain sigma Rang = "C3" and Raum > "200" and SWS = 3 (professoren join PersNr = gelesenVon vorlesungen);',
+         [['-->Selection(condition=((professoren.Rang = "C3") AND (professoren.Raum > "200") AND (vorlesungen.SWS = 3)))'],
+          ['---->NestedLoopsJoin(inner, natural=False, condition=(professoren.PersNr = vorlesungen.gelesenVon))'],
+          ['------>TableScan(professoren)'],
+          ['------>TableScan(vorlesungen)']],
+         [['-->NestedLoopsJoin(inner, natural=False, condition=(professoren.PersNr = vorlesungen.gelesenVon))'],
+          ['---->Selection(condition=((professoren.Rang = "C3") AND (professoren.Raum > "200")))'],
+          ['------>TableScan(professoren)'],
+          ['---->Selection(condition=(vorlesungen.SWS = 3))'],
+          ['------>TableScan(vorlesungen)']]),
+        ('explain sigma Name > "K" (pi Name professoren union pi Name studenten);',
+         [['-->Selection(condition=(professoren.Name > "K"))'],
+          ['---->Union'],
+          ['------>Projection(columns=[professoren.Name=professoren.Name])'],
+          ['-------->TableScan(professoren)'],
+          ['------>Projection(columns=[studenten.Name=studenten.Name])'],
+          ['-------->TableScan(studenten)']],
+         [['-->Union'],
+          ['---->Projection(columns=[professoren.Name=professoren.Name])'],
+          ['------>Selection(condition=(professoren.Name > "K"))'],
+          ['-------->TableScan(professoren)'],
+          ['---->Projection(columns=[studenten.Name=studenten.Name])'],
+          ['------>Selection(condition=(studenten.Name > "K"))'],
+          ['-------->TableScan(studenten)']])
+    ],
+)
+def test_milestone_3_optimize_query(query, result_not_optimized, result_optimized):
+    _test_explain_optimize_query(query, result_not_optimized, result_optimized)
 
+
+def _test_explain_optimize_query(query, result_not_optimized, result_optimized):
+    for optimize in [True, False]:
+        results = query_executor.execute_query(query, optimize)
+
+        assert len(results) == 1
+        result, _ = results[0]
+        assert len(result.schema.column_names) == 1
+
+        if optimize:
+            assert result.records == result_optimized
+        else:
+            assert result.records == result_not_optimized
+
+
+# Milestone 3 speedup tests - disable if needed to save time when running tests
+
+@pytest.mark.parametrize(
+    'query',
+    [
+        ('sigma studenten.Name = "Theophrastos" and vorlesungen.SWS = 4 and professoren.Name = "Sokrates" and assistenten.Name = "Platon" (studenten cross join vorlesungen cross join professoren cross join assistenten cross join pruefen cross join voraussetzen cross join hoeren);'),
+        ('sigma Name > "K" ((pi studenten.Name (sigma studenten.Name = "Theophrastos" and vorlesungen.SWS = 4 and professoren.Name = "Sokrates" and assistenten.Name = "Platon" (studenten cross join vorlesungen cross join professoren cross join assistenten cross join pruefen cross join voraussetzen cross join hoeren))) union (pi Name professoren));')
+    ],
+)
+def test_milestone_3_optimize_query_execution_time(query):
+    _test_optimize_query_execution_time(query)
+
+
+def _test_optimize_query_execution_time(query):
+    times = [0, 0]
+    for i, optimize in enumerate([True, False]):
+        result, execution_time = query_executor.execute_query(query, optimize)[0]
+        times[i] = execution_time
+    assert times[1] / times[0] > 1000

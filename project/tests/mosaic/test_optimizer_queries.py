@@ -77,7 +77,7 @@ def test_optimizer_selection_push_down_complex():
     assert result[3][0] == "-------->NestedLoopsJoin(cross, natural=True, condition=None)"
     assert result[4][0] == "---------->Selection(condition=(hoeren.MatrNr > 26120))"
     assert result[5][0] == "------------>TableScan(hoeren)"
-    assert result[6][0] == "---------->Selection(condition=((professoren.Raum != \"10\") and (professoren.Name = \"Sokrates\")))"
+    assert result[6][0] == "---------->Selection(condition=((professoren.Raum != \"10\") AND (professoren.Name = \"Sokrates\")))"
     assert result[7][0] == "------------>TableScan(professoren)"
 
     _check_query_result_same_optimization(query)
