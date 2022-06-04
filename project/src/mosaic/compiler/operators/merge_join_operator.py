@@ -135,27 +135,34 @@ class MergeJoin(AbstractJoin):
         """
         Returns a list of matching records to be merged with records from the other table.
         The list consists of the records from sub_record_start_index to sub_record_end_index.
+        Checks for each record if it is still matching the reference
         """
         reference = self._get_referenced_values(table, sub_record_start_index, table_referenced_column_indices)
         sub_record_end_index = sub_record_start_index + 1
 
         for record_index in range(sub_record_start_index, len(right_table)):
-            if self._check_records_not_matching(table, record_index, table_referenced_column_indices, reference):
+            if not self._records_are_matching(table, record_index, table_referenced_column_indices, reference):
                 sub_record_end_index = record_index
                 break
 
         return table[sub_record_start_index:sub_record_end_index], sub_record_end_index
 
-    def _check_records_not_matching(self, table, record_index, table_referenced_column_indices, reference):
-        return self._get_referenced_values(table, record_index, table_referenced_column_indices) != reference
+    def _records_are_matching(self, table, record_index, table_referenced_column_indices, reference):
+        """
+        Checks if referenced column values of records are still matching.
+        """
+        return reference == self._get_referenced_values(table, record_index, table_referenced_column_indices)
 
     def _get_referenced_values(self, table, record_index, table_referenced_column_indices):
+        """
+        Returns for a record of a table only the values from referenced columns.
+        """
         return list(map(table[record_index].__getitem__, table_referenced_column_indices))
 
     def _compare_records(self, tuple1, tuple2):
         """
-        Two records get compared to know if the records can be merged or not
-        Returns 0 if records are matching, 1 if left record is smaller, -1 if right record is smaller
+        Two records get compared to know if the records can be merged or not.
+        Returns 0 if records are matching, 1 if left record is smaller, -1 if right record is smaller.
         """
         match = 0
 
