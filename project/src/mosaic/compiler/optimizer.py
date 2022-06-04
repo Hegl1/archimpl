@@ -22,10 +22,6 @@ from .operators.set_operators import AbstractSetOperator
 from .operators.hash_aggregate_operator import HashAggregate
 
 
-# contains the selections, that have been pushed down as far as possible
-_pushed_down_selections = set()
-
-
 def optimize(execution_plan: AbstractOperator):
     """
     Function that optimizes the given execution plan by doing the following:
