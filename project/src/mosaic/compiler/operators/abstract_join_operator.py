@@ -14,6 +14,10 @@ class JoinType(Enum):
     LEFT_OUTER = "left_outer"
 
 
+LEFT_NATURAL_PADDING = "__left__."
+RIGHT_NATURAL_PADDING = "__right__."
+
+
 class AbstractJoin(AbstractOperator):
 
     def __init__(self, table1_reference, table2_reference, join_type, condition, is_natural):
@@ -21,20 +25,30 @@ class AbstractJoin(AbstractOperator):
 
         self.table1_reference = table1_reference
         self.table2_reference = table2_reference
-        schema1 = self.table1_reference.get_schema()
-        schema2 = self.table2_reference.get_schema()
+        self.table1_schema = self.table1_reference.get_schema()
+        self.table2_schema = self.table2_reference.get_schema()
         self.join_type = join_type
         self.is_natural = is_natural
         self.check_join_type()
         if self.is_natural and self.join_type != JoinType.CROSS:
-            self.condition = self._build_natural_join_condition(schema1, schema2)
+            self._pad_natural_join_schema()
+            self.condition = self._build_natural_join_condition()
         else:
             self.condition = condition
-        self.schema = self._build_schema(schema1, schema2)
+        self.schema = self._build_schema()
 
     @abstractmethod
-    def get_result(self): # pragma: no cover
+    def _get_result(self): # pragma: no cover
+        """
+        Calculates the effective result of a join operator but keeps natural join padding.
+        """
         pass
+
+    def get_result(self):
+        result = self._get_result()
+        if self.is_natural and self.join_type != JoinType.CROSS:
+            self._unpad_natural_join_schema()
+        return result
 
     @abstractmethod
     def check_condition(self, schema1, schema2, condition): # pragma: no cover
@@ -55,40 +69,40 @@ class AbstractJoin(AbstractOperator):
     def get_schema(self):
         return self.schema
 
-    def _build_schema(self, schema1, schema2):
-        self.check_table_names(schema1, schema2)
-        self.check_condition(schema1, schema2, self.condition)
+    def _build_schema(self):
+        self.check_table_names(self.table1_schema, self.table2_schema)
+        self.check_condition(self.table1_schema, self.table2_schema, self.condition)
         if self.is_natural and self.join_type != JoinType.CROSS:
-            return self._get_natural_join_schema(schema1, schema2)
+            return self._get_natural_join_schema()
         else:
-            joined_table_name = f"{schema1.table_name}_{self.join_type.value}_join_{schema2.table_name}"
-            return Schema(joined_table_name, schema1.column_names + schema2.column_names,
-                          schema1.column_types + schema2.column_types)
+            joined_table_name = f"{self.table1_schema.table_name}_{self.join_type.value}_join_{self.table2_schema.table_name}"
+            return Schema(joined_table_name, self.table1_schema.column_names + self.table2_schema.column_names,
+                          self.table1_schema.column_types + self.table2_schema.column_types)
 
-    def _get_natural_join_schema(self, schema1, schema2):
+    def _get_natural_join_schema(self):
         """
         Method that builds the schema for a natural join.
         In case of a natural join, the "matching" column is only emitted once.
         e.g: (hoeren.MatrNr, hoeren.VorlNr) natural join (pruefen.MatrNr, pruefen.Note)
         yields (hoeren.MatrNr, hoeren.VorlNr, pruefen.Note)
         """
-        joined_table_name = f"{schema1.table_name}_natural_{self.join_type.value}_join_{schema2.table_name}"
+        joined_table_name = f"{self.table1_schema.table_name}_natural_{self.join_type.value}_join_{self.table2_schema.table_name}"
         schema2_col_names = []
         schema2_col_types = []
-        for schema_name, schema_type in zip(schema2.column_names, schema2.column_types):
-            if schema2.get_simple_column_name(schema_name) not in schema1.get_simple_column_name_list():
+        for schema_name, schema_type in zip(self.table2_schema.column_names, self.table2_schema.column_types):
+            if self.table2_schema.get_simple_column_name(schema_name) not in self.table1_schema.get_simple_column_name_list():
                 schema2_col_names.append(schema_name)
                 schema2_col_types.append(schema_type)
-        return Schema(joined_table_name, schema1.column_names + schema2_col_names,
-                      schema1.column_types + schema2_col_types)
+        return Schema(joined_table_name, self._unpad_column_names(self.table1_schema.column_names, LEFT_NATURAL_PADDING) + self._unpad_column_names(schema2_col_names, RIGHT_NATURAL_PADDING),
+                      self.table1_schema.column_types + schema2_col_types)
 
-    def _build_natural_join_condition(self, schema1, schema2):
+    def _build_natural_join_condition(self):
         """
         Method that builds the condition for a natural join based on the schemas of the join partners.
         Returns either a ConjunctiveExpression or a ComparativeOperationExpression (in case of only one matching column)
         If no matching pairs are found, None is returned and join type gets set to cross.
         """
-        matching_pairs = self._find_matching_simple_column_names(schema1, schema2)
+        matching_pairs = self._find_matching_simple_column_names()
         if len(matching_pairs) == 0:
             self.join_type = JoinType.CROSS
             self.check_join_type()
@@ -104,16 +118,16 @@ class AbstractJoin(AbstractOperator):
                 ComparativeOperator.EQUAL,
                 ColumnExpression(pair[1])) for pair in matching_pairs])
 
-    def _find_matching_simple_column_names(self, schema1, schema2):
+    def _find_matching_simple_column_names(self):
         """
         Finds matching simple column names between 2 schemas and returns a list of tuples of the corresponding
         fully qualified names.
         """
         matching_pairs = []
-        for name in schema1.column_names:
-            if schema1.get_simple_column_name(name) in schema2.get_simple_column_name_list():
+        for name in self.table1_schema.column_names:
+            if self.table1_schema.get_simple_column_name(name) in self.table2_schema.get_simple_column_name_list():
                 matching_pairs.append(
-                    (name, schema2.get_fully_qualified_column_name(schema1.get_simple_column_name(name))))
+                    (name, self.table2_schema.get_fully_qualified_column_name(self.table1_schema.get_simple_column_name(name))))
         return matching_pairs
 
     def _build_null_record(self, num_entries):
@@ -133,7 +147,7 @@ class AbstractJoin(AbstractOperator):
         self._get_join_column_index_from_comparative(schema1, comparative)
         self._get_join_column_index_from_comparative(schema2, comparative)
 
-    def _get_join_column_indices(self, relation, condition):
+    def _get_join_column_indices(self, schema, condition):
         """
         Returns a list of values corresponding to the equivalences used in the condition.
         i.e. hoeren.MatrNr = pruefen.MatrNr and hoeren.VorlNr = pruefen.VorlNr
@@ -141,10 +155,10 @@ class AbstractJoin(AbstractOperator):
         """
         columns = []
         if isinstance(condition, ComparativeOperationExpression):
-            columns.append(self._get_join_column_index_from_comparative(relation.schema, condition))
+            columns.append(self._get_join_column_index_from_comparative(schema, condition))
         else:
             for comparative_condition in condition.conditions:
-                columns.append(self._get_join_column_index_from_comparative(relation.schema, comparative_condition))
+                columns.append(self._get_join_column_index_from_comparative(schema, comparative_condition))
         return columns
 
     def _get_join_column_index_from_comparative(self, schema, comparative):
@@ -187,6 +201,26 @@ class AbstractJoin(AbstractOperator):
         super().explain(rows, indent)
         self.table1_reference.explain(rows, indent + 2)
         self.table2_reference.explain(rows, indent + 2)
+
+    def _pad_natural_join_schema(self):
+        """
+        Pads alias column names from both schemas with a constant to distinguish them in case of a natural join.
+        """
+        self.table1_schema.column_names = [LEFT_NATURAL_PADDING + name if "." not in name else name for name in self.table1_schema.column_names]
+        self.table2_schema.column_names = [RIGHT_NATURAL_PADDING + name if "." not in name else name for name in self.table2_schema.column_names]
+
+    def _unpad_natural_join_schema(self):
+        """
+        Removes padding from both schemas column names introduced with natural joins.
+        """
+        self.table1_schema.column_names = self._unpad_column_names(self.table1_schema.column_names, LEFT_NATURAL_PADDING)
+        self.table2_schema.column_names = self._unpad_column_names(self.table2_schema.column_names, RIGHT_NATURAL_PADDING)
+
+    def _unpad_column_names(self, column_names, prefix):
+        """
+        Removes the specified prefix from the given list of column names
+        """
+        return [name.removeprefix(prefix) for name in column_names]
 
 
 class ConditionNotValidException(CompilerException):

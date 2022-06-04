@@ -118,3 +118,9 @@ def test_join_condition_disjunctive():
     for record in result.records:
         assert record[0] != record[3]
 
+
+def test_natural_join_alias_projection():
+    result, _ = execute_query("(pi PersNr as gelesenVon vorlesungen) natural join professoren;")[0]
+    assert len(result) == 10
+    assert result.schema.column_names == ["PersNr", "professoren.Name", "professoren.Rang", "professoren.Raum"]
+
