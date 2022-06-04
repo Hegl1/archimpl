@@ -12,8 +12,11 @@ class MergeJoin(AbstractJoin):
     def __init__(self, table1_reference, table2_reference, join_type, condition, is_natural):
         super().__init__(table1_reference, table2_reference, join_type, condition, is_natural)
 
-        self.left_table_referenced_column_indices = self._get_join_column_indices(self.table1_reference.get_schema(), condition)
-        self.right_table_referenced_column_indices = self._get_join_column_indices(self.table2_reference.get_schema(), condition)
+        self.right_table_finished = False
+        self.left_table_referenced_column_indices = self._get_join_column_indices(self.table1_reference.get_schema(),
+                                                                                  condition)
+        self.right_table_referenced_column_indices = self._get_join_column_indices(self.table2_reference.get_schema(),
+                                                                                   condition)
 
     def get_result(self):
         left_table = self.table1_reference.get_result()
@@ -21,50 +24,51 @@ class MergeJoin(AbstractJoin):
 
         self._check_tables_sorting()
 
-        result_records = self._build_matching_records(left_table, right_table)
+        result_records = self._build_records(left_table, right_table)
 
         return Table(self.schema, result_records)
 
-    def _build_matching_records(self, left_table, right_table):
+    def _build_records(self, left_table, right_table):
         records = []
 
         left_record_index = 0
         right_record_index = 0
 
-        right_table_finished = False
-        right_record_length = len(right_table.records[0])
-
         while left_record_index < len(left_table.records) and right_record_index < len(right_table.records):
-
-            merge_condition = \
-                self._compare_records(left_table.records[left_record_index], right_table.records[right_record_index])
-
-            if merge_condition == 0:
-                left_record_index, right_record_index = self._insert_matching_records(records, left_table, right_table,
-                                                                                      left_record_index,
-                                                                                      right_record_index)
-
-            elif merge_condition == 1 or right_table_finished:
-                if self.join_type == JoinType.LEFT_OUTER:
-                    records.append(left_table.records[left_record_index] + self._build_null_record(
-                        right_record_length))
-
-                left_record_index += 1
-
-            else:
-                if self.join_type == JoinType.LEFT_OUTER and right_record_index >= 5:
-                    right_table_finished = True
-                else:
-                    right_record_index += 1
+            left_record_index, right_record_index = self._merge_records(left_table, right_table, left_record_index,
+                                                                        right_record_index, records)
 
         return records
 
-    def _insert_matching_records(self, records, left_table, right_table, left_record_index, right_record_index):
+    def _merge_records(self, left_table, right_table, left_record_index, right_record_index, records):
+        merge_condition = self._compare_records(left_table.records[left_record_index],
+                                                right_table.records[right_record_index])
 
-        cross_joined_records, left_next_record_index, right_next_record_index = \
-            self._build_record(left_table, right_table, left_record_index, right_record_index)
+        if merge_condition == 0:
+            left_record_index, right_record_index = self._build_matching_records(records, left_table, right_table,
+                                                                                 left_record_index, right_record_index)
 
-        for record in cross_joined_records:
+        elif merge_condition == 1 or self.right_table_finished:
+            if self.join_type == JoinType.LEFT_OUTER:
+                records.append(left_table.records[left_record_index] +
+                               self._build_null_record(len(right_table.records[right_record_index])))
+
+            left_record_index += 1
+
+        else:
+            if self.join_type == JoinType.LEFT_OUTER and right_record_index >= 5:
+                self.right_table_finished = True
+            else:
+                right_record_index += 1
+
+        return left_record_index, right_record_index
+
+    def _build_matching_records(self, records, left_table, right_table, left_record_index, right_record_index):
+
+        cross_product_of_records, left_next_record_index, right_next_record_index = self._build_cross_product_of_records(
+            left_table, right_table, left_record_index, right_record_index)
+
+        for record in cross_product_of_records:
             records.append(record)
 
         left_record_index = left_next_record_index
@@ -76,31 +80,22 @@ class MergeJoin(AbstractJoin):
 
         return left_record_index, right_record_index
 
-    def _build_record(self, left_table, right_table, left_sub_record_start_index, right_sub_record_start_index):
+    def _build_cross_product_of_records(self, left_table, right_table, left_sub_record_start_index,
+                                        right_sub_record_start_index):
 
-        left_reference = self._get_referenced_values(left_table, left_sub_record_start_index,
-                                                     self.left_table_referenced_column_indices)
-        right_reference = self._get_referenced_values(right_table, right_sub_record_start_index,
-                                                      self.right_table_referenced_column_indices)
+        left_records, left_record_end_index = \
+            self._get_matching_records(left_table, self.left_table_referenced_column_indices,
+                                       left_sub_record_start_index, right_table)
 
-        left_record_end_index = left_sub_record_start_index + 1
-        right_record_end_index = right_sub_record_start_index + 1
+        right_records, right_record_end_index = \
+            self._get_matching_records(right_table, self.right_table_referenced_column_indices,
+                                       right_sub_record_start_index, right_table)
 
-        for left_record_index in range(left_sub_record_start_index, len(right_table.records)):
-            if self._get_referenced_values(left_table, left_record_index, self.left_table_referenced_column_indices) \
-                    != left_reference:
-                left_record_end_index = left_record_index
-                break
+        cross_product_record = self._build_cross_product_of_records_aux(left_records, right_records, right_table)
 
-        for right_record_index in range(right_sub_record_start_index, len(right_table.records)):
-            if self._get_referenced_values(right_table, right_record_index, self.right_table_referenced_column_indices) \
-                    != right_reference:
-                right_record_end_index = right_record_index
-                break
+        return cross_product_record, left_record_end_index, right_record_end_index
 
-        left_records = left_table.records[left_sub_record_start_index:left_record_end_index]
-        right_records = right_table.records[right_sub_record_start_index:right_record_end_index]
-
+    def _build_cross_product_of_records_aux(self, left_records, right_records, right_table):
         cross_product_record = []
 
         for left_record, right_record in itertools.product(left_records, right_records):
@@ -114,7 +109,22 @@ class MergeJoin(AbstractJoin):
                         new_record.append(target)
                 cross_product_record.append(left_record + new_record)
 
-        return cross_product_record, left_record_end_index, right_record_end_index
+        return cross_product_record
+
+    def _get_matching_records(self, table, table_referenced_column_indices, sub_record_start_index, right_table):
+
+        reference = self._get_referenced_values(table, sub_record_start_index, table_referenced_column_indices)
+        sub_record_end_index = sub_record_start_index + 1
+
+        for record_index in range(sub_record_start_index, len(right_table.records)):
+            if self._check_not_matching_records(table, record_index, table_referenced_column_indices, reference):
+                sub_record_end_index = record_index
+                break
+
+        return table.records[sub_record_start_index:sub_record_end_index], sub_record_end_index
+
+    def _check_not_matching_records(self, table, record_index, table_referenced_column_indices, reference):
+        return self._get_referenced_values(table, record_index, table_referenced_column_indices) != reference
 
     def _get_referenced_values(self, table, record_index, table_referenced_column_indices):
         return list(map(table.records[record_index].__getitem__, table_referenced_column_indices))
