@@ -59,4 +59,4 @@ class DisjunctiveExpression(AbstractComputationExpression):
             condition.replace_all_column_names_by_fqn(schema)
 
     def __str__(self):
-        return "(" + " or ".join([str(comparative) for comparative in self.conditions]) + ")"
+        return "(" + " OR ".join([str(comparative) for comparative in self.conditions]) + ")"

@@ -111,7 +111,10 @@ class HashJoin(AbstractJoin):
         return tuple([record[reference] for reference in reference_list])
 
     def __str__(self):
-        return f"HashJoin({self.join_type.value}, natural={self.is_natural}, condition={self.condition})"
+        schema = self.get_schema()
+        if self.condition is not None:
+            self.condition.replace_all_column_names_by_fqn(schema)
+        return f"HashJoin({self.join_type.value}, natural={self.is_natural}, condition={self.condition.__str__()})"
 
 
 def is_comparative_condition_supported(condition):

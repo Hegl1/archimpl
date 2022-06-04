@@ -77,7 +77,7 @@ def test_optimizer_selection_push_down_complex():
     assert result[3][0] == "-------->NestedLoopsJoin(cross, natural=True, condition=None)"
     assert result[4][0] == "---------->Selection(condition=(hoeren.MatrNr > 26120))"
     assert result[5][0] == "------------>TableScan(hoeren)"
-    assert result[6][0] == "---------->Selection(condition=((professoren.Raum != \"10\") and (professoren.Name = \"Sokrates\")))"
+    assert result[6][0] == "---------->Selection(condition=((professoren.Raum != \"10\") AND (professoren.Name = \"Sokrates\")))"
     assert result[7][0] == "------------>TableScan(professoren)"
 
     _check_query_result_same_optimization(query)
@@ -106,7 +106,7 @@ def test_optimizer_replaces_nested_loop_join_with_hash_join():
 def test_optimizer_hash_join_replace_not_allowed():
     query = "studenten join Semester < SWS vorlesungen;"
     result = _execute_query(f"explain {query}")
-    assert result[0][0] == "-->NestedLoopsJoin(inner, natural=False, condition=(Semester < SWS))"
+    assert result[0][0] == "-->NestedLoopsJoin(inner, natural=False, condition=(studenten.Semester < vorlesungen.SWS))"
     assert result[1][0] == "---->TableScan(studenten)"
     assert result[2][0] == "---->TableScan(vorlesungen)"
 

@@ -65,7 +65,10 @@ class NestedLoopsJoin(AbstractJoin):
         return remaining_indices
 
     def __str__(self):
-        return f"NestedLoopsJoin({self.join_type.value}, natural={self.is_natural}, condition={self.condition})"
+        schema = self.get_schema()
+        if self.condition is not None:
+            self.condition.replace_all_column_names_by_fqn(schema)
+        return f"NestedLoopsJoin({self.join_type.value}, natural={self.is_natural}, condition={self.condition.__str__()})"
 
     def check_condition(self, schema1, schema2, condition):
         pass
