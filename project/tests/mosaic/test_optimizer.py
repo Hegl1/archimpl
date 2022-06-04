@@ -95,7 +95,7 @@ def test_optimizer_columns_not_fully_covered_in_first():
 
 
 def test_optimizer_columns_fully_covered_in_both():
-    columns = ["test", "Name"]
+    columns = ["test", "Name", "schema1.Name"]
     schema1 = Schema("schema1", ["test", "schema1.MatrNr", "schema1.Name"], [])
     schema2 = Schema("schema2", ["test", "schema2.MatrNr", "schema2.Name"], [])
 
@@ -104,10 +104,9 @@ def test_optimizer_columns_fully_covered_in_both():
 
 def test_optimizer_columns_not_fully_covered_in_both():
     schema1 = Schema("schema1", ["test", "schema1.MatrNr", "schema1.Name"], [])
-    schema2 = Schema("schema2", ["test", "schema2.MatrNr", "schema2.Name"], [])
+    schema2 = Schema("schema2", ["test", "schema2.MatrNr", "schema2.Test"], [])
 
-    assert not optimizer._are_columns_fully_covered_in_both_schemas(["test", "Name", "schema1.MatrNr"], schema1, schema2)
-    assert not optimizer._are_columns_fully_covered_in_both_schemas(["test", "Name", "schema2.MatrNr"], schema1, schema2)
+    assert not optimizer._are_columns_fully_covered_in_both_schemas(["test", "Name", "MatrNr"], schema1, schema2)
 
 
 def test_optimizer_get_condition_columns():
@@ -234,7 +233,7 @@ def test_optimizer_selection_push_through_natural_join():
     assert isinstance(join.table1_reference.condition, ComparativeOperationExpression)
     assert join.table1_reference.condition.left.value == "MatrNr"
     assert isinstance(join.table2_reference.condition, ComparativeOperationExpression)
-    assert join.table2_reference.condition.left.value == "MatrNr"
+    assert join.table2_reference.condition.left.value == "studenten.MatrNr"
 
 
 def test_optimizer_selection_do_not_push_through_natural_join_not_fully_covered():
@@ -364,7 +363,7 @@ def test_optimizer_selection_push_down_projection_distinct_join():
         ComparativeOperationExpression(ColumnExpression("test"), ComparativeOperator.EQUAL, LiteralExpression("test_text"))
     )
 
-    node = optimizer._selection_access_helper(selection, optimizer._selection_push_down)
+    node = optimizer._selection_access_helper(selection, optimizer._selection_push_down())
 
     assert isinstance(node, Selection)
     assert isinstance(node.table_reference, Projection)
@@ -402,7 +401,7 @@ def test_optimizer_selection_push_down_set_operator_ordering():
         ComparativeOperationExpression(ColumnExpression("MatrNr"), ComparativeOperator.GREATER, LiteralExpression(0))
     )
 
-    node = optimizer._selection_access_helper(selection, optimizer._selection_push_down)
+    node = optimizer._selection_access_helper(selection, optimizer._selection_push_down())
 
     assert isinstance(node, OrderingOperator)
     assert isinstance(node.table_reference, Union)
