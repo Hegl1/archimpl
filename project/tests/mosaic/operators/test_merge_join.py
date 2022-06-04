@@ -2,6 +2,7 @@ import pytest
 from mosaic import table_service
 from mosaic.compiler.operators.abstract_join_operator import JoinType, JoinTypeNotSupportedException, JoinConditionNotSupportedException, ErrorInJoinConditionException
 from mosaic.compiler.operators.merge_join_operator import MergeJoin
+from mosaic.compiler.operators.ordering_operator import OrderingOperator
 from mosaic.compiler.operators.table_scan_operator import TableScan
 from mosaic.compiler.operators.projection_operator import Projection
 from mosaic.compiler.operators.explain import Explain
@@ -19,8 +20,8 @@ def refresh_loaded_tables():
 
 
 def test_mergejoin_comparative():
-    table1 = TableScan("vorlesungen")
-    table2 = TableScan("voraussetzen")
+    table1 = OrderingOperator([ColumnExpression("VorlNr")], TableScan("vorlesungen"))
+    table2 = OrderingOperator([ColumnExpression("Vorgaenger")], TableScan("voraussetzen"))
     comparative = ComparativeOperationExpression(ColumnExpression("vorlesungen.VorlNr"),
                                                  ComparativeOperator.EQUAL,
                                                  ColumnExpression("voraussetzen.Vorgaenger"))
@@ -37,8 +38,8 @@ def test_mergejoin_comparative():
 
 
 def test_mergejoin_conjunctive():
-    table1 = TableScan("vorlesungen")
-    table2 = TableScan("voraussetzen")
+    table1 = OrderingOperator([ColumnExpression("VorlNr"), ColumnExpression("gelesenVon")], TableScan("vorlesungen"))
+    table2 = OrderingOperator([ColumnExpression("Vorgaenger"), ColumnExpression("Nachfolger")], TableScan("voraussetzen"))
     comparative1 = ComparativeOperationExpression(ColumnExpression("vorlesungen.VorlNr"),
                                                   ComparativeOperator.EQUAL,
                                                   ColumnExpression("voraussetzen.Vorgaenger"))
@@ -54,14 +55,14 @@ def test_mergejoin_conjunctive():
 
 
 def test_mergejoin_left_comparative():
-    table1 = TableScan("vorlesungen")
-    table2 = TableScan("voraussetzen")
-    comparative = ComparativeOperationExpression(ColumnExpression("vorlesungen.VorlNr"),
+    table1 = OrderingOperator([ColumnExpression("PersNr")], TableScan("professoren"))
+    table2 = OrderingOperator([ColumnExpression("Boss")], Projection([(None, ColumnExpression("Boss"))], TableScan("assistenten")))
+    comparative = ComparativeOperationExpression(ColumnExpression("professoren.PersNr"),
                                                  ComparativeOperator.EQUAL,
-                                                 ColumnExpression("voraussetzen.Vorgaenger"))
+                                                 ColumnExpression("assistenten.Boss"))
     join = MergeJoin(table1, table2, JoinType.LEFT_OUTER, comparative, False)
     result = join.get_result()
-    assert len(result) == 16
+    assert len(result) == 9
     assert [5001, "Grundzuege", 4, 2137, 5001, 5041] in result.records
     assert [5043, "Erkenntnistheorie", 3, 2126, 5043, 5052] in result.records
     assert [5259, "Der Wiener Kreis", 2, 2133, None, None] in result.records
