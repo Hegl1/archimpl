@@ -169,6 +169,6 @@ def test_milestone_3_optimize_query_execution_time(query):
 def _test_optimize_query_execution_time(query):
     times = [0, 0]
     for i, optimize in enumerate([True, False]):
-        result, execution_time = query_executor.execute_query(query, optimize)[0]
+        _, execution_time = query_executor.execute_query(query, optimize)[0]
         times[i] = execution_time
     assert times[1] / times[0] > 1000
