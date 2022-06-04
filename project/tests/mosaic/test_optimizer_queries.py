@@ -92,3 +92,22 @@ def test_optimizer_selection_push_through_projection_fqn():
     assert result[3][0] == '-------->Selection(condition=(professoren.Name > "K"))'
     assert result[4][0] == "---------->TableScan(professoren)"
     assert result[5][0] == "-------->TableScan(assistenten)"
+
+
+def test_optimizer_replaces_nested_loop_join_with_hash_join():
+    query = "hoeren join hoeren.MatrNr = studenten.MatrNr studenten;"
+    result = _execute_query(f"explain {query}")
+    assert result[0][0] == "-->HashJoin(inner, natural=False, condition=(hoeren.MatrNr = studenten.MatrNr))"
+    assert result[1][0] == "---->TableScan(hoeren)"
+    assert result[2][0] == "---->TableScan(studenten)"
+
+    _check_query_result_same_optimization(query)
+
+def test_optimizer_hash_join_replace_not_allowed():
+    query = "studenten join Semester < SWS vorlesungen;"
+    result = _execute_query(f"explain {query}")
+    assert result[0][0] == "-->NestedLoopsJoin(inner, natural=False, condition=(studenten.Semester < vorlesungen.SWS))"
+    assert result[1][0] == "---->TableScan(studenten)"
+    assert result[2][0] == "---->TableScan(vorlesungen)"
+
+    _check_query_result_same_optimization(query)

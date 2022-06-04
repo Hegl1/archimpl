@@ -114,7 +114,7 @@ def test_milestone_3_query(query, column_names, result_rows):
           ['---->NestedLoopsJoin(inner, natural=False, condition=(professoren.PersNr = vorlesungen.gelesenVon))'],
           ['------>TableScan(professoren)'],
           ['------>TableScan(vorlesungen)']],
-         [['-->NestedLoopsJoin(inner, natural=False, condition=(professoren.PersNr = vorlesungen.gelesenVon))'],
+         [['-->HashJoin(inner, natural=False, condition=(professoren.PersNr = vorlesungen.gelesenVon))'],
           ['---->Selection(condition=((professoren.Rang = "C3") AND (professoren.Raum > "200")))'],
           ['------>TableScan(professoren)'],
           ['---->Selection(condition=(vorlesungen.SWS = 3))'],

@@ -14,10 +14,12 @@ class HashJoin(AbstractJoin):
         table1_hash = self._build_hash(table1, self.table1_schema, self.condition)
         used_keys = set()
 
-        self._build_matching_records(table2, table1_hash, used_keys, result_records)
+        self._build_matching_records(
+            table2, table1_hash, used_keys, result_records)
 
         if self.join_type == JoinType.LEFT_OUTER:
-            self._build_not_matching_records(table2, table1_hash, used_keys, result_records)
+            self._build_not_matching_records(
+                table2, table1_hash, used_keys, result_records)
 
         return Table(self.schema, result_records)
 
@@ -27,13 +29,16 @@ class HashJoin(AbstractJoin):
         Adds resulting tuples in result_records.
         Used_keys gets filled with all the keys out of table1_hash that got used to build a tuple.
         """
-        table2_hash_reference = self._get_join_column_indices(table2, self.condition)
+        table2_hash_reference = self._get_join_column_indices(
+            table2, self.condition)
         for tab2_record in table2.records:
-            tab2_key = self._get_referenced_column_values(table2_hash_reference, tab2_record)
+            tab2_key = self._get_referenced_column_values(
+                table2_hash_reference, tab2_record)
             if tab2_key in table1_hash:
                 used_keys.add(tab2_key)
                 for tab1_record in table1_hash[tab2_key]:
-                    result_records.append(self._build_record(tab1_record, tab2_record, table2))
+                    result_records.append(self._build_record(
+                        tab1_record, tab2_record, table2))
 
     def _build_not_matching_records(self, table2, table1_hash, used_keys, result_records):
         """
@@ -54,7 +59,8 @@ class HashJoin(AbstractJoin):
         if not self.is_natural:
             return left_record + right_record
         else:
-            index_to_exclude = self._get_join_column_indices(right_table, self.condition)
+            index_to_exclude = self._get_join_column_indices(
+                right_table, self.condition)
             new_record = []
             for i, target in enumerate(right_record):
                 if i not in index_to_exclude:
@@ -65,24 +71,20 @@ class HashJoin(AbstractJoin):
         if isinstance(condition, ConjunctiveExpression):
             for comparative in condition.conditions:
                 self._check_comparative_condition_supported(comparative)
-                self._check_comparative_condition_invalid_references(schema1, schema2, comparative)
+                self._check_comparative_condition_invalid_references(
+                    schema1, schema2, comparative)
         else:
             self._check_comparative_condition_supported(condition)
-            self._check_comparative_condition_invalid_references(schema1, schema2, condition)
+            self._check_comparative_condition_invalid_references(
+                schema1, schema2, condition)
 
     def check_join_type(self):
         if self.join_type == JoinType.CROSS:
-            raise JoinTypeNotSupportedException("Cross joins are not supported by Hashjoin")
+            raise JoinTypeNotSupportedException(
+                "Cross joins are not supported by Hashjoin")
 
     def _check_comparative_condition_supported(self, condition):
-        """
-        Method that checks whether the condition is a simple comparative
-        (i.e. a comparative that checks the equality between columns)
-        """
-        if not isinstance(condition, ComparativeOperationExpression) or \
-                not isinstance(condition.right, ColumnExpression) or \
-                not isinstance(condition.left, ColumnExpression) or \
-                condition.operator != ComparativeOperator.EQUAL:
+        if not is_comparative_condition_supported(condition):
             raise JoinConditionNotSupportedException("HashJoin only supports conjunctions of equalities or "
                                                      "simple equalities that only contain column references")
 
@@ -94,7 +96,8 @@ class HashJoin(AbstractJoin):
         hash_reference_index = self._get_join_column_indices(schema, condition)
         result = dict()
         for record in relation.records:
-            key = self._get_referenced_column_values(hash_reference_index, record)
+            key = self._get_referenced_column_values(
+                hash_reference_index, record)
             if key not in result:
                 result[key] = [record]
             else:
@@ -112,3 +115,14 @@ class HashJoin(AbstractJoin):
         if self.condition is not None:
             self.condition.replace_all_column_names_by_fqn(schema)
         return f"HashJoin({self.join_type.value}, natural={self.is_natural}, condition={self.condition.__str__()})"
+
+
+def is_comparative_condition_supported(condition):
+    """
+    Method that checks whether the condition is a simple comparative
+    (i.e. a comparative that checks the equality between columns)
+    """
+    return isinstance(condition, ComparativeOperationExpression) and \
+        isinstance(condition.right, ColumnExpression) and \
+        isinstance(condition.left, ColumnExpression) and \
+        condition.operator == ComparativeOperator.EQUAL
