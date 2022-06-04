@@ -59,4 +59,4 @@ class ConjunctiveExpression(AbstractComputationExpression):
             condition.replace_all_column_names_by_fqn(schema)
 
     def __str__(self):
-        return "(" + " and ".join([str(comparative) for comparative in self.conditions]) + ")"
+        return "(" + " AND ".join([str(comparative) for comparative in self.conditions]) + ")"

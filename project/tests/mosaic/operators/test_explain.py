@@ -143,18 +143,18 @@ def test_explain_arithmetic():
 def test_explain_conjunctive():
     result, _ = execute_query('explain sigma Rang > "C3" and PersNr > 10 professoren;')[0]
     assert len(result) == 2
-    assert result[0][0] == '-->Selection(condition=((professoren.Rang > "C3") and (professoren.PersNr > 10)))'
+    assert result[0][0] == '-->Selection(condition=((professoren.Rang > "C3") AND (professoren.PersNr > 10)))'
     assert result[1][0] == "---->TableScan(professoren)"
 
 
 def test_explain_disjunctive():
     result, _ = execute_query('explain sigma Rang > "C3" or PersNr > 10 professoren;')[0]
     assert len(result) == 2
-    assert result[0][0] == '-->Selection(condition=((professoren.Rang > "C3") or (professoren.PersNr > 10)))'
+    assert result[0][0] == '-->Selection(condition=((professoren.Rang > "C3") OR (professoren.PersNr > 10)))'
     assert result[1][0] == "---->TableScan(professoren)"
 
 def test_explain_aggregate():
     result,_ = execute_query('explain gamma Rang aggregate Anzahl as count(PersNr) professoren;')[0]
     assert len(result) == 2
-    assert result[0][0] == "-->Aggregation(groups=[professoren.Rang],aggregates=[COUNT(professoren.PersNr) -> Anzahl])"
+    assert result[0][0] == "-->Aggregation(groups=[professoren.Rang=Rang],aggregates=[COUNT(professoren.PersNr) -> Anzahl])"
     assert result[1][0] == "---->TableScan(professoren)"

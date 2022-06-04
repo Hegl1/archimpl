@@ -312,7 +312,6 @@ class ASTVisitor(NodeVisitor):
             input_node = children[5]
 
             return HashAggregate(input_node, [], aggregate_columns)
-        pass
 
     def visit_ordering(self, node, visited_children):
         return OrderingOperator(visited_children[2], visited_children[3])

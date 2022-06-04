@@ -1,7 +1,10 @@
 from abc import ABC
 from copy import deepcopy
 from enum import Enum
+from mosaic.compiler.expressions.abstract_computation_expression import AbstractComputationExpression
+from mosaic.compiler.expressions.literal_expression import LiteralExpression
 from mosaic.compiler.operators.abstract_operator import AbstractOperator
+from mosaic.compiler.alias_schema_builder import build_schema
 from mosaic.table_service import Schema, SchemaType, Table
 
 
@@ -94,6 +97,18 @@ class HashAggregate(AbstractOperator, ABC):
     def get_schema(self):
         return self._build_schema()
 
+    def _get_key(self, grouping_columns, row, table, index):
+        key_list = []
+        for group_column in grouping_columns:
+            if isinstance(group_column, AbstractComputationExpression):
+                key_list.append(group_column.get_result(table, index))
+            elif isinstance(group_column, LiteralExpression):
+                key_list.append(group_column.get_result())
+            else:
+                key_list.append(row[group_column])
+
+        return tuple(key_list)
+
     def _group_columns(self):
         """
         First the function fetches all the indexes of the grouping columns of the aggregation.
@@ -109,13 +124,20 @@ class HashAggregate(AbstractOperator, ABC):
         if not self.group_names:
             return {"": table.records}
 
-        # get indexes of all group columns
-        grouping_columns = [table.get_column_index(
-            group_name[1].value) for group_name in self.group_names]
+        grouping_columns = []
+
+        for (_, group_name) in self.group_names:
+            if isinstance(group_name, AbstractComputationExpression) or isinstance(group_name, LiteralExpression):
+                grouping_columns.append(group_name)
+            else:
+                grouping_columns.append(
+                    table.get_column_index(group_name.value))
 
         # generate dictionary
-        for row in table.records:
-            key = tuple(row[key_index] for key_index in grouping_columns)
+        for (index, row) in enumerate(table.records):
+            # get indexes of all group columns
+            key = self._get_key(grouping_columns, row, table, index)
+
             if key not in group_table:
                 group_table[key] = [row]
             else:
@@ -163,15 +185,8 @@ class HashAggregate(AbstractOperator, ABC):
         old_table = self.table_reference.get_result()
         old_schema = self.table_reference.get_schema()
 
-        column_names = []
-        column_types = []
-
-        # get selected columns
-        if self.group_names:
-            column_names += [old_schema.get_fully_qualified_column_name(
-                group_name[1].value) for group_name in self.group_names]
-            column_types += [old_schema.column_types[old_table.get_column_index(name)] 
-                             for name in column_names]
+        column_names, column_types, _ = build_schema(
+            self.group_names, old_schema)
 
         column_names += [aggregation[0]
                          for aggregation in self.aggregations]
@@ -193,15 +208,16 @@ class HashAggregate(AbstractOperator, ABC):
         return Table(schema, records)
 
     def __str__(self):
-        schema = self.table_reference.get_schema()
+        table_schema = self.table_reference.get_schema()
+        aggregate_schema = self.get_schema()
         groups = []
         aggregates = []
         for aggregate in self.aggregations:
             aggregates.append(
-                f"{aggregate[1].value}({schema.get_fully_qualified_column_name(aggregate[2].value)}) -> {aggregate[0]}")
-        for group in self.group_names:
+                f"{aggregate[1].value}({table_schema.get_fully_qualified_column_name(aggregate[2].value)}) -> {aggregate[0]}")
+        for i, (_, column_ref) in enumerate(self.group_names):
             groups.append(
-                schema.get_fully_qualified_column_name(group[1].value))
+                (f"{aggregate_schema.column_names[i]}={str(column_ref)}"))
 
         return f"Aggregation(groups=[{', '.join(groups)}],aggregates=[{', '.join(aggregates)}])"
 
