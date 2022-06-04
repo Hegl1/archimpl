@@ -63,14 +63,11 @@ def _select_optimal_join(join: AbstractJoin):
 
     optimal_join = join
 
-    if join.check_join_type != JoinType.CROSS and hash_join_operator.is_comparative_condition_supported(join.condition):
-        try:
-            optimal_join = HashJoin(join.table1_reference, join.table2_reference,
-                                    join.join_type, join.condition, join.is_natural)
-        except JoinTypeNotSupportedException:
-            optimal_join = join
-
-    #TODO check if it's optimal to replace with merge join
+    try:
+        optimal_join = HashJoin(join.table1_reference, join.table2_reference,
+                                join.join_type, join.condition, join.is_natural)
+    except (JoinTypeNotSupportedException,JoinConditionNotSupportedException):
+        optimal_join = join
 
     optimal_join.table1_reference = _node_access_helper(
         optimal_join.table1_reference, _select_optimal_join, AbstractJoin)
