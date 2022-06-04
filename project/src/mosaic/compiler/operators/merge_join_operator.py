@@ -29,20 +29,29 @@ class MergeJoin(AbstractJoin):
         return Table(self.schema, result_records)
 
     def _build_records(self, left_table, right_table):
+        """
+        Builds the result records.
+        Checks for each record in the two tables if they are matching in merge_records method.
+        """
         records = []
 
         left_record_index = 0
         right_record_index = 0
 
-        while left_record_index < len(left_table.records) and right_record_index < len(right_table.records):
+        while left_record_index < len(left_table) and right_record_index < len(right_table):
             left_record_index, right_record_index = self._merge_records(left_table, right_table, left_record_index,
                                                                         right_record_index, records)
 
         return records
 
     def _merge_records(self, left_table, right_table, left_record_index, right_record_index, records):
-        merge_condition = self._compare_records(left_table.records[left_record_index],
-                                                right_table.records[right_record_index])
+        """
+        Checks if two records of tables are matching.
+        In dependence of the merge_condition the two records are getting merged or not.
+        If not, the index of the left or the right table gets incremented
+        to check the next records in the next iteration.
+        """
+        merge_condition = self._compare_records(left_table[left_record_index], right_table[right_record_index])
 
         if merge_condition == 0:
             left_record_index, right_record_index = self._build_matching_records(records, left_table, right_table,
@@ -50,8 +59,8 @@ class MergeJoin(AbstractJoin):
 
         elif merge_condition == 1 or self.right_table_finished:
             if self.join_type == JoinType.LEFT_OUTER:
-                records.append(left_table.records[left_record_index] +
-                               self._build_null_record(len(right_table.records[right_record_index])))
+                records.append(left_table[left_record_index] +
+                               self._build_null_record(len(right_table[right_record_index])))
 
             left_record_index += 1
 
@@ -64,9 +73,12 @@ class MergeJoin(AbstractJoin):
         return left_record_index, right_record_index
 
     def _build_matching_records(self, records, left_table, right_table, left_record_index, right_record_index):
-
-        cross_product_of_records, left_next_record_index, right_next_record_index = self._build_cross_product_of_records(
-            left_table, right_table, left_record_index, right_record_index)
+        """
+        Builds the record for matching records.
+        Returns the indices to check them next for matches.
+        """
+        cross_product_of_records, left_next_record_index, right_next_record_index = \
+            self._build_cross_product_of_records(left_table, right_table, left_record_index, right_record_index)
 
         for record in cross_product_of_records:
             records.append(record)
@@ -74,7 +86,7 @@ class MergeJoin(AbstractJoin):
         left_record_index = left_next_record_index
 
         if self.join_type == JoinType.LEFT_OUTER:
-            right_record_index = min(len(right_table.records) - 1, right_next_record_index)
+            right_record_index = min(len(right_table) - 1, right_next_record_index)
         else:
             right_record_index = right_next_record_index
 
@@ -82,7 +94,11 @@ class MergeJoin(AbstractJoin):
 
     def _build_cross_product_of_records(self, left_table, right_table, left_sub_record_start_index,
                                         right_sub_record_start_index):
-
+        """
+        Returns the cross product of matching records.
+        Retrieves matching records from left and right table
+        to finally build the cross product in build_cross_product_of_records_aux method.
+        """
         left_records, left_record_end_index = \
             self._get_matching_records(left_table, self.left_table_referenced_column_indices,
                                        left_sub_record_start_index, right_table)
@@ -96,6 +112,10 @@ class MergeJoin(AbstractJoin):
         return cross_product_record, left_record_end_index, right_record_end_index
 
     def _build_cross_product_of_records_aux(self, left_records, right_records, right_table):
+        """
+        Builds the cross product of the matching records.
+        In case of a natural join, the right table is needed to eliminate join columns.
+        """
         cross_product_record = []
 
         for left_record, right_record in itertools.product(left_records, right_records):
@@ -112,24 +132,31 @@ class MergeJoin(AbstractJoin):
         return cross_product_record
 
     def _get_matching_records(self, table, table_referenced_column_indices, sub_record_start_index, right_table):
-
+        """
+        Returns a list of matching records to be merged with records from the other table.
+        The list consists of the records from sub_record_start_index to sub_record_end_index.
+        """
         reference = self._get_referenced_values(table, sub_record_start_index, table_referenced_column_indices)
         sub_record_end_index = sub_record_start_index + 1
 
-        for record_index in range(sub_record_start_index, len(right_table.records)):
-            if self._check_not_matching_records(table, record_index, table_referenced_column_indices, reference):
+        for record_index in range(sub_record_start_index, len(right_table)):
+            if self._check_records_not_matching(table, record_index, table_referenced_column_indices, reference):
                 sub_record_end_index = record_index
                 break
 
-        return table.records[sub_record_start_index:sub_record_end_index], sub_record_end_index
+        return table[sub_record_start_index:sub_record_end_index], sub_record_end_index
 
-    def _check_not_matching_records(self, table, record_index, table_referenced_column_indices, reference):
+    def _check_records_not_matching(self, table, record_index, table_referenced_column_indices, reference):
         return self._get_referenced_values(table, record_index, table_referenced_column_indices) != reference
 
     def _get_referenced_values(self, table, record_index, table_referenced_column_indices):
-        return list(map(table.records[record_index].__getitem__, table_referenced_column_indices))
+        return list(map(table[record_index].__getitem__, table_referenced_column_indices))
 
     def _compare_records(self, tuple1, tuple2):
+        """
+        Two records get compared to know if the records can be merged or not
+        Returns 0 if records are matching, 1 if left record is smaller, -1 if right record is smaller
+        """
         match = 0
 
         for column_index1, column_index2 in zip(self.left_table_referenced_column_indices,
@@ -221,6 +248,11 @@ class MergeJoin(AbstractJoin):
             raise ErrorInJoinConditionException("No table reference found in join condition")
 
     def _check_tables_sorting(self):
+        """
+        Checks if the two tables are sorted correctly for the given join conditions.
+        For all join conditions the referenced columns from the condition have to be sorted.
+        If not an exception gets raised.
+        """
         if not isinstance(self.table1_reference, OrderingOperator) or not isinstance(self.table2_reference,
                                                                                      OrderingOperator):
             raise TableNotSortedException("Tables are not sorted!")
