@@ -27,10 +27,12 @@ def refresh_loaded_tables():
 def test_optimizer_split_selections():
     selection = Selection(TableScan("professoren"), ConjunctiveExpression([
         ColumnExpression("Name"),
-        ComparativeOperationExpression(ColumnExpression("Name"), ComparativeOperator.EQUAL, LiteralExpression("Sokrates"))
+        ComparativeOperationExpression(ColumnExpression(
+            "Name"), ComparativeOperator.EQUAL, LiteralExpression("Sokrates"))
     ]))
 
-    selection = optimizer._selection_access_helper(selection, optimizer._split_selections)
+    selection = optimizer._node_access_helper(
+        selection, optimizer._split_selections, Selection)
 
     assert isinstance(selection, Selection)
     assert isinstance(selection.condition, ColumnExpression)
@@ -48,30 +50,36 @@ def test_optimizer_join_selections():
     selection = Selection(
         Selection(
             TableScan("professoren"),
-            ComparativeOperationExpression(ColumnExpression("Name"), ComparativeOperator.EQUAL, LiteralExpression("Sokrates"))
+            ComparativeOperationExpression(ColumnExpression(
+                "Name"), ComparativeOperator.EQUAL, LiteralExpression("Sokrates"))
         ),
         ColumnExpression("Name")
     )
 
-    selection = optimizer._selection_access_helper(selection, optimizer._join_selections)
+    selection = optimizer._node_access_helper(
+        selection, optimizer._join_selections, Selection)
 
     assert isinstance(selection, Selection)
     assert isinstance(selection.condition, ConjunctiveExpression)
     assert len(selection.condition.conditions) == 2
     assert isinstance(selection.condition.conditions[0], ColumnExpression)
-    assert isinstance(selection.condition.conditions[1], ComparativeOperationExpression)
+    assert isinstance(
+        selection.condition.conditions[1], ComparativeOperationExpression)
 
 
 def test_optimizer_join_selections_nested_conjunctives():
     selection = Selection(
         Selection(
             TableScan("professoren"),
-            ConjunctiveExpression([ColumnExpression("PersNr"), ColumnExpression("Rang")])
+            ConjunctiveExpression(
+                [ColumnExpression("PersNr"), ColumnExpression("Rang")])
         ),
-        ConjunctiveExpression([ColumnExpression("Name"), ColumnExpression("Raum")])
+        ConjunctiveExpression(
+            [ColumnExpression("Name"), ColumnExpression("Raum")])
     )
 
-    selection = optimizer._selection_access_helper(selection, optimizer._join_selections)
+    selection = optimizer._node_access_helper(
+        selection, optimizer._join_selections, Selection)
 
     assert isinstance(selection, Selection)
     assert isinstance(selection.condition, ConjunctiveExpression)
@@ -83,15 +91,18 @@ def test_optimizer_columns_fully_covered_in_first():
     schema1 = Schema("schema1", ["test", "schema1.MatrNr", "schema1.Name"], [])
     schema2 = Schema("schema2", ["tust", "schema2.MatrNr", "schema2.no"], [])
 
-    assert optimizer._are_columns_fully_covered_in_first_schema(columns, schema1, schema2)
+    assert optimizer._are_columns_fully_covered_in_first_schema(
+        columns, schema1, schema2)
 
 
 def test_optimizer_columns_not_fully_covered_in_first():
     schema1 = Schema("schema1", ["test", "schema1.MatrNr", "schema1.Name"], [])
     schema2 = Schema("schema2", ["tust", "schema2.MatrNr", "schema2.no"], [])
 
-    assert not optimizer._are_columns_fully_covered_in_first_schema(["test", "MatrNr", "Name"], schema1, schema2)
-    assert not optimizer._are_columns_fully_covered_in_first_schema(["not_existent", "schema1.MatrNr", "Name"], schema1, schema2)
+    assert not optimizer._are_columns_fully_covered_in_first_schema(
+        ["test", "MatrNr", "Name"], schema1, schema2)
+    assert not optimizer._are_columns_fully_covered_in_first_schema(
+        ["not_existent", "schema1.MatrNr", "Name"], schema1, schema2)
 
 
 def test_optimizer_columns_fully_covered_in_both():
@@ -99,14 +110,16 @@ def test_optimizer_columns_fully_covered_in_both():
     schema1 = Schema("schema1", ["test", "schema1.MatrNr", "schema1.Name"], [])
     schema2 = Schema("schema2", ["test", "schema2.MatrNr", "schema2.Name"], [])
 
-    assert optimizer._are_columns_fully_covered_in_both_schemas(columns, schema1, schema2)
+    assert optimizer._are_columns_fully_covered_in_both_schemas(
+        columns, schema1, schema2)
 
 
 def test_optimizer_columns_not_fully_covered_in_both():
     schema1 = Schema("schema1", ["test", "schema1.MatrNr", "schema1.Name"], [])
     schema2 = Schema("schema2", ["test", "schema2.MatrNr", "schema2.Test"], [])
 
-    assert not optimizer._are_columns_fully_covered_in_both_schemas(["test", "Name", "MatrNr"], schema1, schema2)
+    assert not optimizer._are_columns_fully_covered_in_both_schemas(
+        ["test", "Name", "MatrNr"], schema1, schema2)
 
 
 def test_optimizer_get_condition_columns():
@@ -158,10 +171,12 @@ def test_optimizer_replace_condition_columns():
 
 
 def test_optimizer_selection_push_through_projection_alias():
-    projection = Projection([("nm", ColumnExpression("Name"))], TableScan("professoren"))
+    projection = Projection(
+        [("nm", ColumnExpression("Name"))], TableScan("professoren"))
     selection = Selection(
         projection,
-        ComparativeOperationExpression(ColumnExpression("nm"), ComparativeOperator.EQUAL, LiteralExpression("Sokrates"))
+        ComparativeOperationExpression(ColumnExpression(
+            "nm"), ComparativeOperator.EQUAL, LiteralExpression("Sokrates"))
     )
 
     node = optimizer._selection_push_through_projection(selection, projection)
@@ -173,10 +188,12 @@ def test_optimizer_selection_push_through_projection_alias():
 
 
 def test_optimizer_selection_push_through_projection_no_alias():
-    projection = Projection([(None, ColumnExpression("Name"))], TableScan("professoren"))
+    projection = Projection(
+        [(None, ColumnExpression("Name"))], TableScan("professoren"))
     selection = Selection(
         projection,
-        ComparativeOperationExpression(ColumnExpression("Name"), ComparativeOperator.EQUAL, LiteralExpression("Sokrates"))
+        ComparativeOperationExpression(ColumnExpression(
+            "Name"), ComparativeOperator.EQUAL, LiteralExpression("Sokrates"))
     )
 
     node = optimizer._selection_push_through_projection(selection, projection)
@@ -188,10 +205,12 @@ def test_optimizer_selection_push_through_projection_no_alias():
 
 
 def test_optimizer_selection_do_not_push_through_projection_literal_expression():
-    projection = Projection([("nm", LiteralExpression("test"))], TableScan("professoren"))
+    projection = Projection(
+        [("nm", LiteralExpression("test"))], TableScan("professoren"))
     selection = Selection(
         projection,
-        ComparativeOperationExpression(ColumnExpression("nm"), ComparativeOperator.EQUAL, LiteralExpression("Sokrates"))
+        ComparativeOperationExpression(ColumnExpression(
+            "nm"), ComparativeOperator.EQUAL, LiteralExpression("Sokrates"))
     )
 
     node = optimizer._selection_push_through_projection(selection, projection)
@@ -202,10 +221,12 @@ def test_optimizer_selection_do_not_push_through_projection_literal_expression()
 
 
 def test_optimizer_selection_do_not_push_through_projection_col_not_found():
-    projection = Projection([("nm", LiteralExpression("test"))], TableScan("professoren"))
+    projection = Projection(
+        [("nm", LiteralExpression("test"))], TableScan("professoren"))
     selection = Selection(
         projection,
-        ComparativeOperationExpression(ColumnExpression("not_found_column"), ComparativeOperator.EQUAL, LiteralExpression("Sokrates"))
+        ComparativeOperationExpression(ColumnExpression(
+            "not_found_column"), ComparativeOperator.EQUAL, LiteralExpression("Sokrates"))
     )
 
     node = optimizer._selection_push_through_projection(selection, projection)
@@ -216,10 +237,12 @@ def test_optimizer_selection_do_not_push_through_projection_col_not_found():
 
 
 def test_optimizer_selection_push_through_natural_join():
-    join = HashJoin(TableScan("hoeren"), TableScan("studenten"), JoinType.INNER, None, True)
+    join = HashJoin(TableScan("hoeren"), TableScan(
+        "studenten"), JoinType.INNER, None, True)
     selection = Selection(
         join,
-        ComparativeOperationExpression(ColumnExpression("MatrNr"), ComparativeOperator.EQUAL, LiteralExpression(26120))
+        ComparativeOperationExpression(ColumnExpression(
+            "MatrNr"), ComparativeOperator.EQUAL, LiteralExpression(26120))
     )
 
     node = optimizer._selection_push_through_join_operator(selection, join)
@@ -230,18 +253,22 @@ def test_optimizer_selection_push_through_natural_join():
     assert isinstance(join.table1_reference.table_reference, TableScan)
     assert isinstance(join.table2_reference.table_reference, TableScan)
 
-    assert isinstance(join.table1_reference.condition, ComparativeOperationExpression)
+    assert isinstance(join.table1_reference.condition,
+                      ComparativeOperationExpression)
     assert join.table1_reference.condition.left.value == "MatrNr"
-    assert isinstance(join.table2_reference.condition, ComparativeOperationExpression)
+    assert isinstance(join.table2_reference.condition,
+                      ComparativeOperationExpression)
     assert join.table2_reference.condition.left.value == "studenten.MatrNr"
 
 
 def test_optimizer_selection_do_not_push_through_natural_join_not_fully_covered():
-    join = HashJoin(TableScan("hoeren"), TableScan("studenten"), JoinType.INNER, None, True)
+    join = HashJoin(TableScan("hoeren"), TableScan(
+        "studenten"), JoinType.INNER, None, True)
     selection = Selection(
         join,
         ConjunctiveExpression([
-            ComparativeOperationExpression(ColumnExpression("MatrNr"), ComparativeOperator.EQUAL, LiteralExpression(26120)),
+            ComparativeOperationExpression(ColumnExpression(
+                "MatrNr"), ComparativeOperator.EQUAL, LiteralExpression(26120)),
             ColumnExpression("Semester")
         ])
     )
@@ -258,12 +285,14 @@ def test_optimizer_selection_push_through_inner_join_left():
         TableScan("hoeren"),
         TableScan("studenten"),
         JoinType.INNER,
-        ComparativeOperationExpression(ColumnExpression("hoeren.MatrNr"), ComparativeOperator.EQUAL, ColumnExpression("studenten.MatrNr")),
+        ComparativeOperationExpression(ColumnExpression(
+            "hoeren.MatrNr"), ComparativeOperator.EQUAL, ColumnExpression("studenten.MatrNr")),
         False
     )
     selection = Selection(
         join,
-        ComparativeOperationExpression(ColumnExpression("VorlNr"), ComparativeOperator.EQUAL, LiteralExpression(5001))
+        ComparativeOperationExpression(ColumnExpression(
+            "VorlNr"), ComparativeOperator.EQUAL, LiteralExpression(5001))
     )
 
     node = optimizer._selection_push_through_join_operator(selection, join)
@@ -278,12 +307,14 @@ def test_optimizer_selection_push_through_inner_join_right():
         TableScan("hoeren"),
         TableScan("studenten"),
         JoinType.INNER,
-        ComparativeOperationExpression(ColumnExpression("hoeren.MatrNr"), ComparativeOperator.EQUAL, ColumnExpression("studenten.MatrNr")),
+        ComparativeOperationExpression(ColumnExpression(
+            "hoeren.MatrNr"), ComparativeOperator.EQUAL, ColumnExpression("studenten.MatrNr")),
         False
     )
     selection = Selection(
         join,
-        ComparativeOperationExpression(ColumnExpression("Semester"), ComparativeOperator.EQUAL, LiteralExpression(12))
+        ComparativeOperationExpression(ColumnExpression(
+            "Semester"), ComparativeOperator.EQUAL, LiteralExpression(12))
     )
 
     node = optimizer._selection_push_through_join_operator(selection, join)
@@ -298,12 +329,14 @@ def test_optimizer_selection_do_not_push_through_inner_join_not_fully_covered():
         TableScan("hoeren"),
         TableScan("studenten"),
         JoinType.INNER,
-        ComparativeOperationExpression(ColumnExpression("hoeren.MatrNr"), ComparativeOperator.EQUAL, ColumnExpression("studenten.MatrNr")),
+        ComparativeOperationExpression(ColumnExpression(
+            "hoeren.MatrNr"), ComparativeOperator.EQUAL, ColumnExpression("studenten.MatrNr")),
         False
     )
     selection = Selection(
         join,
-        ComparativeOperationExpression(ColumnExpression("MatrNr"), ComparativeOperator.EQUAL, LiteralExpression(26120))
+        ComparativeOperationExpression(ColumnExpression(
+            "MatrNr"), ComparativeOperator.EQUAL, LiteralExpression(26120))
     )
 
     node = optimizer._selection_push_through_join_operator(selection, join)
@@ -316,11 +349,13 @@ def test_optimizer_selection_do_not_push_through_inner_join_not_fully_covered():
 def test_optimizer_selection_push_through_set_operator():
     union = Union(
         Projection([(None, ColumnExpression("MatrNr"))], TableScan("hoeren")),
-        Projection([(None, ColumnExpression("MatrNr"))], TableScan("studenten"))
+        Projection([(None, ColumnExpression("MatrNr"))],
+                   TableScan("studenten"))
     )
     selection = Selection(
         union,
-        ComparativeOperationExpression(ColumnExpression("hoeren.MatrNr"), ComparativeOperator.EQUAL, LiteralExpression(28106))
+        ComparativeOperationExpression(ColumnExpression(
+            "hoeren.MatrNr"), ComparativeOperator.EQUAL, LiteralExpression(28106))
     )
 
     node = optimizer._selection_push_through_set_operator(selection, union)
@@ -331,9 +366,11 @@ def test_optimizer_selection_push_through_set_operator():
     assert isinstance(union.table1_reference.table_reference, Selection)
     assert isinstance(union.table2_reference.table_reference, Selection)
 
-    assert isinstance(union.table1_reference.table_reference.condition.left, ColumnExpression)
+    assert isinstance(
+        union.table1_reference.table_reference.condition.left, ColumnExpression)
     assert union.table1_reference.table_reference.condition.left.value == "hoeren.MatrNr"
-    assert isinstance(union.table2_reference.table_reference.condition.left, ColumnExpression)
+    assert isinstance(
+        union.table2_reference.table_reference.condition.left, ColumnExpression)
     assert union.table2_reference.table_reference.condition.left.value == "studenten.MatrNr"
 
 
@@ -341,38 +378,50 @@ def test_optimizer_selection_push_down_projection_distinct_join():
     selection = Selection(
         Selection(
             Projection(
-                [(None, ColumnExpression("nm")), ("test", LiteralExpression("test_text")), (None, ColumnExpression("Semester"))],
+                [(None, ColumnExpression("nm")), ("test", LiteralExpression(
+                    "test_text")), (None, ColumnExpression("Semester"))],
                 Selection(
                     HashDistinct(
                         Projection(
-                            [("nm", ColumnExpression("Name")), (None, ColumnExpression("Semester"))],
+                            [("nm", ColumnExpression("Name")),
+                             (None, ColumnExpression("Semester"))],
                             HashJoin(
                                 TableScan("hoeren"),
                                 TableScan("studenten"),
                                 JoinType.INNER,
-                                ComparativeOperationExpression(ColumnExpression("hoeren.MatrNr"), ComparativeOperator.EQUAL, ColumnExpression("studenten.MatrNr")),
+                                ComparativeOperationExpression(ColumnExpression(
+                                    "hoeren.MatrNr"), ComparativeOperator.EQUAL, ColumnExpression("studenten.MatrNr")),
                                 False
                             )
                         )
                     ),
-                    ComparativeOperationExpression(ColumnExpression("nm"), ComparativeOperator.EQUAL, LiteralExpression("Jonas"))
+                    ComparativeOperationExpression(ColumnExpression(
+                        "nm"), ComparativeOperator.EQUAL, LiteralExpression("Jonas"))
                 )
             ),
-            ComparativeOperationExpression(ColumnExpression("Semester"), ComparativeOperator.EQUAL, LiteralExpression(10))
+            ComparativeOperationExpression(ColumnExpression(
+                "Semester"), ComparativeOperator.EQUAL, LiteralExpression(10))
         ),
-        ComparativeOperationExpression(ColumnExpression("test"), ComparativeOperator.EQUAL, LiteralExpression("test_text"))
+        ComparativeOperationExpression(ColumnExpression(
+            "test"), ComparativeOperator.EQUAL, LiteralExpression("test_text"))
     )
 
-    node = optimizer._selection_access_helper(selection, optimizer._selection_push_down())
+    node = optimizer._node_access_helper(
+        selection, optimizer._selection_push_down(), Selection)
 
     assert isinstance(node, Selection)
     assert isinstance(node.table_reference, Projection)
     assert isinstance(node.table_reference.table_reference, HashDistinct)
-    assert isinstance(node.table_reference.table_reference.table_reference, Projection)
-    assert isinstance(node.table_reference.table_reference.table_reference.table_reference, HashJoin)
-    assert isinstance(node.table_reference.table_reference.table_reference.table_reference.table1_reference, TableScan)
-    assert isinstance(node.table_reference.table_reference.table_reference.table_reference.table2_reference, Selection)
-    assert isinstance(node.table_reference.table_reference.table_reference.table_reference.table2_reference.table_reference, Selection)
+    assert isinstance(
+        node.table_reference.table_reference.table_reference, Projection)
+    assert isinstance(
+        node.table_reference.table_reference.table_reference.table_reference, HashJoin)
+    assert isinstance(
+        node.table_reference.table_reference.table_reference.table_reference.table1_reference, TableScan)
+    assert isinstance(
+        node.table_reference.table_reference.table_reference.table_reference.table2_reference, Selection)
+    assert isinstance(
+        node.table_reference.table_reference.table_reference.table_reference.table2_reference.table_reference, Selection)
 
     selection1 = node.table_reference.table_reference.table_reference.table_reference.table2_reference
     selection2 = node.table_reference.table_reference.table_reference.table_reference.table2_reference.table_reference
@@ -398,17 +447,21 @@ def test_optimizer_selection_push_down_set_operator_ordering():
                 )
             )
         ),
-        ComparativeOperationExpression(ColumnExpression("MatrNr"), ComparativeOperator.GREATER, LiteralExpression(0))
+        ComparativeOperationExpression(ColumnExpression(
+            "MatrNr"), ComparativeOperator.GREATER, LiteralExpression(0))
     )
 
-    node = optimizer._selection_access_helper(selection, optimizer._selection_push_down())
+    node = optimizer._node_access_helper(
+        selection, optimizer._selection_push_down(), Selection)
 
     assert isinstance(node, OrderingOperator)
     assert isinstance(node.table_reference, Union)
     assert isinstance(node.table_reference.table1_reference, Projection)
     assert isinstance(node.table_reference.table2_reference, Projection)
-    assert isinstance(node.table_reference.table1_reference.table_reference, Selection)
-    assert isinstance(node.table_reference.table2_reference.table_reference, Selection)
+    assert isinstance(
+        node.table_reference.table1_reference.table_reference, Selection)
+    assert isinstance(
+        node.table_reference.table2_reference.table_reference, Selection)
 
     selection1 = node.table_reference.table1_reference.table_reference
     selection2 = node.table_reference.table2_reference.table_reference
