@@ -23,11 +23,11 @@ class NestedLoopsJoin(AbstractJoin):
 
         remaining_column_indices = []
         if self.is_natural:
-            remaining_column_indices = self.get_remaining_column_indices(self.schema2)
+            remaining_column_indices = self.get_remaining_column_indices(self.table2_schema)
 
         joined_table_records = []
-        aux_schema = Schema(f"{self.schema1.table_name}_join_{self.schema2.table_name}", self.schema1.column_names + self.schema2.column_names,
-                            self.schema1.column_types + self.schema2.column_types)
+        aux_schema = Schema(f"{self.table1_schema.table_name}_join_{self.table2_schema.table_name}", self.table1_schema.column_names + self.table2_schema.column_names,
+                            self.table1_schema.column_types + self.table2_schema.column_types)
         aux_table = Table(aux_schema, [])
 
         for record1 in table1.records:
