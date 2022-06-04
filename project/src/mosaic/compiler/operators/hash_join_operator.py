@@ -5,11 +5,12 @@ from ..expressions.comparative_operation_expression import ComparativeOperationE
 
 class HashJoin(AbstractJoin):
 
-    def get_result(self):
+    def _get_result(self):
         table1 = self.table1_reference.get_result()
         table2 = self.table2_reference.get_result()
 
         result_records = []
+
         table1_hash = self._build_hash(table1, self.condition)
         used_keys = set()
 
@@ -90,7 +91,7 @@ class HashJoin(AbstractJoin):
         Builds a hash table of all rows of the given relation based on the join condition.
         Results in a dictionary with (column_val1, ...) as key and a list of records as value.
         """
-        hash_reference_index = self._get_join_column_indices(relation, condition)
+        hash_reference_index = self._get_join_column_indices(self.schema1, condition)
         result = dict()
         for record in relation.records:
             key = self._get_referenced_column_values(hash_reference_index, record)

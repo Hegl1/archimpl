@@ -17,17 +17,17 @@ class NestedLoopsJoin(AbstractJoin):
     def __init__(self, table1_reference, table2_reference, join_type, condition, is_natural):
         super().__init__(table1_reference, table2_reference, join_type, condition, is_natural)
 
-    def get_result(self):
+    def _get_result(self):
         table1 = self.table1_reference.get_result()
         table2 = self.table2_reference.get_result()
 
         remaining_column_indices = []
         if self.is_natural:
-            remaining_column_indices = self.get_remaining_column_indices(table2.schema)
+            remaining_column_indices = self.get_remaining_column_indices(self.schema2)
 
         joined_table_records = []
-        aux_schema = Schema(f"{table1.schema.table_name}_join_{table2.schema.table_name}", table1.schema.column_names + table2.schema.column_names,
-                            table1.schema.column_types + table2.schema.column_types)
+        aux_schema = Schema(f"{self.schema1.table_name}_join_{self.schema2.table_name}", self.schema1.column_names + self.schema2.column_names,
+                            self.schema1.column_types + self.schema2.column_types)
         aux_table = Table(aux_schema, [])
 
         for record1 in table1.records:
@@ -50,7 +50,6 @@ class NestedLoopsJoin(AbstractJoin):
                     joined_table_records.append(record1 + self._build_null_record(len(remaining_column_indices)))
                 else:
                     joined_table_records.append(record1 + self._build_null_record(len(table2.schema.column_names)))
-
         return Table(self.schema, joined_table_records)
 
     def get_remaining_column_indices(self, schema2):

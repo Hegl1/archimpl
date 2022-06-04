@@ -210,3 +210,13 @@ def test_hashjoin_explain():
     assert "left_outer" in result.records[0][0]
     assert "condition=(studenten.Name = assistenten.Name)" in result.records[0][0]
     assert "natural=True" in result.records[0][0]
+
+
+def test_natural_join_alias_projection():
+    table1 = TableScan("vorlesungen")
+    table2 = TableScan("professoren")
+    projection = Projection([("PersNr", ColumnExpression("gelesenVon"))], table1)
+    join = HashJoin(projection, table2, JoinType.INNER, None, True)
+    result = join.get_result()
+    assert len(result) == 10
+    assert result.schema.column_names == ["PersNr", "professoren.Name", "professoren.Rang", "professoren.Raum"]
