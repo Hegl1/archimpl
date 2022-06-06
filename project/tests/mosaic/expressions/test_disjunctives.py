@@ -67,4 +67,4 @@ def test_explain():
         [comparative_operation_three, conjunctive])
 
     assert str(
-        disjunctive) == f'(({column} = "{comparison_string2}") or (({column2} > {comparison_number}) and ("{comparison_string}" = {column})))'
+        disjunctive) == f'(({column} = "{comparison_string2}") OR (({column2} > {comparison_number}) AND ("{comparison_string}" = {column})))'

@@ -8,13 +8,13 @@ class HashDistinct(AbstractOperator):
     It is used for duplicate elimination and here is implemented in a hash-based way.
     """
 
-    def __init__(self, table):
+    def __init__(self, table_reference):
         super().__init__()
 
-        self.table = table
+        self.table_reference = table_reference
 
     def get_result(self):
-        table = self.table.get_result()
+        table = self.table_reference.get_result()
 
         hashes = set()
         records = []
@@ -30,11 +30,16 @@ class HashDistinct(AbstractOperator):
         return Table(schema, records)
 
     def get_schema(self):
-        return self.table.get_schema()
+        return self.table_reference.get_schema()
+
+    def simplify(self):
+        self.table_reference = self.table_reference.simplify()
+
+        return self
 
     def __str__(self):
         return f"HashDistinct"
 
     def explain(self, rows, indent):
         super().explain(rows, indent)
-        self.table.explain(rows, indent + 2)
+        self.table_reference.explain(rows, indent + 2)

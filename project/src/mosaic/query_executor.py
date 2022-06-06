@@ -4,9 +4,10 @@ from mosaic import cli
 from mosaic import parser
 from mosaic.compiler import compiler
 from mosaic.table_service import TableNotFoundException
+from mosaic.compiler import optimizer
 
 
-def execute_query(user_in):
+def execute_query(user_in, optimize = False):
     """
     Function that executes queries. Multiple queries per line are also possible.
     Returns a list containing all results as tuples: (result, execution_time)
@@ -15,8 +16,6 @@ def execute_query(user_in):
     results = []
 
     for query in user_in.split(";"):
-        start_execution = perf_counter_ns()
-
         # strip to allow chaining of multiple queries in a line
         query = query.strip()
 
@@ -28,6 +27,12 @@ def execute_query(user_in):
 
             try:
                 result_expression = compiler.compile(ast.ast)
+
+                if optimize:
+                    result_expression = optimizer.optimize(result_expression)
+
+                start_execution = perf_counter_ns()
+
                 result = result_expression.get_result()
 
                 end_execution = perf_counter_ns()
@@ -47,7 +52,7 @@ def execute_query(user_in):
     return results
 
 
-def execute_query_file(file_path):
+def execute_query_file(file_path, optimize = False):
     """
     Function that executes queries found in a .mql file.
     Returns a list containing all results
@@ -59,7 +64,7 @@ def execute_query_file(file_path):
             if not queries.endswith(';'):
                 raise cli.CliErrorMessageException("Missing semicolon at the end of query file")
             else:
-                return execute_query(queries)
+                return execute_query(queries, optimize)
     except FileNotFoundError:
         raise cli.CliErrorMessageException("Invalid Path, no query file found")
     except PermissionError:

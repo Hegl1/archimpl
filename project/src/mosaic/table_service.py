@@ -4,6 +4,8 @@ from enum import Enum
 
 import tabulate
 
+from mosaic.compiler.compiler_exception import CompilerException
+
 
 class SchemaType(Enum):
     """
@@ -30,12 +32,15 @@ class Schema:
         self.column_names = column_names
         self.column_types = column_types
 
+    def get_simple_column_name_list(self):
+        return [self.get_simple_column_name(name) for name in self.column_names]
+
     def get_simple_column_name(self, column_name):
         """
         Transforms the FQN column name into a simple column name
         """
-        if column_name.startswith(self.table_name + "."):
-            column_name = column_name[len(self.table_name) + 1:]  # remove FQN
+        if "." in column_name:
+            column_name = column_name.split(".")[1]  # remove FQN
 
         return column_name
 
@@ -43,18 +48,17 @@ class Schema:
         """
         Transforms a column name to a FQN column name
         """
-        if column_name in self.column_names:
-            return column_name
 
-        if "." in column_name:
-            return column_name
-
-        found_columns = list(filter(lambda column: column.endswith(f".{column_name}"), self.column_names))
+        found_columns = list(filter(lambda column: column.endswith(f".{column_name}")
+                                                   or column == column_name, self.column_names))
 
         if len(found_columns) > 1:
             raise AmbiguousColumnException(f"Column \"{column_name}\" is ambiguous in table \"{self.table_name}\"")
         elif len(found_columns) == 1:
             return found_columns[0]
+
+        if len(found_columns) == 0 and "." in column_name:
+            return column_name
 
         return f"{self.table_name}.{column_name}"
 
@@ -84,13 +88,13 @@ class Table:
     Class that represents one table in our Database.
     This class has the following properties:
     schema: Schema - the schema of the table, including the table name, columns names and column types
-    data: [[float | int | str]]] - list that represents tables data.
+    records: [[float | int | str]]] - list that represents tables data.
         Each entry of the list represents a row in the table.
     """
 
-    def __init__(self, schema, data):
+    def __init__(self, schema, records):
         self.schema = schema
-        self.records = data
+        self.records = records
 
     @property
     def table_name(self):
@@ -128,7 +132,7 @@ class TableIndexException(Exception):
     pass
 
 
-class TableNotFoundException(Exception):
+class TableNotFoundException(CompilerException):
     pass
 
 

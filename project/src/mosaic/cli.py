@@ -15,6 +15,9 @@ class CliErrorMessageException(Exception):
     pass
 
 
+_optimizer_enabled = False
+
+
 def _quit_application():
     click.echo("Bye!")
     sys.exit(0)
@@ -23,6 +26,7 @@ def _quit_application():
 def _print_command_help():
     click.echo("\\help \t\t\t\t shows this output.")
     click.echo("\\execute <query-file> \t\t executes the query loaded from query-file.")
+    click.echo("\\optimize \t\t\t toggles whether the queries should be optimized.")
     click.echo("\\quit \t\t\t\t quits the application.")
     click.echo("\\clear \t\t\t\t clears the screen.")
     click.echo("")
@@ -46,7 +50,7 @@ def _execute_query_file_from_command(user_in):
     if len(split_string) != 2:
         raise CliErrorMessageException("Wrong usage of \\execute. See \\help for further detail")
     else:
-        results = query_executor.execute_query_file(split_string[1])
+        results = query_executor.execute_query_file(split_string[1], _optimizer_enabled)
         _print_results(results)
 
 
@@ -62,6 +66,11 @@ def _execute_command(user_in):
         _quit_application()
     elif user_in == "\\clear" or user_in == "\\c":
         click.clear()
+    elif user_in == "\\optimize" or user_in == "\\o":
+        global _optimizer_enabled
+        _optimizer_enabled = not _optimizer_enabled
+
+        click.echo("Optimizer was " + ("enabled" if _optimizer_enabled else "disabled"))
     elif user_in.startswith("\\execute ") or user_in.startswith("\\e "):
         _execute_query_file_from_command(user_in)
     else:
@@ -111,7 +120,7 @@ def _main_loop():
                 if not user_in.endswith(";"):
                     user_in = _multi_line_loop(user_in, session)
 
-                results = query_executor.execute_query(user_in)
+                results = query_executor.execute_query(user_in, _optimizer_enabled)
                 _print_results(results)
         except CliErrorMessageException as e:
             click.secho("Error: " + str(e), fg='red')
@@ -141,7 +150,7 @@ def _execute_initial_query_file(query_file_path):
     Function that is used to load and execute a query file upon program startup.
     """
     try:
-        results = query_executor.execute_query_file(query_file_path)
+        results = query_executor.execute_query_file(query_file_path, _optimizer_enabled)
         _print_results(results)
     except CliErrorMessageException as e:
         click.secho("Error: " + str(e), fg='red')
@@ -153,13 +162,22 @@ def _execute_initial_query_file(query_file_path):
               help="Directory which contains all tables to load at startup")
 @click.option("--query-file", default=None, type=click.Path(exists=True),
               help="Path to an optional query file to execute")
-def main(data_directory, query_file):
+@click.option("--optimize", is_flag = True, help="Enables the optimizer")
+def main(data_directory, query_file, optimize):
     """
     Function that executes on program startup. Loads initial data and optionally executes a query file.
     """
     _load_initial_data(data_directory)
+
+    global _optimizer_enabled
+    _optimizer_enabled = optimize
+
     if query_file is not None:
         _execute_initial_query_file(query_file)
     click.echo(f"Data loaded from \"{data_directory}\"\n")
+
+    if optimize:
+        click.echo("Optimizer is enabled\n")
+
     click.secho("Welcome to Mosaic!\n", fg="green")
     _main_loop()

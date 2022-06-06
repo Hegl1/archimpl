@@ -5,7 +5,7 @@ execution plan.
 """
 
 from parsimonious.nodes import NodeVisitor
-
+from mosaic.compiler.compiler_exception import CompilerException
 from mosaic.compiler.expressions.arithmetic_operation_expression import ArithmeticOperationExpression, \
     ArithmeticOperator
 from mosaic.compiler.expressions.column_expression import ColumnExpression
@@ -16,16 +16,17 @@ from mosaic.compiler.expressions.disjunctive_expression import DisjunctiveExpres
 from mosaic.compiler.operators.explain import Explain
 from mosaic.compiler.expressions.literal_expression import LiteralExpression
 from mosaic.compiler.operators.hash_distinct_operator import HashDistinct
-from mosaic.compiler.operators.nested_loops_join_operators import JoinType, NestedLoopsJoin
+from mosaic.compiler.operators.nested_loops_join_operators import NestedLoopsJoin
+from mosaic.compiler.operators.hash_join_operator import HashJoin
+from mosaic.compiler.operators.abstract_join_operator import JoinType
 from mosaic.compiler.operators.ordering_operator import OrderingOperator
 from mosaic.compiler.operators.projection_operator import Projection
 from mosaic.compiler.operators.selection_operator import Selection
 from mosaic.compiler.operators.set_operators import SetOperationType, Union, Intersect, Except
 from mosaic.compiler.operators.table_scan_operator import TableScan
+from mosaic.compiler.operators.hash_aggregate_operator import AggregateFunction
+from mosaic.compiler.operators.hash_aggregate_operator import HashAggregate
 
-
-class QueryExecutionError(Exception):
-    pass
 
 
 ###########################################################
@@ -37,7 +38,7 @@ class ASTVisitor(NodeVisitor):
 
     # We define QueryExecutionError as an unwrapped exception,
     # so that parsimonious does not wrap it inside a VisitationError.
-    unwrapped_exceptions = (QueryExecutionError,)
+    unwrapped_exceptions = (CompilerException,)
 
     ####################
     # Literals
@@ -250,16 +251,14 @@ class ASTVisitor(NodeVisitor):
             return [visited_children[0]]
 
     def visit_aggregate_list(self, node, visited_children):
-        pass
+        return visited_children
 
     def visit_aggregate_column(self, node, visited_children):
-        # Example:
-        # name = visited_children[0]
-        # aggregate_function = visited_children[3]
-        # expression = visited_children[7]
+        name = visited_children[0]
+        aggregate_function = visited_children[3]
+        expression = visited_children[7]
 
-        # return (name, aggregate_function, expression)
-        pass
+        return (name, aggregate_function, expression)
 
     ####################
     # Commands
@@ -286,38 +285,33 @@ class ASTVisitor(NodeVisitor):
 
     def visit_aggregate_function(self, node, visited_children):
         function_name = node.text.strip().lower()
-
-        # Example:
-        # if function_name == 'sum':
-        #     return AggregateFunction.SUM
-        # elif function_name == 'avg':
-        #     return AggregateFunction.AVG
-        # elif function_name == 'min':
-        #     return AggregateFunction.MIN
-        # elif function_name == 'max':
-        #     return AggregateFunction.MAX
-        # elif function_name == 'count':
-        #     return AggregateFunction.COUNT
-        pass
+        if function_name == 'sum':
+            return AggregateFunction.SUM
+        elif function_name == 'avg':
+            return AggregateFunction.AVG
+        elif function_name == 'min':
+            return AggregateFunction.MIN
+        elif function_name == 'max':
+            return AggregateFunction.MAX
+        elif function_name == 'count':
+            return AggregateFunction.COUNT
 
     def visit_grouping(self, node, visited_children):
-        # Example:
-        # children = visited_children[0]
+        children = visited_children[0]
 
-        # # If there are seven children, we have group columns.
-        # if len(children) == 7:
-        #     group_columns = children[2]
-        #     aggregate_columns = children[5]
-        #     input_node = children[6]
+        # If there are seven children, we have group columns.
+        if len(children) == 7:
+            group_columns = children[2]
+            aggregate_columns = children[5]
+            input_node = children[6]
 
-        #     return HashAggregate(input_node, group_columns, aggregate_columns)
-        # # Otherwise, we want to compute aggregates over the super group.
-        # else:
-        #     aggregate_columns = children[4]
-        #     input_node = children[5]
+            return HashAggregate(input_node, group_columns, aggregate_columns)
+        # Otherwise, we want to compute aggregates over the super group.
+        else:
+            aggregate_columns = children[4]
+            input_node = children[5]
 
-        #     return HashAggregate(input_node, [], aggregate_columns)
-        pass
+            return HashAggregate(input_node, [], aggregate_columns)
 
     def visit_ordering(self, node, visited_children):
         return OrderingOperator(visited_children[2], visited_children[3])
@@ -346,10 +340,16 @@ class ASTVisitor(NodeVisitor):
             return SetOperationType.EXCEPT
 
     def visit_join_operator(self, node, visited_children):
-        pass
+        if node.text == "join":
+            return JoinType.INNER
+        else:
+            return JoinType.LEFT_OUTER
 
     def visit_natural_join_operator(self, node, visited_children):
-        pass
+        if node.text == "natural join":
+            return JoinType.INNER
+        else:
+            return JoinType.LEFT_OUTER
 
     def visit_cross_join_operator(self, node, visited_children):
         return JoinType.CROSS
@@ -374,10 +374,10 @@ class ASTVisitor(NodeVisitor):
 
             for join_type, condition, right in visited_children[1]:
                 left = NestedLoopsJoin(left,
-                                       right,
-                                       join_type,
-                                       condition=condition,
-                                       is_natural=(condition is None))
+                                right,
+                                join_type,
+                                condition=condition,
+                                is_natural=(condition is None))
 
             return left
         else:
