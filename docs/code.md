@@ -1,6 +1,6 @@
 # CODE
 
-For our project we use Python3 and manage dependencies using [pipenv](https://pipenv.pypa.io/en/latest/#install-pipenv-today).
+For our project we use Python3 (min. 3.9) and manage dependencies using [pipenv](https://pipenv.pypa.io/en/latest/#install-pipenv-today).
 To install a working environment run `pipenv install ; pipenv install --dev`.
 With the installed python module `python3 -m pipenv install ; python3 -m pipenv install --dev` can be used.
 
