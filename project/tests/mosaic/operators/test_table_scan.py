@@ -22,7 +22,7 @@ def test_retrieve_alias_table():
     assert result.table_name == "test"
     assert result.schema.column_names == ["test.table_name"]
 
-    assert table_service.retrieve("#tables").table_name == "#tables"
+    assert table_service.retrieve_table("#tables").table_name == "#tables"
 
 
 def test_retrieve_non_existent_table():

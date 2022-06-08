@@ -27,7 +27,7 @@ def test_select_one_column(column_name):
     column_expression = ColumnExpression(column_name)
     projection = Projection([(None, column_expression)], table_scan)
 
-    table = table_service.retrieve("#columns")
+    table = table_service.retrieve_table("#columns")
 
     result = projection.get_result()
 
@@ -58,7 +58,7 @@ def test_select_multiple_columns(column_names):
 
     projection = Projection(column_expressions, table_scan)
 
-    table = table_service.retrieve("#columns")
+    table = table_service.retrieve_table("#columns")
 
     result = projection.get_result()
 
@@ -99,7 +99,7 @@ def test_select_int_subtract():
     arithmetic_operation = ArithmeticOperationExpression(ColumnExpression("ordinal_position"),
                                                          ArithmeticOperator.SUBTRACT, LiteralExpression(1))
 
-    table = table_service.retrieve("#columns")
+    table = table_service.retrieve_table("#columns")
 
     projection = Projection([("t", arithmetic_operation)], table_scan)
 
@@ -118,7 +118,7 @@ def test_select_float_multiply():
     arithmetic_operation = ArithmeticOperationExpression(ColumnExpression("ordinal_position"),
                                                          ArithmeticOperator.TIMES, LiteralExpression(1.5))
 
-    table = table_service.retrieve("#columns")
+    table = table_service.retrieve_table("#columns")
 
     projection = Projection([("t", arithmetic_operation)], table_scan)
 
@@ -137,7 +137,7 @@ def test_select_float_divide():
     arithmetic_operation = ArithmeticOperationExpression(ColumnExpression("ordinal_position"),
                                                          ArithmeticOperator.DIVIDE, LiteralExpression(2))
 
-    table = table_service.retrieve("#columns")
+    table = table_service.retrieve_table("#columns")
 
     projection = Projection([("t", arithmetic_operation)], table_scan)
 
@@ -155,7 +155,7 @@ def test_select_literal_only():
     table_scan = TableScan("#columns")
     literal = LiteralExpression(0)
 
-    table = table_service.retrieve("#columns")
+    table = table_service.retrieve_table("#columns")
 
     projection = Projection([("zero", literal)], table_scan)
 
@@ -174,7 +174,7 @@ def test_select_concat_columns():
     arithmetic_operation = ArithmeticOperationExpression(ColumnExpression("ordinal_position"), ArithmeticOperator.ADD,
                                                          ColumnExpression("data_type"))
 
-    table = table_service.retrieve("#columns")
+    table = table_service.retrieve_table("#columns")
 
     projection = Projection([("t", arithmetic_operation)], table_scan)
 
@@ -195,7 +195,7 @@ def test_select_nested_arithmetic():
     arithmetic_operation = ArithmeticOperationExpression(LiteralExpression(10), ArithmeticOperator.ADD,
                                                          inner_arithmetic_operation)
 
-    table = table_service.retrieve("#columns")
+    table = table_service.retrieve_table("#columns")
 
     projection = Projection([("t", arithmetic_operation)], table_scan)
 
