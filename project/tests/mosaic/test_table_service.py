@@ -31,16 +31,16 @@ def test_load_tables_from_directory():
 
 def test_retrieve():
     table_service.load_tables_from_directory("./tests/testdata/")
-    assert table_service.retrieve("studenten") is not None
-    assert len(table_service.retrieve("studenten").records) == 8
-    assert table_service.retrieve("studenten").schema.column_names == ["studenten.MatrNr", "studenten.Name",
+    assert table_service.retrieve_table("studenten") is not None
+    assert len(table_service.retrieve_table("studenten").records) == 8
+    assert table_service.retrieve_table("studenten").schema.column_names == ["studenten.MatrNr", "studenten.Name",
                                                                 "studenten.Semester"]
     with pytest.raises(table_service.TableNotFoundException):
-        table_service.retrieve("notFoundTable")
-    assert table_service.retrieve("#tables") is not None
-    assert len(table_service.retrieve("#tables").records) == 9
-    assert table_service.retrieve("#columns") is not None
-    assert len(table_service.retrieve("#columns").records) == 26
+        table_service.retrieve_table("notFoundTable")
+    assert table_service.retrieve_table("#tables") is not None
+    assert len(table_service.retrieve_table("#tables").records) == 9
+    assert table_service.retrieve_table("#columns") is not None
+    assert len(table_service.retrieve_table("#columns").records) == 26
 
 
 def test_table_exists():
@@ -49,7 +49,7 @@ def test_table_exists():
 
 
 def test_table_get_column_index():
-    table = table_service.retrieve("#columns")
+    table = table_service.retrieve_table("#columns")
     assert table is not None
 
     assert table.get_column_index("#columns.column_name") == 1  # FQN
@@ -60,7 +60,7 @@ def test_table_get_column_index():
 
 
 def test_table_get_item():
-    table = table_service.retrieve("#columns")
+    table = table_service.retrieve_table("#columns")
     assert table is not None
 
     assert len(table[0]) == 4
@@ -72,7 +72,7 @@ def test_table_get_item():
 
 
 def test_table_get_item_not_found():
-    table = table_service.retrieve("#columns")
+    table = table_service.retrieve_table("#columns")
     assert table is not None
 
     tables = len(table)

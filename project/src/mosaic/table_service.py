@@ -128,6 +128,10 @@ class Table:
         return len(self.records)
 
 
+class IndexNotFoundException(CompilerException):
+    pass
+
+
 class TableIndexException(Exception):
     pass
 
@@ -153,6 +157,7 @@ class AmbiguousColumnException(Exception):
 
 
 _tables = dict()
+_indices = dict()
 
 
 def _convert_schema_type_string(type_string):
@@ -205,7 +210,20 @@ def _read_schema_section(table_name, schema_start, schema_lines):
     return column_names, column_types
 
 
-def _read_data_section(column_types, data_start, data_lines):
+def _create_indices(table_name, schema: Schema, index_start, index_lines):
+    _indices[table_name] = dict()
+    for i, line in enumerate(index_lines):
+        line = line.rstrip('\n')
+
+        try:
+            schema.get_column_index(line)
+        except TableIndexException:
+            raise TableParsingException(f'Column "{line}" in line {i + 2+ index_start} does not exist in schema')
+
+        _indices[table_name][line] = dict()
+
+
+def _read_data_section(column_types, schema, data_start, data_lines):
     data_list = []
     for i, line in enumerate(data_lines):
         if line == "\n":
@@ -228,6 +246,15 @@ def _read_data_section(column_types, data_start, data_lines):
             raise TableParsingException(f"Parsing error in line {i + 2 + data_start} near \"{field}\"")
 
         data_list.append(data)
+
+        if schema.table_name in _indices:
+            for index_column in _indices[schema.table_name]:
+                index_column_index = schema.get_column_index(index_column)
+                key = data[index_column_index]
+                if key not in _indices[schema.table_name][index_column]:
+                    _indices[schema.table_name][index_column][key] = []
+                _indices[schema.table_name][index_column][key].append(data)
+
 
     return data_list
 
@@ -256,17 +283,40 @@ def load_from_file(path):
             except ValueError:
                 raise TableParsingException("No data section found")
 
+        index_start = None
+        try:
+            index_start = lines.index('[Indices]\n')
+        except ValueError:
+            try:
+                index_start = lines.index('[indices]')
+                raise TableParsingException("Empty index section found")
+            except ValueError:
+                pass
+
         schema_end = schema_start
         while schema_end < len(lines) and lines[schema_end] != "\n":
+
+            if index_start is not None and schema_end == index_start:
+                raise TableParsingException("Newline between schema and indices section required")
+
             if schema_end == data_start:
                 raise TableParsingException("Newline between schema and data section required")
             schema_end += 1
 
+        if index_start is not None:
+            index_end = index_start
+            while index_end < len(lines) and lines[index_end] != "\n":
+                if index_end == data_start:
+                    raise TableParsingException("Newline between indices and data section required")
+                index_end += 1
+
         # read content
         column_names, column_types = _read_schema_section(table_name, schema_start, lines[schema_start + 1:schema_end])
         schema = Schema(table_name, column_names, column_types)
+        if index_start is not None:
+            _create_indices(table_name, schema, index_start, lines[index_start + 1:index_end])
 
-        data_list = _read_data_section(column_types, data_start, lines[data_start + 1:])
+        data_list = _read_data_section(column_types, schema, data_start, lines[data_start + 1:])
 
     _tables[table_name] = Table(schema, data_list)
 
@@ -335,7 +385,7 @@ def _create_columns_table():
     _tables[columns_table_name] = Table(schema, columns_data)
 
 
-def retrieve(table_name, makeCopy=False):
+def retrieve_table(table_name, makeCopy=False):
     """
     This function returns a table specified by the table_name
     """
@@ -352,11 +402,28 @@ def table_exists(name):
     return name in _tables
 
 
+def _get_index_name(table_name, index_column):
+    return f"{table_name}_{index_column}"
+
+
+def retrieve_index(table_name, index_column):
+    try:
+        return _indices[table_name][index_column]
+    except KeyError:
+        raise IndexNotFoundException(f'Index with name "{_get_index_name(table_name, index_column)}" does not exist')
+
+
+def index_exists(table_name, index_column):
+    return table_name in _indices and index_column in _indices[table_name]
+
+
 def initialize():
     """
     Clears the stored tables and creates #tables and #columns table at start
     """
     global _tables
+    global _indices
     _tables = dict()
+    _indices = dict()
     _create_tables_table()
     _create_columns_table()

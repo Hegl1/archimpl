@@ -14,4 +14,4 @@ def evaluate(comparative_operation):
 
 def retrieve_table(name):
     table_service.load_tables_from_directory("./tests/testdata/")
-    return table_service.retrieve(name)
+    return table_service.retrieve_table(name)
