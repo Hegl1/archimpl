@@ -1,7 +1,7 @@
 from copy import deepcopy
 from mosaic.compiler.expressions.abstract_computation_expression import AbstractComputationExpression
-from mosaic.compiler.operators import hash_join_operator
-from mosaic.compiler.operators.hash_join_operator import HashJoin
+from mosaic.compiler.operators import hash_join
+from mosaic.compiler.operators.hash_join import HashJoin
 
 from mosaic.table_service import AmbiguousColumnException, Schema, TableIndexException
 from .abstract_compile_node import AbstractCompileNode
@@ -9,17 +9,17 @@ from .expressions.abstract_expression import AbstractExpression
 from .expressions.column_expression import ColumnExpression
 from .expressions.conjunctive_expression import ConjunctiveExpression
 from .expressions.disjunctive_expression import DisjunctiveExpression
-from .expressions.comparative_operation_expression import ComparativeOperationExpression
-from .expressions.arithmetic_operation_expression import ArithmeticOperationExpression
+from .expressions.comparative_expression import ComparativeExpression
+from .expressions.arithmetic_expression import ArithmeticExpression
 from .operators.abstract_operator import AbstractOperator
-from .operators.selection_operator import Selection
+from .operators.selection import Selection
 from .operators.explain import Explain
-from .operators.hash_distinct_operator import HashDistinct
-from .operators.abstract_join_operator import AbstractJoin, JoinConditionNotSupportedException, JoinType, JoinTypeNotSupportedException
-from .operators.ordering_operator import OrderingOperator
-from .operators.projection_operator import Projection
+from .operators.hash_distinct import HashDistinct
+from .operators.abstract_join import AbstractJoin, JoinConditionNotSupportedException, JoinType, JoinTypeNotSupportedException
+from .operators.ordering import Ordering
+from .operators.projection import Projection
 from .operators.set_operators import AbstractSetOperator
-from .operators.hash_aggregate_operator import HashAggregate
+from .operators.hash_aggregate import HashAggregate
 
 
 def optimize(execution_plan: AbstractOperator):
@@ -58,15 +58,15 @@ def _select_optimal_join(join: AbstractJoin):
     optimal_join = join
 
     try:
-        optimal_join = HashJoin(join.table1_reference, join.table2_reference,
+        optimal_join = HashJoin(join.left_node, join.right_node,
                                 join.join_type, join.condition, join.is_natural)
     except (JoinTypeNotSupportedException, JoinConditionNotSupportedException):
         optimal_join = join
 
-    optimal_join.table1_reference = _node_access_helper(
-        optimal_join.table1_reference, _select_optimal_join, AbstractJoin)
-    optimal_join.table2_reference = _node_access_helper(
-        optimal_join.table2_reference, _select_optimal_join, AbstractJoin)
+    optimal_join.left_node = _node_access_helper(
+        optimal_join.left_node, _select_optimal_join, AbstractJoin)
+    optimal_join.right_node = _node_access_helper(
+        optimal_join.right_node, _select_optimal_join, AbstractJoin)
     return optimal_join
 
 
@@ -81,16 +81,16 @@ def _node_access_helper(node: AbstractCompileNode, function, searched_node_class
     if isinstance(node, searched_node_class):
         node = function(node)
     elif isinstance(node, Explain):
-        node.execution_plan = _node_access_helper(
-            node.execution_plan, function, searched_node_class)
+        node.node = _node_access_helper(
+            node.node, function, searched_node_class)
     elif isinstance(node, (AbstractJoin, AbstractSetOperator)):
-        node.table1_reference = _node_access_helper(
-            node.table1_reference, function, searched_node_class)
-        node.table2_reference = _node_access_helper(
-            node.table2_reference, function, searched_node_class)
-    elif isinstance(node, (OrderingOperator, Projection, HashAggregate, HashDistinct, Selection)):
-        node.table_reference = _node_access_helper(
-            node.table_reference, function, searched_node_class)
+        node.left_node = _node_access_helper(
+            node.left_node, function, searched_node_class)
+        node.right_node = _node_access_helper(
+            node.right_node, function, searched_node_class)
+    elif isinstance(node, (Ordering, Projection, HashAggregate, HashDistinct, Selection)):
+        node.node = _node_access_helper(
+            node.node, function, searched_node_class)
 
     return node
 
@@ -107,12 +107,12 @@ def _split_selections(selection: Selection):
         conjunctive_expression = ConjunctiveExpression(conjunctive_conditions)
         conjunctive_expression = conjunctive_expression.simplify()
 
-        selection.table_reference = Selection(
-            selection.table_reference, conjunctive_expression)
+        selection.node = Selection(
+            selection.node, conjunctive_expression)
         selection.condition = condition
 
-    selection.table_reference = _node_access_helper(
-        selection.table_reference, _split_selections, Selection)
+    selection.node = _node_access_helper(
+        selection.node, _split_selections, Selection)
     return selection
 
 
@@ -121,8 +121,8 @@ def _join_selections(selection: Selection):
     Joins consecutive selections for the given selection.
     The resulting joined selection is returned (as conjunctive)
     """
-    if isinstance(selection.table_reference, Selection):
-        child_selection = selection.table_reference
+    if isinstance(selection.node, Selection):
+        child_selection = selection.node
 
         if isinstance(selection.condition, ConjunctiveExpression):
             conditions = selection.condition.conditions
@@ -135,12 +135,12 @@ def _join_selections(selection: Selection):
             conditions.append(child_selection.condition)
 
         selection.condition = ConjunctiveExpression(conditions)
-        selection.table_reference = child_selection.table_reference
+        selection.node = child_selection.node
 
         selection = _join_selections(selection)
 
-    selection.table_reference = _node_access_helper(
-        selection.table_reference, _join_selections, Selection)
+    selection.node = _node_access_helper(
+        selection.node, _join_selections, Selection)
 
     return selection
 
@@ -157,20 +157,20 @@ def _selection_push_down(pushed_down_selections=set()):
             # ignore pushed down selections
             return selection
 
-        child_node = selection.table_reference
+        child_node = selection.node
         node = selection
 
-        if isinstance(child_node, (HashDistinct, OrderingOperator)):
+        if isinstance(child_node, (HashDistinct, Ordering)):
             node = child_node
 
-            selection.table_reference = child_node.table_reference
-            child_node.table_reference = _node_access_helper(
+            selection.node = child_node.node
+            child_node.node = _node_access_helper(
                 selection, _selection_push_down(pushed_down_selections), Selection)
         elif isinstance(child_node, Selection):
             node = child_node
 
-            selection.table_reference = child_node.table_reference
-            child_node.table_reference = _node_access_helper(
+            selection.node = child_node.node
+            child_node.node = _node_access_helper(
                 selection, _selection_push_down(pushed_down_selections), Selection)
 
             node = _node_access_helper(node, _selection_push_down(
@@ -188,8 +188,8 @@ def _selection_push_down(pushed_down_selections=set()):
         if node == selection:
             # selection can not be pushed down any further -> add to pushed_down_selections and do recursive call
             pushed_down_selections.add(node)
-            node.table_reference = _node_access_helper(
-                node.table_reference, _selection_push_down(pushed_down_selections), Selection)
+            node.node = _node_access_helper(
+                node.node, _selection_push_down(pushed_down_selections), Selection)
 
         return node
 
@@ -204,7 +204,7 @@ def _selection_push_through_projection(selection: Selection, projection: Project
     push-through was not possible
     """
     projection_schema = projection.get_schema()
-    child_schema = projection.table_reference.get_schema()
+    child_schema = projection.node.get_schema()
 
     selection_columns = _get_condition_columns(selection.condition)
     fqn_selection_columns = [projection_schema.get_fully_qualified_column_name(
@@ -277,8 +277,8 @@ def _selection_push_through_projection(selection: Selection, projection: Project
     _replace_condition_columns(
         selection.condition, selection_columns_replacements)
 
-    selection.table_reference = projection.table_reference
-    projection.table_reference = _node_access_helper(
+    selection.node = projection.node
+    projection.node = _node_access_helper(
         selection, _selection_push_down(pushed_down_selections), Selection)
 
     return projection
@@ -294,8 +294,8 @@ def _selection_push_through_join_operator(selection: Selection, join_operator: A
 
     selection_columns = _get_condition_columns(selection.condition)
 
-    table1_schema = join_operator.table1_reference.get_schema()
-    table2_schema = join_operator.table2_reference.get_schema()
+    table1_schema = join_operator.left_node.get_schema()
+    table2_schema = join_operator.right_node.get_schema()
 
     is_fully_covered_table1 = False
     is_fully_covered_table2 = False
@@ -320,9 +320,9 @@ def _selection_push_through_join_operator(selection: Selection, join_operator: A
                     join_schema.get_simple_column_name(column))
 
             table1_selection = Selection(
-                join_operator.table1_reference, selection.condition)
+                join_operator.left_node, selection.condition)
             table2_selection = Selection(
-                join_operator.table2_reference, deepcopy(selection.condition))
+                join_operator.right_node, deepcopy(selection.condition))
             _replace_condition_columns(
                 table2_selection.condition, table_2_selection_columns_replacements)
 
@@ -339,8 +339,8 @@ def _selection_push_through_join_operator(selection: Selection, join_operator: A
 
         node = join_operator
 
-        table1_selection.table_reference = join_operator.table1_reference
-        join_operator.table1_reference = _node_access_helper(
+        table1_selection.node = join_operator.left_node
+        join_operator.left_node = _node_access_helper(
             table1_selection, _selection_push_down(pushed_down_selections), Selection)
 
     if is_fully_covered_table2:
@@ -348,8 +348,8 @@ def _selection_push_through_join_operator(selection: Selection, join_operator: A
 
         node = join_operator
 
-        table2_selection.table_reference = join_operator.table2_reference
-        join_operator.table2_reference = _node_access_helper(
+        table2_selection.node = join_operator.right_node
+        join_operator.right_node = _node_access_helper(
             table2_selection, _selection_push_down(pushed_down_selections), Selection)
 
     return node
@@ -361,8 +361,8 @@ def _selection_push_through_set_operator(selection: Selection, set_operator: Abs
     and renaming the columns and pushing it through the right relation.
     Returns the set-operator that should replace the selection
     """
-    table1_schema = set_operator.table1_reference.get_schema()
-    table2_schema = set_operator.table2_reference.get_schema()
+    table1_schema = set_operator.left_node.get_schema()
+    table2_schema = set_operator.right_node.get_schema()
 
     selection_columns = _get_condition_columns(selection.condition)
     table_2_selection_columns_replacements = {}
@@ -374,16 +374,16 @@ def _selection_push_through_set_operator(selection: Selection, set_operator: Abs
             simple_name)
 
     table1_selection = Selection(
-        set_operator.table1_reference, selection.condition)
+        set_operator.left_node, selection.condition)
     table2_selection = Selection(
-        set_operator.table2_reference, deepcopy(selection.condition))
+        set_operator.right_node, deepcopy(selection.condition))
     _replace_condition_columns(
         table2_selection.condition, table_2_selection_columns_replacements)
 
     # push to left and right child
-    set_operator.table1_reference = _node_access_helper(
+    set_operator.left_node = _node_access_helper(
         table1_selection, _selection_push_down(pushed_down_selections), Selection)
-    set_operator.table2_reference = _node_access_helper(
+    set_operator.right_node = _node_access_helper(
         table2_selection, _selection_push_down(pushed_down_selections), Selection)
 
     return set_operator
@@ -395,7 +395,7 @@ def _get_condition_columns(expression):
     """
     columns = []
 
-    if isinstance(expression, (ComparativeOperationExpression, ArithmeticOperationExpression)):
+    if isinstance(expression, (ComparativeExpression, ArithmeticExpression)):
         columns += _get_condition_columns(expression.left)
         columns += _get_condition_columns(expression.right)
     elif isinstance(expression, (ConjunctiveExpression, DisjunctiveExpression)):
@@ -413,7 +413,7 @@ def _replace_condition_columns(expression, column_replacement):
     For that it uses the column_replacement, where the key is the column-name that
     should be replaced and the value with which it should be replaced
     """
-    if isinstance(expression, (ComparativeOperationExpression, ArithmeticOperationExpression)):
+    if isinstance(expression, (ComparativeExpression, ArithmeticExpression)):
         _replace_condition_columns(expression.left, column_replacement)
         _replace_condition_columns(expression.right, column_replacement)
     elif isinstance(expression, (ConjunctiveExpression, DisjunctiveExpression)):

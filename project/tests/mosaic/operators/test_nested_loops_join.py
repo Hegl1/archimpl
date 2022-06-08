@@ -1,9 +1,9 @@
 import pytest
 
 from mosaic import table_service
-from mosaic.compiler.operators.nested_loops_join_operators import SelfJoinWithoutRenamingException, NestedLoopsJoin, \
+from mosaic.compiler.operators.nested_loops_join import SelfJoinWithoutRenamingException, NestedLoopsJoin, \
     JoinType
-from mosaic.compiler.operators.table_scan_operator import TableScan
+from mosaic.compiler.operators.table_scan import TableScan
 from mosaic.query_executor import execute_query
 
 

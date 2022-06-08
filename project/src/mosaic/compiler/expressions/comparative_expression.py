@@ -20,7 +20,7 @@ class IncompatibleOperandTypesException(Exception):
     pass
 
 
-class ComparativeOperationExpression(AbstractComputationExpression):
+class ComparativeExpression(AbstractComputationExpression):
     """
     Class that represents a comparison operation.
     This class has the following properties:

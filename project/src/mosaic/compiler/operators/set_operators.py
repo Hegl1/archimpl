@@ -17,19 +17,19 @@ class TableSchemaDoesNotMatchException(Exception):
 
 class AbstractSetOperator(AbstractOperator, ABC):
 
-    def __init__(self, table1_reference, table2_reference):
+    def __init__(self, left_node, right_node):
         super().__init__()
-        self.table1_reference = table1_reference
-        self.table2_reference = table2_reference
+        self.left_node = left_node
+        self.right_node = right_node
 
     def explain(self, rows, indent):
         super().explain(rows, indent)
-        self.table1_reference.explain(rows, indent + 2)
-        self.table2_reference.explain(rows, indent + 2)
+        self.left_node.explain(rows, indent + 2)
+        self.right_node.explain(rows, indent + 2)
 
     def simplify(self):
-        self.table1_reference = self.table1_reference.simplify()
-        self.table2_reference = self.table2_reference.simplify()
+        self.left_node = self.left_node.simplify()
+        self.right_node = self.right_node.simplify()
 
         return self
 
@@ -43,8 +43,8 @@ class Union(AbstractSetOperator):
     """
 
     def get_result(self):
-        table1 = self.table1_reference.get_result()
-        table2 = self.table2_reference.get_result()
+        table1 = self.left_node.get_result()
+        table2 = self.right_node.get_result()
 
         _check_schemas(table1.schema, table2.schema)
 
@@ -55,8 +55,8 @@ class Union(AbstractSetOperator):
         return Table(schema, table_union_records)
 
     def get_schema(self):
-        schema1 = self.table1_reference.get_schema()
-        schema2 = self.table2_reference.get_schema()
+        schema1 = self.left_node.get_schema()
+        schema2 = self.right_node.get_schema()
         _check_schemas(schema1, schema2)
         table_union_name = f"{schema1.table_name}_union_{schema2.table_name}"
         return Schema(table_union_name, schema1.column_names, schema1.column_types)
@@ -74,8 +74,8 @@ class Intersect(AbstractSetOperator):
     """
 
     def get_result(self):
-        table1 = self.table1_reference.get_result()
-        table2 = self.table2_reference.get_result()
+        table1 = self.left_node.get_result()
+        table2 = self.right_node.get_result()
 
         _check_schemas(table1.schema, table2.schema)
 
@@ -86,8 +86,8 @@ class Intersect(AbstractSetOperator):
         return Table(schema, table_intersect_records)
 
     def get_schema(self):
-        schema1 = self.table1_reference.get_schema()
-        schema2 = self.table2_reference.get_schema()
+        schema1 = self.left_node.get_schema()
+        schema2 = self.right_node.get_schema()
         _check_schemas(schema1, schema2)
         table_intersect_name = f"{schema1.table_name}_intersect_{schema2.table_name}"
         return Schema(table_intersect_name, schema1.column_names, schema1.column_types)
@@ -105,8 +105,8 @@ class Except(AbstractSetOperator):
     """
 
     def get_result(self):
-        table1 = self.table1_reference.get_result()
-        table2 = self.table2_reference.get_result()
+        table1 = self.left_node.get_result()
+        table2 = self.right_node.get_result()
 
         _check_schemas(table1.schema, table2.schema)
 
@@ -122,8 +122,8 @@ class Except(AbstractSetOperator):
         return Table(schema, table_except_records)
 
     def get_schema(self):
-        schema1 = self.table1_reference.get_schema()
-        schema2 = self.table2_reference.get_schema()
+        schema1 = self.left_node.get_schema()
+        schema2 = self.right_node.get_schema()
         _check_schemas(schema1, schema2)
         table_except_name = f"{schema1.table_name}_except_{schema2.table_name}"
         return Schema(table_except_name, schema1.column_names, schema1.column_types)
