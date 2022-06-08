@@ -1,8 +1,5 @@
+from mosaic.compiler.get_string_representation import get_string_representation
 from mosaic.compiler.expressions.abstract_computation_expression import AbstractComputationExpression
-from mosaic.compiler.expressions.arithmetic_operation_expression import ArithmeticOperationExpression
-from mosaic.compiler.expressions.comparative_operation_expression import ComparativeOperationExpression
-from mosaic.compiler.expressions.conjunctive_expression import ConjunctiveExpression
-from mosaic.compiler.expressions.disjunctive_expression import DisjunctiveExpression
 from mosaic.compiler.expressions.literal_expression import LiteralExpression
 from mosaic.compiler.alias_schema_builder import build_schema
 from mosaic.table_service import Table, Schema
@@ -67,9 +64,8 @@ class Projection(AbstractOperator):
         new_schema = self.get_schema()
         old_schema = self.table_reference.get_schema()
         column_name_strings = []
-        for i, (alias, column_ref) in enumerate(self.column_references):
-            column_ref.replace_all_column_names_by_fqn(old_schema)
-            column_name_strings.append(f"{new_schema.column_names[i]}={str(column_ref)}")
+        for i, (_, column_ref) in enumerate(self.column_references):
+            column_name_strings.append(f"{new_schema.column_names[i]}={get_string_representation(column_ref, old_schema)}")
 
         return f"Projection(columns=[{', '.join(column_name_strings)}])"
 

@@ -1,3 +1,4 @@
+from mosaic.compiler.get_string_representation import get_string_representation
 from .abstract_join_operator import *
 from ..expressions.column_expression import ColumnExpression
 from ..expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
@@ -112,9 +113,8 @@ class HashJoin(AbstractJoin):
 
     def __str__(self):
         schema = self.get_schema()
-        if self.condition is not None:
-            self.condition.replace_all_column_names_by_fqn(schema)
-        return f"HashJoin({self.join_type.value}, natural={self.is_natural}, condition={self.condition.__str__()})"
+
+        return f"HashJoin({self.join_type.value}, natural={self.is_natural}, condition={get_string_representation(self.condition, schema)})"
 
 
 def is_comparative_condition_supported(condition):

@@ -17,7 +17,6 @@ from mosaic.compiler.operators.explain import Explain
 from mosaic.compiler.expressions.literal_expression import LiteralExpression
 from mosaic.compiler.operators.hash_distinct_operator import HashDistinct
 from mosaic.compiler.operators.nested_loops_join_operators import NestedLoopsJoin
-from mosaic.compiler.operators.hash_join_operator import HashJoin
 from mosaic.compiler.operators.abstract_join_operator import JoinType
 from mosaic.compiler.operators.ordering_operator import OrderingOperator
 from mosaic.compiler.operators.projection_operator import Projection

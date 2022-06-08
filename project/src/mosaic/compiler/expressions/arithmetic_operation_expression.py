@@ -1,5 +1,6 @@
 from enum import Enum
 
+from mosaic.compiler.get_string_representation import get_string_representation
 from mosaic.table_service import SchemaType, get_schema_type, Schema
 from .abstract_computation_expression import AbstractComputationExpression
 from .literal_expression import LiteralExpression
@@ -114,13 +115,5 @@ class ArithmeticOperationExpression(AbstractComputationExpression):
 
         return self
 
-    def replace_all_column_names_by_fqn(self, schema: Schema):
-        """
-        Recursively replaces all occurrences of column names in the expression by the respective fully qualified
-        column names based on the given schema of a table.
-        """
-        self.left.replace_all_column_names_by_fqn(schema)
-        self.right.replace_all_column_names_by_fqn(schema)
-
-    def __str__(self):
-        return f"{{{self.left} {self.operator.value} {self.right}}}"
+    def get_string_representation(self, schema: Schema = None):
+        return f"{{{get_string_representation(self.left, schema)} {self.operator.value} {get_string_representation(self.right, schema)}}}"

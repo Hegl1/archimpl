@@ -1,3 +1,4 @@
+from mosaic.compiler.get_string_representation import get_string_representation
 from mosaic.table_service import Table, Schema
 from .abstract_join_operator import *
 
@@ -65,9 +66,8 @@ class NestedLoopsJoin(AbstractJoin):
 
     def __str__(self):
         schema = self.get_schema()
-        if self.condition is not None:
-            self.condition.replace_all_column_names_by_fqn(schema)
-        return f"NestedLoopsJoin({self.join_type.value}, natural={self.is_natural}, condition={self.condition.__str__()})"
+
+        return f"NestedLoopsJoin({self.join_type.value}, natural={self.is_natural}, condition={get_string_representation(self.condition, schema)})"
 
     def check_condition(self, schema1, schema2, condition):
         pass
