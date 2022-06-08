@@ -345,6 +345,7 @@ def load_tables_from_directory(path):
         # Throw exception
         raise NoTableLoadedException
     else:
+        _create_indices_table()
         _create_tables_table()
         _create_columns_table()
         # do not change function call order here. this yields a result exactly as required in MS1
@@ -383,6 +384,20 @@ def _create_columns_table():
 
     schema = Schema(columns_table_name, columns_schema_names, columns_schema_types)
     _tables[columns_table_name] = Table(schema, columns_data)
+
+
+def _create_indices_table():
+    table_name = "#indices"
+    column_names = [f"{table_name}.name",
+                    f"{table_name}.table",
+                    f"{table_name}.column"]
+    column_types = [SchemaType.VARCHAR, SchemaType.VARCHAR, SchemaType.VARCHAR]
+    records = []
+    for table in _indices:
+        for column in _indices[table]:
+            records.append([_get_index_name(table, column), table, column])
+    schema = Schema(table_name, column_names, column_types)
+    _tables[table_name] = Table(schema, records)
 
 
 def retrieve_table(table_name, makeCopy=False):
@@ -425,5 +440,6 @@ def initialize():
     global _indices
     _tables = dict()
     _indices = dict()
+    _create_indices_table()
     _create_tables_table()
     _create_columns_table()
