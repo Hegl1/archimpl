@@ -1,3 +1,5 @@
+from mosaic.compiler.get_string_representation import get_string_representation
+from mosaic.compiler.expressions.abstract_expression import AbstractExpression
 from mosaic.table_service import Table, Schema
 from .abstract_operator import AbstractOperator
 from ..expressions.abstract_computation_expression import AbstractComputationExpression
@@ -59,9 +61,8 @@ class Selection(AbstractOperator):
 
     def __str__(self):
         schema = self.get_schema()
-        if self.condition is not None:
-            self.condition.replace_all_column_names_by_fqn(schema)
-        return f"Selection(condition={self.condition.__str__()})"
+
+        return f"Selection(condition={get_string_representation(self.condition, schema)})"
 
     def explain(self, rows, indent):
         super().explain(rows, indent)

@@ -16,15 +16,7 @@ class LiteralExpression(AbstractExpression):
     def get_result(self):
         return self.value
 
-    def replace_all_column_names_by_fqn(self, schema: Schema):
-        """
-        Recursively replaces all occurrences of column names in the expression by the respective fully qualified
-        column names based on the given schema of a table.
-        If the leaf of an expression node in not a column name then nothing needs to be done.
-        """
-        pass
-
-    def __str__(self):
+    def get_string_representation(self, schema: Schema = None):
         if isinstance(self.value, str):
             return f"\"{self.value}\""
         elif self.value is None:

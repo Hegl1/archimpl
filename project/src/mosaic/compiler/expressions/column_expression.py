@@ -15,12 +15,8 @@ class ColumnExpression(AbstractExpression):
     def get_result(self):
         return self.value
 
-    def replace_all_column_names_by_fqn(self, schema: Schema):
-        """
-        Replaces the column name in the expression by the respective fully qualified
-        column name based on the given schema of a table.
-        """
-        self.value = schema.get_fully_qualified_column_name(self.value)
-
-    def __str__(self):
-        return self.value
+    def get_string_representation(self, schema: Schema = None):
+        if schema is None:
+            return self.value
+        else:
+            return schema.get_fully_qualified_column_name(self.value)
