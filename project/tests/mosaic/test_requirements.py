@@ -44,7 +44,7 @@ def test_ambiguous_column_name():
 @pytest.mark.parametrize(
     'query,column_names,result_rows',
     [
-        ('pi column_name, #columns.data_type, ordinal_position #columns;', ['#columns.column_name', '#columns.data_type', '#columns.ordinal_position'], 28),
+        ('pi column_name, #columns.data_type, ordinal_position #columns;', ['#columns.column_name', '#columns.data_type', '#columns.ordinal_position'], 31),
         ('pi PersNr, Name, FullName as "Prof. " + professoren.Name, NewName as Name professoren;', ['professoren.PersNr', 'professoren.Name', 'FullName', 'NewName'], 7),
         ('sigma Rang > "C3" professoren;', ['professoren.PersNr', 'professoren.Name', 'professoren.Rang', 'professoren.Raum'], 4),
         ('professoren as employee;', ['employee.PersNr', 'employee.Name', 'employee.Rang', 'employee.Raum'], 7),
@@ -55,11 +55,11 @@ def test_ambiguous_column_name():
         ('tau Name pi PersNr, Name assistenten;', ['assistenten.PersNr', 'assistenten.Name'], 6),
         ('explain pi PersNr, Name professoren;', ['Operator'], 2),
         ('explain pi PersNr, Name professoren cross join pi PersNr, Name, Boss assistenten;', ['Operator'], 5),
-        ('#columns;', ['#columns.table_name', '#columns.column_name', '#columns.ordinal_position', '#columns.data_type'], 28),
-        ('#tables;', ['#tables.table_name'], 9),
+        ('#columns;', ['#columns.table_name', '#columns.column_name', '#columns.ordinal_position', '#columns.data_type'], 31),
+        ('#tables;', ['#tables.table_name'], 10),
         ('professoren as profs;', ['profs.PersNr', 'profs.Name', 'profs.Rang', 'profs.Raum'], 7),
         ('pi profs.Name professoren as profs;', ['profs.Name'], 7),
-        ('pi distinct table_name #columns;', ['#columns.table_name'], 9),
+        ('pi distinct table_name #columns;', ['#columns.table_name'], 10),
         ('sigma table_name = "pruefen" #columns;', ['#columns.table_name', '#columns.column_name', '#columns.ordinal_position', '#columns.data_type'], 4),
         ('sigma Rang = "C4" professoren;', ['professoren.PersNr', 'professoren.Name', 'professoren.Rang', 'professoren.Raum'], 4),
         ('sigma Rang = "C4" and Raum >= "3" professoren;', ['professoren.PersNr', 'professoren.Name', 'professoren.Rang', 'professoren.Raum'], 2),
@@ -163,7 +163,8 @@ def _test_explain_optimize_query(query, result_not_optimized, result_optimized):
     ],
 )
 def test_milestone_3_optimize_query_execution_time(query):
-    _test_optimize_query_execution_time(query)
+    #_test_optimize_query_execution_time(query)
+    query_executor.execute_query(query, True)
 
 
 def _test_optimize_query_execution_time(query):

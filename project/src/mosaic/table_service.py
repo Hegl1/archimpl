@@ -287,11 +287,7 @@ def load_from_file(path):
         try:
             index_start = lines.index('[Indices]\n')
         except ValueError:
-            try:
-                index_start = lines.index('[indices]')
-                raise TableParsingException("Empty index section found")
-            except ValueError:
-                pass
+            pass
 
         schema_end = schema_start
         while schema_end < len(lines) and lines[schema_end] != "\n":
@@ -313,7 +309,7 @@ def load_from_file(path):
         # read content
         column_names, column_types = _read_schema_section(table_name, schema_start, lines[schema_start + 1:schema_end])
         schema = Schema(table_name, column_names, column_types)
-        if index_start is not None:
+        if index_start is not None and index_start != index_end - 1:
             _create_indices(table_name, schema, index_start, lines[index_start + 1:index_end])
 
         data_list = _read_data_section(column_types, schema, data_start, lines[data_start + 1:])
