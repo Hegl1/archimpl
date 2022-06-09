@@ -3,23 +3,26 @@ from mosaic.compiler.expressions.abstract_computation_expression import Abstract
 from mosaic.compiler.operators import hash_join
 from mosaic.compiler.operators.hash_join import HashJoin
 
-from mosaic.table_service import AmbiguousColumnException, Schema, TableIndexException
+from mosaic.table_service import AmbiguousColumnException, Schema, TableIndexException, index_exists
 from .abstract_compile_node import AbstractCompileNode
 from .expressions.abstract_expression import AbstractExpression
 from .expressions.column_expression import ColumnExpression
 from .expressions.conjunctive_expression import ConjunctiveExpression
 from .expressions.disjunctive_expression import DisjunctiveExpression
-from .expressions.comparative_expression import ComparativeExpression
+from .expressions.comparative_expression import ComparativeExpression, ComparativeOperator
 from .expressions.arithmetic_expression import ArithmeticExpression
+from .expressions.literal_expression import LiteralExpression
 from .operators.abstract_operator import AbstractOperator
 from .operators.selection import Selection
 from .operators.explain import Explain
 from .operators.hash_distinct import HashDistinct
-from .operators.abstract_join import AbstractJoin, JoinConditionNotSupportedException, JoinType, JoinTypeNotSupportedException
+from .operators.abstract_join import AbstractJoin, JoinConditionNotSupportedException, JoinType, \
+    JoinTypeNotSupportedException
 from .operators.ordering import Ordering
 from .operators.projection import Projection
 from .operators.set_operators import AbstractSetOperator
 from .operators.hash_aggregate import HashAggregate
+from .operators.table_scan import TableScan
 
 
 def optimize(execution_plan: AbstractOperator):
@@ -43,6 +46,8 @@ def optimize(execution_plan: AbstractOperator):
         execution_plan, _split_selections, Selection)
     execution_plan = _node_access_helper(
         execution_plan, _selection_push_down(), Selection)
+    execution_plan = _node_access_helper(
+        execution_plan, _apply_index_seek, Selection)
     execution_plan = _node_access_helper(
         execution_plan, _join_selections, Selection)
 
@@ -460,3 +465,66 @@ def _are_columns_fully_covered_in_both_schemas(columns, schema1: Schema, schema2
         except TableIndexException:
             return False
     return True
+
+
+def _apply_index_seek(selection: Selection):
+    """
+    Checks for the given selection and direct child selections if they can be used for an index seek. Merges one of
+    the selections with a subjacent table scan to produce an index seek if possible. Returns the top-level node that
+    should replace the selection.
+    """
+    potential_candidate_selections = set()
+
+    parent = None
+    node = selection
+    while isinstance(node, Selection):
+        if _is_condition_suitable_for_index_join(node.condition):
+            potential_candidate_selections.add((node, parent))
+        parent = node
+        node = node.node
+
+    if isinstance(node, TableScan):
+        table_name = node.table_name
+        candidate_selections = []
+        for potential_candidate_selection, parent in potential_candidate_selections:
+            column_name = _get_simple_column_name_from_condition_for_index_join(
+                potential_candidate_selection.condition)
+            if index_exists(table_name, column_name):
+                candidate_selections.append((potential_candidate_selection, parent))
+        if candidate_selections:
+            best_selection, bs_parent = _choose_best_candidate_selection_for_index_scan(candidate_selections)
+            # TODO merge with one of the candidate selections
+            # TODO handle rebuilding rest of branch correctly
+    else:
+        node = _node_access_helper(node, _apply_index_seek, Selection)
+
+    return selection
+
+
+def _is_condition_suitable_for_index_join(condition):
+    """
+    Checks whether the condition is a simple comparative that checks the equality between a column and a literal.
+    """
+    if isinstance(condition, ComparativeExpression) and condition.operator == ComparativeOperator.EQUAL:
+        column_eq_literal = isinstance(condition.left, ColumnExpression) and isinstance(condition.right, LiteralExpression)
+        literal_eq_column = isinstance(condition.left, LiteralExpression) and isinstance(condition.right, ColumnExpression)
+        return column_eq_literal or literal_eq_column
+    return False
+
+
+def _get_simple_column_name_from_condition_for_index_join(condition):
+    """
+    Retrieves the column name from a condition that is suitable for an index join.
+    """
+    if isinstance(condition.left, ColumnExpression):
+        column_name = condition.left.get_result()
+    else:
+        column_name = condition.right.get_result()
+    if "." in column_name:
+        column_name = column_name.split(".")[1]  # remove FQN
+    return column_name
+
+
+def _choose_best_candidate_selection_for_index_scan(candidate_selections):
+    # TODO optional improvement: choose best candidate based on more useful criteria
+    return candidate_selections[0]
