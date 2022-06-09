@@ -24,11 +24,15 @@ class IndexSeek(AbstractOperator):
         self.schema = deepcopy(table_service.retrieve_table(self.table_name, makeCopy=False).schema)
         if self.alias is not None:
             self.schema.rename(self.alias)
+        self.index = table_service.retrieve_index(self.table_name, self.index_column)
+        self.comparison_value = self._consume_condition()
 
     def get_result(self):
-        index = table_service.retrieve_index(self.table_name, self.index_column)
-        key = self._consume_condition()
-        result = index[key]
+        key = self.comparison_value
+        if key in self.index:
+            result = self.index[key]
+        else:
+            result = []
         return Table(self.schema, result)
 
     def get_schema(self):
@@ -66,6 +70,7 @@ class IndexSeek(AbstractOperator):
             raise IndexSeekConditionNotSupportedException("IndexSeek only supports conditions which are simple "
                                                           "equalities")
         if self._column_name_is_supported(column_name):
+            # TODO check type of value compatible
             return value
         else:
             raise ErrorInIndexSeekConditionException(
