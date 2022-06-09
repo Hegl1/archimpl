@@ -2,19 +2,19 @@ from mosaic.table_service import Table, Schema
 from .abstract_operator import AbstractOperator
 
 
-class OrderingOperator(AbstractOperator):
+class Ordering(AbstractOperator):
     """
     Class that represents an ordering operation.
     In this implementation the sorted() function of python is used for sorting which has a complexity of O(n log n).
     """
 
-    def __init__(self, column_list, table_reference):
+    def __init__(self, node, column_list):
         super().__init__()
+        self.node = node
         self.column_list = column_list
-        self.table_reference = table_reference
 
     def get_result(self):
-        table = self.table_reference.get_result()
+        table = self.node.get_result()
         column_indices = _get_column_indices(self.column_list, table)
 
         ordered_records = sorted(table.records, key=lambda record: _get_sort_key(record, column_indices))
@@ -23,10 +23,10 @@ class OrderingOperator(AbstractOperator):
         return Table(schema, ordered_records)
 
     def get_schema(self):
-        return self.table_reference.get_schema()
+        return self.node.get_schema()
 
     def simplify(self):
-        self.table_reference = self.table_reference.simplify()
+        self.node = self.node.simplify()
 
         return self
 
@@ -37,7 +37,7 @@ class OrderingOperator(AbstractOperator):
 
     def explain(self, rows, indent):
         super().explain(rows, indent)
-        self.table_reference.explain(rows, indent + 2)
+        self.node.explain(rows, indent + 2)
 
 
 def _get_column_indices(column_list, table):

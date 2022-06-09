@@ -1,6 +1,6 @@
 from mosaic.compiler.expressions.abstract_computation_expression import AbstractComputationExpression
-from mosaic.compiler.expressions.arithmetic_operation_expression import ArithmeticOperationExpression
-from mosaic.compiler.expressions.comparative_operation_expression import ComparativeOperationExpression
+from mosaic.compiler.expressions.arithmetic_expression import ArithmeticExpression
+from mosaic.compiler.expressions.comparative_expression import ComparativeExpression
 from mosaic.compiler.expressions.conjunctive_expression import ConjunctiveExpression
 from mosaic.compiler.expressions.disjunctive_expression import DisjunctiveExpression
 from mosaic.compiler.expressions.literal_expression import LiteralExpression
@@ -35,9 +35,9 @@ def build_schema(column_references,old_schema):
 
             schema_names.append(alias)
 
-            if isinstance(column_reference, ArithmeticOperationExpression):
+            if isinstance(column_reference, ArithmeticExpression):
                 schema_types.append(column_reference.get_schema_type(old_schema))
-            elif isinstance(column_reference, ComparativeOperationExpression) or \
+            elif isinstance(column_reference, ComparativeExpression) or \
                     isinstance(column_reference, ConjunctiveExpression) or \
                     isinstance(column_reference, DisjunctiveExpression):
                 schema_types.append(SchemaType.INT)
