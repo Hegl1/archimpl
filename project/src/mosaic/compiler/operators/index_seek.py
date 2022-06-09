@@ -3,7 +3,7 @@ from mosaic import table_service
 from .abstract_operator import AbstractOperator
 from ..compiler_exception import CompilerException
 from ..expressions.column_expression import ColumnExpression
-from ..expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
+from ..expressions.comparative_expression import ComparativeExpression, ComparativeOperator
 from ..expressions.literal_expression import LiteralExpression
 from ..get_string_representation import get_string_representation
 from ...table_service import index_exists, Table
@@ -48,7 +48,7 @@ class IndexSeek(AbstractOperator):
         super().explain(rows, indent)
 
     def _consume_condition(self):
-        if isinstance(self.condition, ComparativeOperationExpression) and \
+        if isinstance(self.condition, ComparativeExpression) and \
                 self.condition.operator == ComparativeOperator.EQUAL:
             left = self.condition.left
             right = self.condition.right
