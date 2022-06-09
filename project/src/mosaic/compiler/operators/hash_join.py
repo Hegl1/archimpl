@@ -1,18 +1,18 @@
 from mosaic.compiler.get_string_representation import get_string_representation
-from .abstract_join_operator import *
+from .abstract_join import *
 from ..expressions.column_expression import ColumnExpression
-from ..expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
+from ..expressions.comparative_expression import ComparativeExpression, ComparativeOperator
 
 
 class HashJoin(AbstractJoin):
 
     def _get_result(self):
-        table1 = self.table1_reference.get_result()
-        table2 = self.table2_reference.get_result()
+        table1 = self.left_node.get_result()
+        table2 = self.right_node.get_result()
 
         result_records = []
 
-        table1_hash = self._build_hash(table1, self.table1_schema, self.condition)
+        table1_hash = self._build_hash(table1, self.left_schema, self.condition)
         used_keys = set()
 
         self._build_matching_records(
@@ -122,7 +122,7 @@ def is_comparative_condition_supported(condition):
     Method that checks whether the condition is a simple comparative
     (i.e. a comparative that checks the equality between columns)
     """
-    return isinstance(condition, ComparativeOperationExpression) and \
+    return isinstance(condition, ComparativeExpression) and \
         isinstance(condition.right, ColumnExpression) and \
         isinstance(condition.left, ColumnExpression) and \
         condition.operator == ComparativeOperator.EQUAL

@@ -6,25 +6,25 @@ execution plan.
 
 from parsimonious.nodes import NodeVisitor
 from mosaic.compiler.compiler_exception import CompilerException
-from mosaic.compiler.expressions.arithmetic_operation_expression import ArithmeticOperationExpression, \
+from mosaic.compiler.expressions.arithmetic_expression import ArithmeticExpression, \
     ArithmeticOperator
 from mosaic.compiler.expressions.column_expression import ColumnExpression
-from mosaic.compiler.expressions.comparative_operation_expression import ComparativeOperationExpression, \
+from mosaic.compiler.expressions.comparative_expression import ComparativeExpression, \
     ComparativeOperator
 from mosaic.compiler.expressions.conjunctive_expression import ConjunctiveExpression
 from mosaic.compiler.expressions.disjunctive_expression import DisjunctiveExpression
 from mosaic.compiler.operators.explain import Explain
 from mosaic.compiler.expressions.literal_expression import LiteralExpression
-from mosaic.compiler.operators.hash_distinct_operator import HashDistinct
-from mosaic.compiler.operators.nested_loops_join_operators import NestedLoopsJoin
-from mosaic.compiler.operators.abstract_join_operator import JoinType
-from mosaic.compiler.operators.ordering_operator import OrderingOperator
-from mosaic.compiler.operators.projection_operator import Projection
-from mosaic.compiler.operators.selection_operator import Selection
+from mosaic.compiler.operators.hash_distinct import HashDistinct
+from mosaic.compiler.operators.nested_loops_join import NestedLoopsJoin
+from mosaic.compiler.operators.abstract_join import JoinType
+from mosaic.compiler.operators.ordering import Ordering
+from mosaic.compiler.operators.projection import Projection
+from mosaic.compiler.operators.selection import Selection
 from mosaic.compiler.operators.set_operators import SetOperationType, Union, Intersect, Except
-from mosaic.compiler.operators.table_scan_operator import TableScan
-from mosaic.compiler.operators.hash_aggregate_operator import AggregateFunction
-from mosaic.compiler.operators.hash_aggregate_operator import HashAggregate
+from mosaic.compiler.operators.table_scan import TableScan
+from mosaic.compiler.operators.hash_aggregate import AggregateFunction
+from mosaic.compiler.operators.hash_aggregate import HashAggregate
 
 
 
@@ -94,12 +94,12 @@ class ASTVisitor(NodeVisitor):
 
             for operator, right in visited_children[1]:
                 if operator == '*':
-                    left = ArithmeticOperationExpression(left,
+                    left = ArithmeticExpression(left,
                                                          ArithmeticOperator.TIMES,
                                                          right)
                     break
                 elif operator == '/':
-                    left = ArithmeticOperationExpression(left,
+                    left = ArithmeticExpression(left,
                                                          ArithmeticOperator.DIVIDE,
                                                          right)
                     break
@@ -121,12 +121,12 @@ class ASTVisitor(NodeVisitor):
 
             for operator, right in visited_children[1]:
                 if operator == '+':
-                    left = ArithmeticOperationExpression(left,
+                    left = ArithmeticExpression(left,
                                                          ArithmeticOperator.ADD,
                                                          right)
                     break
                 elif operator == '-':
-                    left = ArithmeticOperationExpression(left,
+                    left = ArithmeticExpression(left,
                                                          ArithmeticOperator.SUBTRACT,
                                                          right)
                     break
@@ -148,32 +148,32 @@ class ASTVisitor(NodeVisitor):
 
             for operator, right in visited_children[1]:
                 if operator == '=':
-                    left = ComparativeOperationExpression(left,
+                    left = ComparativeExpression(left,
                                                           ComparativeOperator.EQUAL,
                                                           right)
                     break
                 elif operator == '!=':
-                    left = ComparativeOperationExpression(left,
+                    left = ComparativeExpression(left,
                                                           ComparativeOperator.NOT_EQUAL,
                                                           right)
                     break
                 elif operator == '<':
-                    left = ComparativeOperationExpression(left,
+                    left = ComparativeExpression(left,
                                                           ComparativeOperator.SMALLER,
                                                           right)
                     break
                 elif operator == '<=':
-                    left = ComparativeOperationExpression(left,
+                    left = ComparativeExpression(left,
                                                           ComparativeOperator.SMALLER_EQUAL,
                                                           right)
                     break
                 elif operator == '>':
-                    left = ComparativeOperationExpression(left,
+                    left = ComparativeExpression(left,
                                                           ComparativeOperator.GREATER,
                                                           right)
                     break
                 elif operator == '>=':
-                    left = ComparativeOperationExpression(left,
+                    left = ComparativeExpression(left,
                                                           ComparativeOperator.GREATER_EQUAL,
                                                           right)
                     break
@@ -269,12 +269,12 @@ class ASTVisitor(NodeVisitor):
             table_reference = visited_children[0][5]
             column_expressions = visited_children[0][4]
 
-            return HashDistinct(Projection(column_expressions, table_reference))
+            return HashDistinct(Projection(table_reference, column_expressions))
         else:
             table_reference = visited_children[0][3]
             column_expressions = visited_children[0][2]
 
-            return Projection(column_expressions, table_reference)
+            return Projection(table_reference, column_expressions)
 
     def visit_selection(self, node, visited_children):
         condition = visited_children[2]
@@ -313,7 +313,7 @@ class ASTVisitor(NodeVisitor):
             return HashAggregate(input_node, [], aggregate_columns)
 
     def visit_ordering(self, node, visited_children):
-        return OrderingOperator(visited_children[2], visited_children[3])
+        return Ordering(visited_children[3], visited_children[2])
 
     def visit_relation_reference(self, node, visited_children):
         # If there are two children, we have a simple reference.

@@ -18,7 +18,7 @@ class IncompatibleOperationException(Exception):
     pass
 
 
-class ArithmeticOperationExpression(AbstractComputationExpression):
+class ArithmeticExpression(AbstractComputationExpression):
     """
     Class that represents a binary arithmetic operation.
     This implementation includes the basic arithmetic operations of addition, subtraction, multiplication and division.
@@ -86,7 +86,7 @@ class ArithmeticOperationExpression(AbstractComputationExpression):
         """
         Returns the schema_type for the given expression in the given table
         """
-        if isinstance(expression, ArithmeticOperationExpression):
+        if isinstance(expression, ArithmeticExpression):
             return expression.get_schema_type(schema)
         elif isinstance(expression, ColumnExpression):
             return schema.column_types[schema.get_column_index(expression.get_result())]
