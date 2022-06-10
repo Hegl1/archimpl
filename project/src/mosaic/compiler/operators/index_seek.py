@@ -19,11 +19,11 @@ class IndexSeek(AbstractOperator):
         super().__init__()
         self.table_name = table_name
         self.alias = alias
-        self.index_column = index_column
         self.condition = condition
         self.schema = deepcopy(table_service.retrieve_table(self.table_name, makeCopy=False).schema)
         if self.alias is not None:
             self.schema.rename(self.alias)
+        self.index_column = self.schema.get_simple_column_name(index_column)
         self.index = table_service.retrieve_index(self.table_name, self.index_column)
         self.comparison_value = self._consume_condition()
 

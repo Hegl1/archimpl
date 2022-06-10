@@ -39,7 +39,7 @@ def test_index_seek_alias():
     left = ColumnExpression("test.MatrNr")
     right = LiteralExpression(28106)
     condition = ComparativeExpression(left, ComparativeOperator.EQUAL, right)
-    operator = IndexSeek("correctIndex", "MatrNr", condition, alias="test")
+    operator = IndexSeek("correctIndex", "test.MatrNr", condition, alias="test")
     result = operator.get_result()
 
     assert isinstance(result, Table)
