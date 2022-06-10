@@ -478,7 +478,7 @@ def _apply_index_seek(selection: Selection):
     parent = None
     node = selection
     while isinstance(node, Selection):
-        if _is_condition_suitable_for_index_join(node.condition):
+        if _is_condition_suitable_for_index_seek(node.condition):
             potential_candidate_selections.add((node, parent))
         parent = node
         node = node.node
@@ -487,12 +487,12 @@ def _apply_index_seek(selection: Selection):
         table_name = node.table_name
         candidate_selections = []
         for potential_candidate_selection, parent in potential_candidate_selections:
-            column_name = _get_simple_column_name_from_condition_for_index_join(
+            column_name = _get_simple_column_name_from_condition_for_index_seek(
                 potential_candidate_selection.condition)
             if index_exists(table_name, column_name):
                 candidate_selections.append((potential_candidate_selection, parent))
         if candidate_selections:
-            best_selection, bs_parent = _choose_best_candidate_selection_for_index_scan(candidate_selections)
+            best_selection, bs_parent = _choose_best_candidate_selection_for_index_seek(candidate_selections)
             # TODO merge with one of the candidate selections
             # TODO handle rebuilding rest of branch correctly
     else:
@@ -501,7 +501,7 @@ def _apply_index_seek(selection: Selection):
     return selection
 
 
-def _is_condition_suitable_for_index_join(condition):
+def _is_condition_suitable_for_index_seek(condition):
     """
     Checks whether the condition is a simple comparative that checks the equality between a column and a literal.
     """
@@ -512,9 +512,9 @@ def _is_condition_suitable_for_index_join(condition):
     return False
 
 
-def _get_simple_column_name_from_condition_for_index_join(condition):
+def _get_simple_column_name_from_condition_for_index_seek(condition):
     """
-    Retrieves the column name from a condition that is suitable for an index join.
+    Retrieves the column name from a condition that is suitable for an index seek.
     """
     if isinstance(condition.left, ColumnExpression):
         column_name = condition.left.get_result()
@@ -525,6 +525,6 @@ def _get_simple_column_name_from_condition_for_index_join(condition):
     return column_name
 
 
-def _choose_best_candidate_selection_for_index_scan(candidate_selections):
+def _choose_best_candidate_selection_for_index_seek(candidate_selections):
     # TODO optional improvement: choose best candidate based on more useful criteria
     return candidate_selections[0]
