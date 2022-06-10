@@ -495,7 +495,7 @@ def test_optimizer_apply_index_seek_simple_selection_over_table_scan():
 def test_optimizer_apply_index_seek_simple_selection_over_table_scan_alias():
     node = Selection(
         TableScan("correctIndex", alias="c"),
-        ComparativeExpression(ColumnExpression("c.MatrNr"), ComparativeOperator.EQUAL, LiteralExpression(28106))
+        ComparativeExpression(LiteralExpression(28106), ComparativeOperator.EQUAL, ColumnExpression("c.MatrNr"))
     )
 
     node = optimizer._node_access_helper(
@@ -534,3 +534,29 @@ def test_optimizer_apply_index_seek_multiple_selections_over_table_scan_choose_r
     assert node.node.condition.operator == ComparativeOperator.EQUAL
     assert isinstance(node.node.condition.left, ColumnExpression)
     assert isinstance(node.node.condition.right, LiteralExpression)
+
+
+def test_optimizer_apply_index_seek_multiple_selections_over_table_scan_choose_middle_selection():
+    node = Selection(
+        Selection(
+            Selection(
+                TableScan("correctIndex"),
+                ComparativeExpression(LiteralExpression(5216), ComparativeOperator.EQUAL, ColumnExpression("VorlNr"))
+            ),
+            ComparativeExpression(LiteralExpression(28107), ComparativeOperator.EQUAL, ColumnExpression("MatrNr"))
+        ),
+        ComparativeExpression(ColumnExpression("VorlNr"), ComparativeOperator.EQUAL, LiteralExpression(5216))
+    )
+
+    node = optimizer._node_access_helper(
+        node, optimizer._apply_index_seek, Selection)
+
+    assert isinstance(node, Selection)
+    assert isinstance(node.node, Selection)
+    index_seek = node.node.node
+    assert isinstance(index_seek, IndexSeek)
+
+    assert index_seek.table_name == "correctIndex"
+    assert index_seek.index_column == "MatrNr"
+    assert index_seek.alias is None
+    assert isinstance(index_seek.condition, ComparativeExpression)

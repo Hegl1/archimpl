@@ -18,6 +18,7 @@ def test_index_seek_no_alias():
     assert len(result.records) == 4
     for record in result.records:
         assert record[0] == 28106
+    assert str(operator) == "IndexSeek(correctIndex_MatrNr, condition=(correctIndex.MatrNr = 28106))"
 
 
 def test_index_seek_no_alias_condition_mirrored():
@@ -48,6 +49,7 @@ def test_index_seek_alias():
     assert len(result.records) == 4
     for record in result.records:
         assert record[0] == 28106
+    assert str(operator) == "IndexSeek(correctIndex_MatrNr, table_alias=test, condition=(test.MatrNr = 28106))"
 
 
 def test_index_seek_table_non_existent():

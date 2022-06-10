@@ -42,7 +42,7 @@ class IndexSeek(AbstractOperator):
         schema = self.get_schema()
         if self.alias is None:
             return f"IndexSeek({_get_index_name(self.table_name, self.index_column)}, condition={get_string_representation(self.condition, schema)})"
-        return f"IndexSeek({_get_index_name(self.table_name, self.index_column)}, table_alias={self.alias}, condition={get_string_representation(self.condition, schema)}) "
+        return f"IndexSeek({_get_index_name(self.table_name, self.index_column)}, table_alias={self.alias}, condition={get_string_representation(self.condition, schema)})"
 
     def explain(self, rows, indent):
         super().explain(rows, indent)
