@@ -6,7 +6,7 @@ from ..expressions.column_expression import ColumnExpression
 from ..expressions.comparative_expression import ComparativeExpression, ComparativeOperator
 from ..expressions.literal_expression import LiteralExpression
 from ..get_string_representation import get_string_representation
-from ...table_service import index_exists, Table
+from ...table_service import Table, _get_index_name
 
 
 class IndexSeek(AbstractOperator):
@@ -41,8 +41,8 @@ class IndexSeek(AbstractOperator):
     def __str__(self):
         schema = self.get_schema()
         if self.alias is None:
-            return f"IndexSeek({self.table_name}, condition={get_string_representation(self.condition, schema)})"
-        return f"IndexSeek(table_name={self.table_name}, alias={self.alias}, condition={get_string_representation(self.condition, schema)}) "
+            return f"IndexSeek({_get_index_name(self.table_name, self.index_column)}, condition={get_string_representation(self.condition, schema)})"
+        return f"IndexSeek({_get_index_name(self.table_name, self.index_column)}, table_alias={self.alias}, condition={get_string_representation(self.condition, schema)}) "
 
     def explain(self, rows, indent):
         super().explain(rows, indent)

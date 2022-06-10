@@ -13,6 +13,7 @@ from .expressions.comparative_expression import ComparativeExpression, Comparati
 from .expressions.arithmetic_expression import ArithmeticExpression
 from .expressions.literal_expression import LiteralExpression
 from .operators.abstract_operator import AbstractOperator
+from .operators.index_seek import IndexSeek
 from .operators.selection import Selection
 from .operators.explain import Explain
 from .operators.hash_distinct import HashDistinct
@@ -486,17 +487,21 @@ def _apply_index_seek(selection: Selection):
     if isinstance(node, TableScan):
         table_name = node.table_name
         candidate_selections = []
-        for potential_candidate_selection, parent in potential_candidate_selections:
+        for potential_candidate_selection, pcs_parent in potential_candidate_selections:
             column_name = _get_simple_column_name_from_condition_for_index_seek(
                 potential_candidate_selection.condition)
             if index_exists(table_name, column_name):
-                candidate_selections.append((potential_candidate_selection, parent))
+                candidate_selections.append((potential_candidate_selection, pcs_parent))
         if candidate_selections:
             best_selection, bs_parent = _choose_best_candidate_selection_for_index_seek(candidate_selections)
-            # TODO merge with one of the candidate selections
-            # TODO handle rebuilding rest of branch correctly
+            index_seek = IndexSeek(node.table_name, _get_simple_column_name_from_condition_for_index_seek(best_selection.condition), best_selection.condition, node.alias)
+            parent.node = index_seek
+            if bs_parent is not None:
+                bs_parent.node = best_selection.node
+            else:
+                return best_selection.node
     else:
-        node = _node_access_helper(node, _apply_index_seek, Selection)
+        parent.node = _node_access_helper(node, _apply_index_seek, Selection)
 
     return selection
 
