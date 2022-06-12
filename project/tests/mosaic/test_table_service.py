@@ -14,7 +14,8 @@ def test_load_from_file():
     table = table_service._tables["studenten"]
     assert table is not None
     assert table.table_name == "studenten"
-    assert table.schema.column_names == ["studenten.MatrNr", "studenten.Name", "studenten.Semester"]
+    assert table.schema.column_names == [
+        "studenten.MatrNr", "studenten.Name", "studenten.Semester"]
     assert table.schema.column_types == [table_service.SchemaType.INT, table_service.SchemaType.VARCHAR,
                                          table_service.SchemaType.INT]
     assert table[0, "studenten.MatrNr"] == 24002
@@ -23,8 +24,9 @@ def test_load_from_file():
 def test_load_tables_from_directory():
     assert len(table_service._tables) == 3
     not_loaded = table_service.load_tables_from_directory("./tests/testdata/")
-    assert len(table_service._tables) == 12  # incl. #tables and #columns and #indices
-    assert len(not_loaded) == 12
+    # incl. #tables and #columns and #indices
+    assert len(table_service._tables) == 12
+    assert len(not_loaded) == 16
     with pytest.raises(table_service.NoTableLoadedException):
         table_service.load_tables_from_directory("./")
 
@@ -34,7 +36,7 @@ def test_retrieve():
     assert table_service.retrieve_table("studenten") is not None
     assert len(table_service.retrieve_table("studenten").records) == 8
     assert table_service.retrieve_table("studenten").schema.column_names == ["studenten.MatrNr", "studenten.Name",
-                                                                "studenten.Semester"]
+                                                                             "studenten.Semester"]
     with pytest.raises(table_service.TableNotFoundException):
         table_service.retrieve_table("notFoundTable")
     assert table_service.retrieve_table("#tables") is not None
@@ -112,9 +114,31 @@ def test_index_section_empty():
 
 def test_no_newline_schema_index_section():
     with pytest.raises(table_service.TableParsingException):
-        table_service.load_from_file("./tests/testdata/noNewLineSchemaIndex.table")
+        table_service.load_from_file(
+            "./tests/testdata/noNewLineSchemaIndex.table")
 
 
 def test_no_newline_schema_data_section():
     with pytest.raises(table_service.TableParsingException):
-        table_service.load_from_file("./tests/testdata/noNewLineIndexData.table")
+        table_service.load_from_file(
+            "./tests/testdata/noNewLineIndexData.table")
+
+
+def test_duplicated_column_name():
+    with pytest.raises(table_service.TableParsingException):
+        table_service.load_from_file("./tests/testdata/duplicatedColumn.table")
+
+
+def test_bad_column_start():
+    with pytest.raises(table_service.TableParsingException):
+        table_service.load_from_file("./tests/testdata/badColumnStart.table")
+
+
+def test_bad_column_name():
+    with pytest.raises(table_service.TableParsingException):
+        table_service.load_from_file("./tests/testdata/badColumnName.table")
+
+
+def test_null_as_column_name():
+    with pytest.raises(table_service.TableParsingException):
+        table_service.load_from_file("./tests/testdata/nullColumnName.table")

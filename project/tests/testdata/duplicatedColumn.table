@@ -1,0 +1,7 @@
+[Schema]
+PersNr: int
+Gehalt: float
+Gehalt: varchar
+
+[Data]
+2125;2500.31;hey

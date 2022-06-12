@@ -49,11 +49,12 @@ class Schema:
         Transforms a column name to a FQN column name
         """
 
-        found_columns = list(filter(lambda column: column.endswith(f".{column_name}")
-                                                   or column == column_name, self.column_names))
+        found_columns = list(filter(lambda column: column.endswith(f".{column_name}") or
+                                    column == column_name, self.column_names))
 
         if len(found_columns) > 1:
-            raise AmbiguousColumnException(f"Column \"{column_name}\" is ambiguous in table \"{self.table_name}\"")
+            raise AmbiguousColumnException(
+                f"Column \"{column_name}\" is ambiguous in table \"{self.table_name}\"")
         elif len(found_columns) == 1:
             return found_columns[0]
 
@@ -79,7 +80,8 @@ class Schema:
         """
         Renames the table
         """
-        self.column_names = [name.replace(f"{self.table_name}.", f"{new_name}.") for name in self.column_names]
+        self.column_names = [name.replace(
+            f"{self.table_name}.", f"{new_name}.") for name in self.column_names]
         self.table_name = new_name
 
 
@@ -107,7 +109,8 @@ class Table:
         self.schema.rename(new_name)
 
     def __str__(self):
-        records = [[column if column is not None else "NULL" for column in row] for row in self.records]
+        records = [[column if column is not None else "NULL" for column in row]
+                   for row in self.records]
         return tabulate.tabulate(records, self.schema.column_names, tablefmt="psql", stralign="left")
 
     def __getitem__(self, item):
@@ -122,7 +125,8 @@ class Table:
             else:
                 return [row[column_index] for row in self.records[row_index]]
         except IndexError:
-            raise TableIndexException(f'No row with given index in table "{self.table_name}"')
+            raise TableIndexException(
+                f'No row with given index in table "{self.table_name}"')
 
     def __len__(self):
         return len(self.records)
@@ -196,16 +200,37 @@ def _read_schema_section(table_name, schema_start, schema_lines):
         schema = [s.strip() for s in line.split(':')]
 
         if len(schema) != 2:
-            raise TableParsingException(f"Too many parts in line {i + 2 + schema_start}")
+            raise TableParsingException(
+                f"Too many parts in line {i + 2 + schema_start}")
+        if len(schema[0]) < 1:
+            raise TableParsingException(
+                f"Column name must be at least one character in line {i + 2 + schema_start}")
         if " " in schema[0]:
-            raise TableParsingException(f"Column name can not contain spaces in line {i + 2 + schema_start}")
+            raise TableParsingException(
+                f"Column name can not contain spaces in line {i + 2 + schema_start}")
+        if schema[0].lower() == "null":
+            raise TableParsingException(
+                f"Colmn name can not be named null (reserved keyword) in line {i + 2 + schema_start}")
+        if not schema[0][0].isalpha():
+            raise TableParsingException(
+                f"Colum name can not start with a non letter in line {i + 2 + schema_start}")
+        if any([not char.isalnum() for char in schema[0]]):
+            raise TableParsingException(
+                f"Colum name can only contain alphanumeric characters in line {i + 2 + schema_start}")
 
-        column_names.append(f"{table_name}.{schema[0]}")
+        column_name = f"{table_name}.{schema[0]}"
+
+        if column_name in column_names:
+            raise TableParsingException(
+                f"Column names can not be duplicated in line {i + 2 + schema_start}")
+
+        column_names.append(column_name)
 
         try:
             column_types.append(_convert_schema_type_string(schema[1]))
         except WrongSchemaTypeException:
-            raise TableParsingException(f"Unknown type in line {i + 2 + schema_start}: \"{schema[1]}\"")
+            raise TableParsingException(
+                f"Unknown type in line {i + 2 + schema_start}: \"{schema[1]}\"")
 
     return column_names, column_types
 
@@ -218,7 +243,8 @@ def _create_indices(table_name, schema: Schema, index_start, index_lines):
         try:
             schema.get_column_index(line)
         except TableIndexException:
-            raise TableParsingException(f'Column "{line}" in line {i + 2+ index_start} does not exist in schema')
+            raise TableParsingException(
+                f'Column "{line}" in line {i + 2+ index_start} does not exist in schema')
 
         _indices[table_name][line] = dict()
 
@@ -231,7 +257,8 @@ def _read_data_section(column_types, schema, data_start, data_lines):
 
         fields = line.rstrip('\n').split(';')
         if len(fields) != len(column_types):
-            raise TableParsingException(f"Wrong number of columns in line {i + 2 + data_start}")
+            raise TableParsingException(
+                f"Wrong number of columns in line {i + 2 + data_start}")
 
         data = list(range(len(fields)))
         try:
@@ -243,7 +270,8 @@ def _read_data_section(column_types, schema, data_start, data_lines):
                 else:
                     data[k] = field
         except Exception:
-            raise TableParsingException(f"Parsing error in line {i + 2 + data_start} near \"{field}\"")
+            raise TableParsingException(
+                f"Parsing error in line {i + 2 + data_start} near \"{field}\"")
 
         data_list.append(data)
 
@@ -254,7 +282,6 @@ def _read_data_section(column_types, schema, data_start, data_lines):
                 if key not in _indices[schema.table_name][index_column]:
                     _indices[schema.table_name][index_column][key] = []
                 _indices[schema.table_name][index_column][key].append(data)
-
 
     return data_list
 
@@ -293,26 +320,32 @@ def load_from_file(path):
         while schema_end < len(lines) and lines[schema_end] != "\n":
 
             if index_start is not None and schema_end == index_start:
-                raise TableParsingException("Newline between schema and indices section required")
+                raise TableParsingException(
+                    "Newline between schema and indices section required")
 
             if schema_end == data_start:
-                raise TableParsingException("Newline between schema and data section required")
+                raise TableParsingException(
+                    "Newline between schema and data section required")
             schema_end += 1
 
         if index_start is not None:
             index_end = index_start
             while index_end < len(lines) and lines[index_end] != "\n":
                 if index_end == data_start:
-                    raise TableParsingException("Newline between indices and data section required")
+                    raise TableParsingException(
+                        "Newline between indices and data section required")
                 index_end += 1
 
         # read content
-        column_names, column_types = _read_schema_section(table_name, schema_start, lines[schema_start + 1:schema_end])
+        column_names, column_types = _read_schema_section(
+            table_name, schema_start, lines[schema_start + 1:schema_end])
         schema = Schema(table_name, column_names, column_types)
         if index_start is not None and index_start != index_end - 1:
-            _create_indices(table_name, schema, index_start, lines[index_start + 1:index_end])
+            _create_indices(table_name, schema, index_start,
+                            lines[index_start + 1:index_end])
 
-        data_list = _read_data_section(column_types, schema, data_start, lines[data_start + 1:])
+        data_list = _read_data_section(
+            column_types, schema, data_start, lines[data_start + 1:])
 
     _tables[table_name] = Table(schema, data_list)
 
@@ -350,8 +383,10 @@ def load_tables_from_directory(path):
 
 def _create_tables_table():
     table_name = "#tables"
-    table_names = [[item] for item in list(_tables.keys())] + [["#tables"]] + [["#columns"]]
-    schema = Schema(table_name, [f"{table_name}.table_name"], [_convert_schema_type_string("varchar")])
+    table_names = [[item] for item in list(
+        _tables.keys())] + [["#tables"]] + [["#columns"]]
+    schema = Schema(table_name, [f"{table_name}.table_name"], [
+                    _convert_schema_type_string("varchar")])
     _tables[table_name] = Table(schema, table_names)
 
 
@@ -371,14 +406,16 @@ def _create_columns_table():
     for table_name in _tables:
         column_names = _tables[table_name].schema.column_names
         for i, column_name in enumerate(column_names):
-            columns_data.append([table_name, column_name, i, _tables[table_name].schema.column_types[i].value])
+            columns_data.append(
+                [table_name, column_name, i, _tables[table_name].schema.column_types[i].value])
 
     # add entries for the #columns table columns
     for i, columns_schema_name in enumerate(columns_schema_names):
         columns_data.append([columns_table_name, columns_schema_name,
                              i, columns_schema_types[i].value])
 
-    schema = Schema(columns_table_name, columns_schema_names, columns_schema_types)
+    schema = Schema(columns_table_name, columns_schema_names,
+                    columns_schema_types)
     _tables[columns_table_name] = Table(schema, columns_data)
 
 
@@ -421,7 +458,8 @@ def retrieve_index(table_name, index_column):
     try:
         return _indices[table_name][index_column]
     except KeyError:
-        raise IndexNotFoundException(f'Index with name "{_get_index_name(table_name, index_column)}" does not exist')
+        raise IndexNotFoundException(
+            f'Index with name "{_get_index_name(table_name, index_column)}" does not exist')
 
 
 def index_exists(table_name, index_column):
