@@ -203,10 +203,14 @@ def _read_schema_section(table_name, schema_start, schema_lines):
             raise TableParsingException(
                 f"Too many parts in line {i + 2 + schema_start}")
         if len(schema[0]) < 1:
-            raise TableParsingException(f"Column name must be at least one character in line {i + 2 + schema_start}")
+            raise TableParsingException(
+                f"Column name must be at least one character in line {i + 2 + schema_start}")
         if " " in schema[0]:
             raise TableParsingException(
                 f"Column name can not contain spaces in line {i + 2 + schema_start}")
+        if schema[0].lower() == "null":
+            raise TableParsingException(
+                f"Colmn name can not be named null (reserved keyword) in line {i + 2 + schema_start}")
         if not schema[0][0].isalpha():
             raise TableParsingException(
                 f"Colum name can not start with a non letter in line {i + 2 + schema_start}")
@@ -217,7 +221,8 @@ def _read_schema_section(table_name, schema_start, schema_lines):
         column_name = f"{table_name}.{schema[0]}"
 
         if column_name in column_names:
-            raise TableParsingException(f"Column names can not be duplicated in line {i + 2 + schema_start}")
+            raise TableParsingException(
+                f"Column names can not be duplicated in line {i + 2 + schema_start}")
 
         column_names.append(column_name)
 
