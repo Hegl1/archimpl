@@ -1,6 +1,7 @@
 from mosaic.compiler.operators.explain import Explain
 import pytest
 from mosaic import table_service
+from mosaic.compiler.operators.index_seek import IndexSeek
 from mosaic.table_service import Schema
 from mosaic.compiler.operators.selection import Selection
 from mosaic.compiler.operators.projection import Projection
@@ -470,3 +471,92 @@ def test_optimizer_selection_push_down_set_operator_ordering():
     assert selection1.condition.left.value == "MatrNr"
     assert isinstance(selection2.condition.left, ColumnExpression)
     assert selection2.condition.left.value == "studenten.MatrNr"
+
+
+def test_optimizer_apply_index_seek_simple_selection_over_table_scan():
+    node = Selection(
+        TableScan("correctIndex"),
+        ComparativeExpression(ColumnExpression("MatrNr"), ComparativeOperator.EQUAL, LiteralExpression(28106))
+    )
+
+    node = optimizer._node_access_helper(
+        node, optimizer._apply_index_seek, Selection)
+
+    assert isinstance(node, IndexSeek)
+    assert node.table_name == "correctIndex"
+    assert node.index_column == "MatrNr"
+    assert node.alias is None
+    assert isinstance(node.condition, ComparativeExpression)
+    assert node.condition.operator == ComparativeOperator.EQUAL
+    assert isinstance(node.condition.left, ColumnExpression)
+    assert isinstance(node.condition.right, LiteralExpression)
+
+
+def test_optimizer_apply_index_seek_simple_selection_over_table_scan_alias():
+    node = Selection(
+        TableScan("correctIndex", alias="c"),
+        ComparativeExpression(LiteralExpression(28106), ComparativeOperator.EQUAL, ColumnExpression("c.MatrNr"))
+    )
+
+    node = optimizer._node_access_helper(
+        node, optimizer._apply_index_seek, Selection)
+
+    assert isinstance(node, IndexSeek)
+    assert node.table_name == "correctIndex"
+    assert node.index_column == "MatrNr"
+    assert node.alias == "c"
+    assert isinstance(node.condition, ComparativeExpression)
+
+
+def test_optimizer_apply_index_seek_multiple_selections_over_table_scan_choose_root_selection():
+    node = Selection(
+        Selection(
+            TableScan("correctIndex"),
+            ComparativeExpression(LiteralExpression(28107), ComparativeOperator.GREATER, ColumnExpression("MatrNr"))
+        ),
+        ComparativeExpression(ColumnExpression("MatrNr"), ComparativeOperator.EQUAL, LiteralExpression(28106))
+    )
+
+    node = optimizer._node_access_helper(
+        node, optimizer._apply_index_seek, Selection)
+
+    assert isinstance(node, Selection)
+    assert isinstance(node.condition, ComparativeExpression)
+    assert node.condition.operator == ComparativeOperator.GREATER
+    assert isinstance(node.condition.right, ColumnExpression)
+    assert isinstance(node.condition.left, LiteralExpression)
+
+    assert isinstance(node.node, IndexSeek)
+    assert node.node.table_name == "correctIndex"
+    assert node.node.index_column == "MatrNr"
+    assert node.node.alias is None
+    assert isinstance(node.node.condition, ComparativeExpression)
+    assert node.node.condition.operator == ComparativeOperator.EQUAL
+    assert isinstance(node.node.condition.left, ColumnExpression)
+    assert isinstance(node.node.condition.right, LiteralExpression)
+
+
+def test_optimizer_apply_index_seek_multiple_selections_over_table_scan_choose_middle_selection():
+    node = Selection(
+        Selection(
+            Selection(
+                TableScan("correctIndex"),
+                ComparativeExpression(LiteralExpression(5216), ComparativeOperator.EQUAL, ColumnExpression("VorlNr"))
+            ),
+            ComparativeExpression(LiteralExpression(28107), ComparativeOperator.EQUAL, ColumnExpression("MatrNr"))
+        ),
+        ComparativeExpression(ColumnExpression("VorlNr"), ComparativeOperator.EQUAL, LiteralExpression(5216))
+    )
+
+    node = optimizer._node_access_helper(
+        node, optimizer._apply_index_seek, Selection)
+
+    assert isinstance(node, Selection)
+    assert isinstance(node.node, Selection)
+    index_seek = node.node.node
+    assert isinstance(index_seek, IndexSeek)
+
+    assert index_seek.table_name == "correctIndex"
+    assert index_seek.index_column == "MatrNr"
+    assert index_seek.alias is None
+    assert isinstance(index_seek.condition, ComparativeExpression)
