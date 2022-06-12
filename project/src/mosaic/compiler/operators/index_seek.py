@@ -70,7 +70,6 @@ class IndexSeek(AbstractOperator):
             raise IndexSeekConditionNotSupportedException("IndexSeek only supports conditions which are simple "
                                                           "equalities")
         if self._column_name_is_supported(column_name):
-            # TODO check type of value compatible
             return value
         else:
             raise ErrorInIndexSeekConditionException(
