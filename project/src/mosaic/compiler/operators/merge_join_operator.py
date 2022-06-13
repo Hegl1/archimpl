@@ -14,16 +14,14 @@ class MergeJoin(AbstractJoin):
 
         self.right_table_finished = False
         self.left_table_referenced_column_indices = self._get_join_column_indices(self.table1_reference.get_schema(),
-                                                                                  condition)
+                                                                                  self.condition)
         self.right_table_referenced_column_indices = self._get_join_column_indices(self.table2_reference.get_schema(),
-                                                                                   condition)
+                                                                                   self.condition)
 
-    def get_result(self):
+    def _get_result(self):
+        self._check_tables_sorting()
         left_table = self.table1_reference.get_result()
         right_table = self.table2_reference.get_result()
-
-        self._check_tables_sorting()
-
         result_records = self._build_records(left_table, right_table)
 
         return Table(self.schema, result_records)
@@ -34,7 +32,6 @@ class MergeJoin(AbstractJoin):
         Checks for each record in the two tables if they are matching in merge_records method.
         """
         records = []
-
         left_record_index = 0
         right_record_index = 0
 
@@ -65,7 +62,7 @@ class MergeJoin(AbstractJoin):
             left_record_index += 1
 
         else:
-            if self.join_type == JoinType.LEFT_OUTER and right_record_index >= 5:
+            if self.join_type == JoinType.LEFT_OUTER and right_record_index >= len(right_table) - 1:
                 self.right_table_finished = True
             else:
                 right_record_index += 1
@@ -124,9 +121,11 @@ class MergeJoin(AbstractJoin):
             else:
                 index_to_exclude = self._get_join_column_indices(right_table, self.condition)
                 new_record = []
+
                 for i, target in enumerate(right_record):
                     if i not in index_to_exclude:
                         new_record.append(target)
+
                 cross_product_record.append(left_record + new_record)
 
         return cross_product_record
@@ -213,64 +212,24 @@ class MergeJoin(AbstractJoin):
         self._get_join_column_index_from_comparative(schema1, comparative)
         self._get_join_column_index_from_comparative(schema2, comparative)
 
-    def _get_join_column_indices(self, schema, condition):
-        """
-        Returns a list of values corresponding to the equivalences used in the condition.
-        i.e. hoeren.MatrNr = pruefen.MatrNr and hoeren.VorlNr = pruefen.VorlNr
-            -> (0, 1) (indices for the left relation.)
-        """
-        columns = []
-        if isinstance(condition, ComparativeOperationExpression):
-            columns.append(self._get_join_column_index_from_comparative(schema, condition))
-        else:
-            for comparative_condition in condition.conditions:
-                columns.append(self._get_join_column_index_from_comparative(schema, comparative_condition))
-        return columns
-
-    def _get_join_column_index_from_comparative(self, schema, comparative):
-        """
-        Method that checks whether the schema reference is left or right in the comparative
-        and returns the column index of that reference for the schema.
-        If no reference is found or the schema gets referenced more than once in the comparative,
-        an exception is thrown.
-        """
-        left = None
-        right = None
-        try:
-            left = schema.get_column_index(comparative.left.get_result())
-        except TableIndexException:
-            pass
-        try:
-            right = schema.get_column_index(comparative.right.get_result())
-        except TableIndexException:
-            pass
-
-        if left is not None and right is not None:
-            raise ErrorInJoinConditionException("Column of one table found in both sides of join condition")
-        elif left is not None:
-            return left
-        elif right is not None:
-            return right
-        else:
-            raise ErrorInJoinConditionException("No table reference found in join condition")
-
     def _check_tables_sorting(self):
         """
         Checks if the two tables are sorted correctly for the given join conditions.
         For all join conditions the referenced columns from the condition have to be sorted.
         If not an exception gets raised.
         """
-        if not isinstance(self.table1_reference, OrderingOperator) or not isinstance(self.table2_reference,
-                                                                                     OrderingOperator):
+        if not isinstance(self.table1_reference, OrderingOperator) or \
+                not isinstance(self.table2_reference, OrderingOperator):
             raise TableNotSortedException("Tables are not sorted!")
 
         if not (self.table1_reference.column_list != self.table2_reference.column_list):
             raise TableNotSortedException("Tables are not sorted the same!")
 
     def __str__(self):
-        return f"MergeJoin(natural={self.is_natural}, " \
-               f"condition={self.condition}, " \
-               f"left={self.join_type == JoinType.LEFT_OUTER}) "
+        schema = self.get_schema()
+        if self.condition is not None:
+            self.condition.replace_all_column_names_by_fqn(schema)
+        return f"MergeJoin({self.join_type.value}, natural={self.is_natural}, condition={self.condition.__str__()})"
 
 
 class TableNotSortedException(CompilerException):
