@@ -4,7 +4,6 @@ from .abstract_join_operator import *
 from .ordering_operator import OrderingOperator
 from ..expressions.column_expression import ColumnExpression
 from ..expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
-from ...table_service import TableIndexException
 
 
 class MergeJoin(AbstractJoin):
