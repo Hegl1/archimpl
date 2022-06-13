@@ -1,7 +1,7 @@
 from copy import deepcopy
 from mosaic.compiler.operators.hash_join import HashJoin
 
-from mosaic.table_service import Schema, TableIndexException, index_exists
+from mosaic.table_service import Schema, TableIndexException, index_exists, retrieve_index
 from .abstract_compile_node import AbstractCompileNode
 from .expressions.column_expression import ColumnExpression
 from .expressions.conjunctive_expression import ConjunctiveExpression
@@ -493,8 +493,7 @@ def _apply_index_seek(selection: Selection):
                 candidate_selections.append((potential_candidate_selection, pcs_parent))
         if candidate_selections:
             # choose a selection and merge with the table scan into an index seek
-            best_selection, bs_parent = _choose_best_candidate_selection_for_index_seek(candidate_selections)
-            index_seek = IndexSeek(node.table_name, _get_simple_column_name_from_condition_for_index_seek(best_selection.condition), best_selection.condition, node.alias)
+            index_seek, best_selection, bs_parent = _get_best_index_seek_for_candidates(candidate_selections, node)
             # replace the table scan at the bottom end of the subtree by the new index seek
             parent.node = index_seek
             if bs_parent is not None:
@@ -540,7 +539,28 @@ def _get_simple_column_name_from_condition_for_index_seek(condition):
     return column_name
 
 
-def _choose_best_candidate_selection_for_index_seek(candidate_selections):
-    # right now the "best" candidate is just the first in the list
-    # optional improvement: choose best candidate based on more useful criteria
-    return candidate_selections[0]
+def _get_best_index_seek_for_candidates(candidate_selections, target_table):
+    """
+    Chooses the best selection to replace with an index seek.
+    The best selection is the selection that returns the least number of rows.
+    """
+
+    # step1: construct index_seek for each selection
+    # step2: look number of rows the index seek returns (O(1) => dict)
+    # step3: use index with least rows returned
+
+    result_selection = None
+    result_index = None
+    min_entries = float('inf')
+
+    for candidate in candidate_selections:
+
+        index = IndexSeek(target_table.table_name, _get_simple_column_name_from_condition_for_index_seek(candidate[0].condition),
+                          candidate[0].condition, target_table.alias)
+        num_entries = index.get_num_records()
+        if num_entries <= min_entries:
+            result_index = index
+            result_selection = candidate
+            min_entries = num_entries
+
+    return result_index, result_selection[0], result_selection[1]
