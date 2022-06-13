@@ -1,26 +1,26 @@
 import itertools
-
-from .abstract_join_operator import *
-from .ordering_operator import OrderingOperator
+from mosaic.compiler.get_string_representation import get_string_representation
+from .abstract_join import *
+from .ordering import Ordering
 from ..expressions.column_expression import ColumnExpression
-from ..expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
+from ..expressions.comparative_expression import ComparativeExpression, ComparativeOperator
 
 
 class MergeJoin(AbstractJoin):
 
-    def __init__(self, table1_reference, table2_reference, join_type, condition, is_natural):
-        super().__init__(table1_reference, table2_reference, join_type, condition, is_natural)
+    def __init__(self, left_node, right_node, join_type, condition, is_natural):
+        super().__init__(left_node, right_node, join_type, condition, is_natural)
 
         self.right_table_finished = False
-        self.left_table_referenced_column_indices = self._get_join_column_indices(self.table1_reference.get_schema(),
+        self.left_table_referenced_column_indices = self._get_join_column_indices(self.left_node.get_schema(),
                                                                                   self.condition)
-        self.right_table_referenced_column_indices = self._get_join_column_indices(self.table2_reference.get_schema(),
+        self.right_table_referenced_column_indices = self._get_join_column_indices(self.right_node.get_schema(),
                                                                                    self.condition)
 
     def _get_result(self):
         self._check_tables_sorting()
-        left_table = self.table1_reference.get_result()
-        right_table = self.table2_reference.get_result()
+        left_table = self.left_node.get_result()
+        right_table = self.right_node.get_result()
         result_records = self._build_records(left_table, right_table)
 
         return Table(self.schema, result_records)
@@ -193,23 +193,12 @@ class MergeJoin(AbstractJoin):
         Method that checks whether the condition is a simple comparative
         (i.e. a comparative that checks the equality between columns)
         """
-        if not isinstance(condition, ComparativeOperationExpression) or \
+        if not isinstance(condition, ComparativeExpression) or \
                 not isinstance(condition.right, ColumnExpression) or \
                 not isinstance(condition.left, ColumnExpression) or \
                 condition.operator != ComparativeOperator.EQUAL:
             raise JoinConditionNotSupportedException("MergeJoin only supports conjunctions of equalities or "
                                                      "simple equalities that only contain column references")
-
-    def _check_comparative_condition_invalid_references(self, schema1, schema2, comparative):
-        """
-        Checks whether the equalities in comparative always contain exactly one column reference of one table
-        and column names not being ambiguous.
-        Throws an exception if the condition is invalid.
-        e.g:    hoeren join hoeren.MatrNr = pruefen.MatrNr pruefen -> is valid
-                hoeren MatrNr = pruefen.MatrNr pruefen -> invalid
-        """
-        self._get_join_column_index_from_comparative(schema1, comparative)
-        self._get_join_column_index_from_comparative(schema2, comparative)
 
     def _check_tables_sorting(self):
         """
@@ -217,18 +206,18 @@ class MergeJoin(AbstractJoin):
         For all join conditions the referenced columns from the condition have to be sorted.
         If not an exception gets raised.
         """
-        if not isinstance(self.table1_reference, OrderingOperator) or \
-                not isinstance(self.table2_reference, OrderingOperator):
+        if not isinstance(self.left_node, Ordering) or \
+                not isinstance(self.right_node, Ordering):
             raise TableNotSortedException("Tables are not sorted!")
 
-        if not (self.table1_reference.column_list != self.table2_reference.column_list):
+        # TODO: fix (probably compare with columns from condition?)
+        if not (self.left_node.column_list != self.right_node.column_list):
             raise TableNotSortedException("Tables are not sorted the same!")
 
     def __str__(self):
         schema = self.get_schema()
-        if self.condition is not None:
-            self.condition.replace_all_column_names_by_fqn(schema)
-        return f"MergeJoin({self.join_type.value}, natural={self.is_natural}, condition={self.condition.__str__()})"
+
+        return f"MergeJoin({self.join_type.value}, natural={self.is_natural}, condition={get_string_representation(self.condition, schema)})"
 
 
 class TableNotSortedException(CompilerException):
