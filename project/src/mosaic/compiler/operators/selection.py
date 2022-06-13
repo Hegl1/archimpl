@@ -1,3 +1,5 @@
+from mosaic.compiler.get_string_representation import get_string_representation
+from mosaic.compiler.expressions.abstract_expression import AbstractExpression
 from mosaic.table_service import Table, Schema
 from .abstract_operator import AbstractOperator
 from ..expressions.abstract_computation_expression import AbstractComputationExpression
@@ -11,13 +13,13 @@ class Selection(AbstractOperator):
     It returns a table which only contains records which fulfill the given condition.
     """
 
-    def __init__(self, table_reference, condition):
+    def __init__(self, node, condition):
         super().__init__()
-        self.table_reference = table_reference
+        self.node = node
         self.condition = condition
 
     def get_result(self):
-        table = self.table_reference.get_result()
+        table = self.node.get_result()
         result = []
 
         schema = Schema(table.table_name, table.schema.column_names, table.schema.column_types)
@@ -43,26 +45,25 @@ class Selection(AbstractOperator):
         return Table(schema, result)
 
     def get_schema(self):
-        return self.table_reference.get_schema()
+        return self.node.get_schema()
 
     def simplify(self):
-        self.table_reference = self.table_reference.simplify()
+        self.node = self.node.simplify()
         self.condition = self.condition.simplify()
 
         if isinstance(self.condition, LiteralExpression):
             result = self.condition.get_result()
 
             if result:
-                return self.table_reference
+                return self.node
 
         return self
 
     def __str__(self):
         schema = self.get_schema()
-        if self.condition is not None:
-            self.condition.replace_all_column_names_by_fqn(schema)
-        return f"Selection(condition={self.condition.__str__()})"
+
+        return f"Selection(condition={get_string_representation(self.condition, schema)})"
 
     def explain(self, rows, indent):
         super().explain(rows, indent)
-        self.table_reference.explain(rows, indent + 2)
+        self.node.explain(rows, indent + 2)

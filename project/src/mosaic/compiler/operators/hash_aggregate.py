@@ -88,9 +88,9 @@ def extract(aggregations):
 
 class HashAggregate(AbstractOperator, ABC):
 
-    def __init__(self, table_reference, group_names, aggregations):
+    def __init__(self, node, group_names, aggregations):
         super().__init__()
-        self.table_reference = table_reference
+        self.node = node
         self.group_names = group_names
         self.aggregations = extract(aggregations)
 
@@ -116,7 +116,7 @@ class HashAggregate(AbstractOperator, ABC):
         If there are grouping columns it loops through all the columns and adds matching rows to the group column tuple keys.
         Returns Dictionary with group column tuples as key and matching rows as value.
         """
-        table = self.table_reference.get_result()
+        table = self.node.get_result()
 
         group_table = {}
 
@@ -155,7 +155,7 @@ class HashAggregate(AbstractOperator, ABC):
         aggregation results gets appended to the table records.
         Returns computed records.
         """
-        table = self.table_reference.get_result()
+        table = self.node.get_result()
         records = []
         for grouped_keys, group in groups.items():
             row = list(grouped_keys)
@@ -182,8 +182,8 @@ class HashAggregate(AbstractOperator, ABC):
         for the aggregated columns.
         Returns the built schema.
         """
-        old_table = self.table_reference.get_result()
-        old_schema = self.table_reference.get_schema()
+        old_table = self.node.get_result()
+        old_schema = self.node.get_schema()
 
         column_names, column_types, _ = build_schema(
             self.group_names, old_schema)
@@ -208,7 +208,7 @@ class HashAggregate(AbstractOperator, ABC):
         return Table(schema, records)
 
     def __str__(self):
-        table_schema = self.table_reference.get_schema()
+        table_schema = self.node.get_schema()
         aggregate_schema = self.get_schema()
         groups = []
         aggregates = []
@@ -223,4 +223,4 @@ class HashAggregate(AbstractOperator, ABC):
 
     def explain(self, rows, indent):
         super().explain(rows, indent)
-        self.table_reference.explain(rows, indent + 2)
+        self.node.explain(rows, indent + 2)

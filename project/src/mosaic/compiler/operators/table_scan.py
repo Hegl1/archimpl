@@ -15,7 +15,7 @@ class TableScan(AbstractOperator):
         self.alias = alias
 
     def get_result(self):
-        table = table_service.retrieve(self.table_name, makeCopy=self.alias is not None)
+        table = table_service.retrieve_table(self.table_name, makeCopy=self.alias is not None)
 
         if self.alias is not None:
             table.rename(self.alias)
@@ -23,7 +23,7 @@ class TableScan(AbstractOperator):
         return table
 
     def get_schema(self):
-        schema = deepcopy(table_service.retrieve(self.table_name, makeCopy=False).schema)
+        schema = deepcopy(table_service.retrieve_table(self.table_name, makeCopy=False).schema)
         if self.alias is not None:
             schema.rename(self.alias)
         return schema

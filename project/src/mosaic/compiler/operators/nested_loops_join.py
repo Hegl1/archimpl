@@ -1,5 +1,6 @@
+from mosaic.compiler.get_string_representation import get_string_representation
 from mosaic.table_service import Table, Schema
-from .abstract_join_operator import *
+from .abstract_join import *
 
 
 class NestedLoopsJoin(AbstractJoin):
@@ -14,20 +15,17 @@ class NestedLoopsJoin(AbstractJoin):
     is_natural: boolean expressing if a join is natural
     """
 
-    def __init__(self, table1_reference, table2_reference, join_type, condition, is_natural):
-        super().__init__(table1_reference, table2_reference, join_type, condition, is_natural)
-
     def _get_result(self):
-        table1 = self.table1_reference.get_result()
-        table2 = self.table2_reference.get_result()
+        table1 = self.left_node.get_result()
+        table2 = self.right_node.get_result()
 
         remaining_column_indices = []
         if self.is_natural:
-            remaining_column_indices = self.get_remaining_column_indices(self.table2_schema)
+            remaining_column_indices = self.get_remaining_column_indices(self.right_schema)
 
         joined_table_records = []
-        aux_schema = Schema(f"{self.table1_schema.table_name}_join_{self.table2_schema.table_name}", self.table1_schema.column_names + self.table2_schema.column_names,
-                            self.table1_schema.column_types + self.table2_schema.column_types)
+        aux_schema = Schema(f"{self.left_schema.table_name}_join_{self.right_schema.table_name}", self.left_schema.column_names + self.right_schema.column_names,
+                            self.left_schema.column_types + self.right_schema.column_types)
         aux_table = Table(aux_schema, [])
 
         for record1 in table1.records:
@@ -50,6 +48,7 @@ class NestedLoopsJoin(AbstractJoin):
                     joined_table_records.append(record1 + self._build_null_record(len(remaining_column_indices)))
                 else:
                     joined_table_records.append(record1 + self._build_null_record(len(table2.schema.column_names)))
+
         return Table(self.schema, joined_table_records)
 
     def get_remaining_column_indices(self, schema2):
@@ -65,9 +64,8 @@ class NestedLoopsJoin(AbstractJoin):
 
     def __str__(self):
         schema = self.get_schema()
-        if self.condition is not None:
-            self.condition.replace_all_column_names_by_fqn(schema)
-        return f"NestedLoopsJoin({self.join_type.value}, natural={self.is_natural}, condition={self.condition.__str__()})"
+
+        return f"NestedLoopsJoin({self.join_type.value}, natural={self.is_natural}, condition={get_string_representation(self.condition, schema)})"
 
     def check_condition(self, schema1, schema2, condition):
         pass

@@ -91,7 +91,7 @@ def test_execute_command_optimize(mock_out):
 def test_load_initial_data(mock_out):
     cli._load_initial_data("./tests/testdata/")
     function_output = mock_out.getvalue()
-    assert table_service.retrieve("studenten") is not None
+    assert table_service.retrieve_table("studenten") is not None
     assert "could not be loaded" in function_output
     assert "doNotLoad.notable" in function_output
 
