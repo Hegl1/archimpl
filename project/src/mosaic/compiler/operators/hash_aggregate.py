@@ -1,5 +1,4 @@
 from abc import ABC
-from copy import deepcopy
 from enum import Enum
 from mosaic.compiler.expressions.abstract_computation_expression import AbstractComputationExpression
 from mosaic.compiler.expressions.literal_expression import LiteralExpression

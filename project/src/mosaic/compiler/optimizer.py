@@ -1,7 +1,7 @@
 from copy import deepcopy
 from mosaic.compiler.operators.hash_join import HashJoin
 
-from mosaic.table_service import Schema, TableIndexException, index_exists, retrieve_index
+from mosaic.table_service import Schema, TableIndexException, index_exists
 from .abstract_compile_node import AbstractCompileNode
 from .expressions.column_expression import ColumnExpression
 from .expressions.conjunctive_expression import ConjunctiveExpression
@@ -186,7 +186,7 @@ def _selection_push_down(pushed_down_selections=set()):
             node = _selection_push_through_set_operator(
                 selection, child_node, pushed_down_selections)
 
-        if node == selection:
+        if node == selection and node not in pushed_down_selections:
             # selection can not be pushed down any further -> add to pushed_down_selections and do recursive call
             pushed_down_selections.add(node)
             node.node = _node_access_helper(
@@ -544,10 +544,6 @@ def _get_best_index_seek_for_candidates(candidate_selections, target_table):
     Chooses the best selection to replace with an index seek.
     The best selection is the selection that returns the least number of rows.
     """
-
-    # step1: construct index_seek for each selection
-    # step2: look number of rows the index seek returns (O(1) => dict)
-    # step3: use index with least rows returned
 
     result_selection = None
     result_index = None
