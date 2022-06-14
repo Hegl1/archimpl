@@ -28,15 +28,22 @@ class IndexSeek(AbstractOperator):
         self.comparison_value = self._consume_condition()
 
     def get_result(self):
+        result = self._get_index_records()
+        return Table(self.schema, result)
+
+    def get_schema(self):
+        return self.schema
+
+    def get_num_records(self):
+        return len(self._get_index_records())
+
+    def _get_index_records(self):
         key = self.comparison_value
         if key in self.index:
             result = self.index[key]
         else:
             result = []
-        return Table(self.schema, result)
-
-    def get_schema(self):
-        return self.schema
+        return result
 
     def __str__(self):
         schema = self.get_schema()

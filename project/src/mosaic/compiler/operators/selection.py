@@ -1,5 +1,4 @@
 from mosaic.compiler.get_string_representation import get_string_representation
-from mosaic.compiler.expressions.abstract_expression import AbstractExpression
 from mosaic.table_service import Table, Schema
 from .abstract_operator import AbstractOperator
 from ..expressions.abstract_computation_expression import AbstractComputationExpression

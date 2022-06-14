@@ -1,5 +1,4 @@
 from mosaic.compiler.get_string_representation import get_string_representation
-from mosaic.table_service import Table, Schema
 from .abstract_join import *
 
 
