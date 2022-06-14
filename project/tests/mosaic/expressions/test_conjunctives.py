@@ -48,3 +48,15 @@ def test_explain():
         [comparative_operation, comparative_operation_two])
     assert str(
         conjunctive) == f'(({column2} > {comparison_number}) AND ("{comparison_string}" = {column}))'
+
+
+def test_conjunction_with_literal():
+    table = comparative_helper.retrieve_table("studenten")
+
+    conjunction = ConjunctiveExpression([
+        LiteralExpression(1),
+        LiteralExpression(0)
+    ])
+
+    for i in range(len(table)):
+        assert conjunction.get_result(table, i) == 0

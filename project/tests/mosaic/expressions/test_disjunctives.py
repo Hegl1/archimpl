@@ -68,3 +68,15 @@ def test_explain():
 
     assert str(
         disjunctive) == f'(({column} = "{comparison_string2}") OR (({column2} > {comparison_number}) AND ("{comparison_string}" = {column})))'
+
+
+def test_disjunction_with_literal():
+    table = comparative_helper.retrieve_table("studenten")
+
+    conjunction = DisjunctiveExpression([
+        LiteralExpression(1),
+        LiteralExpression(0)
+    ])
+
+    for i in range(len(table)):
+        assert conjunction.get_result(table, i) == 1
