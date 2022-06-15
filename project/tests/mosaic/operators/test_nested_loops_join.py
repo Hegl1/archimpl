@@ -124,3 +124,7 @@ def test_natural_join_alias_projection():
     assert len(result) == 10
     assert result.schema.column_names == ["PersNr", "professoren.Name", "professoren.Rang", "professoren.Raum"]
 
+
+def test_natural_join_to_cross():
+    join = NestedLoopsJoin(TableScan("voraussetzen"), TableScan("vorlesungen"), JoinType.INNER, None, True)
+    assert join.join_type == JoinType.CROSS

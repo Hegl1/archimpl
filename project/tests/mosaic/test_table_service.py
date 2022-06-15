@@ -26,7 +26,7 @@ def test_load_tables_from_directory():
     not_loaded = table_service.load_tables_from_directory("./tests/testdata/")
     # incl. #tables and #columns and #indices
     assert len(table_service._tables) == 12
-    assert len(not_loaded) == 16
+    assert len(not_loaded) == 17
     with pytest.raises(table_service.NoTableLoadedException):
         table_service.load_tables_from_directory("./")
 
@@ -142,3 +142,8 @@ def test_bad_column_name():
 def test_null_as_column_name():
     with pytest.raises(table_service.TableParsingException):
         table_service.load_from_file("./tests/testdata/nullColumnName.table")
+
+
+def test_wrong_schema_type():
+    with pytest.raises(table_service.WrongSchemaTypeException):
+        table_service.get_schema_type(table_service.get_schema_type)
