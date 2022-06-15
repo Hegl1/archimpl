@@ -11,7 +11,7 @@ class InvalidAliasException(Exception):
     pass
 
 
-def build_schema(column_references,old_schema):
+def build_schema(column_references, old_schema):
     """
     Builds the schema for the projection-result, including the columns.
     columns is a list containing:

@@ -38,6 +38,11 @@ def test_ambiguous_column_name():
         _test_query('pi Name (professoren cross join assistenten);', [], 0)
 
 
+def test_arithmetic_null_schema():
+    result, _ = query_executor.execute_query('pi z as test + test pi test as null hoeren;')[0]
+    assert result.schema.column_types[0] == table_service.SchemaType.NULL
+
+
 # Milestone 2 queries
 
 
