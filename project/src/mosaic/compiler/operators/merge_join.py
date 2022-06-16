@@ -1,4 +1,6 @@
 import itertools
+from copy import deepcopy
+
 from mosaic.compiler.get_string_representation import get_string_representation
 from .abstract_join import *
 from .ordering import Ordering
@@ -10,15 +12,14 @@ class MergeJoin(AbstractJoin):
 
     def __init__(self, left_node, right_node, join_type, condition, is_natural):
         super().__init__(left_node, right_node, join_type, condition, is_natural)
-
+        self._check_tables_sorting()
         self.right_table_finished = False
-        self.left_table_referenced_column_indices = self._get_join_column_indices(self.left_node.get_schema(),
+        self.left_table_referenced_column_indices = self._get_join_column_indices(self.left_schema,
                                                                                   self.condition)
-        self.right_table_referenced_column_indices = self._get_join_column_indices(self.right_node.get_schema(),
+        self.right_table_referenced_column_indices = self._get_join_column_indices(self.right_schema,
                                                                                    self.condition)
 
     def _get_result(self):
-        self._check_tables_sorting()
         left_table = self.left_node.get_result()
         right_table = self.right_node.get_result()
         result_records = self._build_records(left_table, right_table)
@@ -118,7 +119,7 @@ class MergeJoin(AbstractJoin):
             if not self.is_natural:
                 cross_product_record.append(left_record + right_record)
             else:
-                index_to_exclude = self._get_join_column_indices(right_table, self.condition)
+                index_to_exclude = self._get_join_column_indices(self.right_schema, self.condition)
                 new_record = []
 
                 for i, target in enumerate(right_record):
@@ -206,13 +207,47 @@ class MergeJoin(AbstractJoin):
         For all join conditions the referenced columns from the condition have to be sorted.
         If not an exception gets raised.
         """
-        if not isinstance(self.left_node, Ordering) or \
-                not isinstance(self.right_node, Ordering):
+        if not isinstance(self.left_node, Ordering) or not isinstance(self.right_node, Ordering):
             raise TableNotSortedException("Tables are not sorted!")
 
-        # TODO: fix (probably compare with columns from condition?)
-        if not (self.left_node.column_list != self.right_node.column_list):
-            raise TableNotSortedException("Tables are not sorted the same!")
+        if len(self.left_node.column_list) != len(self.right_node.column_list):
+            raise TableNotSortedException("Tables are not sorted the same!1")
+
+        condition_list = []
+        if isinstance(self.condition, ConjunctiveExpression):
+            condition_list = deepcopy(self.condition.conditions)
+
+        condition_found = False
+
+        for left, right in zip(self.left_node.column_list, self.right_node.column_list):
+
+            if isinstance(self.condition, ComparativeExpression):
+                if not self.aux(left, right, self.condition):
+                    raise TableNotSortedException("Tables are not sorted the same!2")
+
+            else:
+
+                for condition in condition_list:
+                    condition_found = self.aux(left, right, condition)
+                    if condition_found:
+                        condition_list.remove(condition)
+                        break
+
+                if not condition_found:
+                    raise TableNotSortedException("Tables are not sorted same!3")
+
+    def aux(self, left, right, condition):
+
+        right_name = self.right_schema.get_fully_qualified_column_name(right.value) \
+            if "." in condition.right.value \
+            else right.value
+
+        left_name = self.left_schema.get_fully_qualified_column_name(left.value) \
+            if "." in condition.right.value \
+            else left.value
+
+        return (left_name == condition.left.value and right_name == condition.right.value or
+                left_name == condition.right.value and right_name == condition.left.value)
 
     def __str__(self):
         schema = self.get_schema()

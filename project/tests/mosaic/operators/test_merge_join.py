@@ -132,15 +132,13 @@ def test_mergejoin_natural():
 def test_mergejoin_left_natural():
     table1 = Ordering(Projection(TableScan("professoren"), [("Boss", ColumnExpression("PersNr"))]),
                       [ColumnExpression("Boss")])
-    table2 = Ordering(Projection(TableScan("assistenten"), [(None, ColumnExpression("Boss"))]),
-                      [ColumnExpression("Boss")])
+    table2 = Ordering(TableScan("assistenten"), [ColumnExpression("Boss")])
 
     join = MergeJoin(table1, table2, JoinType.LEFT_OUTER, None, True)
     result = join.get_result()
 
-    assert len(result) == 8
-    assert [24002, "Xenokrates", 18, None, None, None] in result.records
-    assert [29555, "Feuerbach", 2, None, None, None] in result.records
+    assert len(result) == 9
+    assert [2125, 3002, "Platon", "Ideenlehre"] in result.records
 
 
 def test_unsorted_tables():
