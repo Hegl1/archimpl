@@ -14,10 +14,8 @@ class MergeJoin(AbstractJoin):
         super().__init__(left_node, right_node, join_type, condition, is_natural)
         self._check_tables_sorting()
         self.right_table_finished = False
-        self.left_table_referenced_column_indices = self._get_join_column_indices(self.left_schema,
-                                                                                  self.condition)
-        self.right_table_referenced_column_indices = self._get_join_column_indices(self.right_schema,
-                                                                                   self.condition)
+        self.left_table_referenced_column_indices = self._get_join_column_indices(self.left_schema, self.condition)
+        self.right_table_referenced_column_indices = self._get_join_column_indices(self.right_schema, self.condition)
 
     def _get_result(self):
         left_table = self.left_node.get_result()
@@ -50,11 +48,11 @@ class MergeJoin(AbstractJoin):
         """
         merge_condition = self._compare_records(left_table[left_record_index], right_table[right_record_index])
 
-        if merge_condition == 0:
+        if merge_condition == "matching":
             left_record_index, right_record_index = self._build_matching_records(records, left_table, right_table,
                                                                                  left_record_index, right_record_index)
 
-        elif merge_condition == 1 or self.right_table_finished:
+        elif merge_condition == "right is bigger" or self.right_table_finished:
             if self.join_type == JoinType.LEFT_OUTER:
                 records.append(left_table[left_record_index] +
                                self._build_null_record(len(right_table[right_record_index])))
@@ -104,11 +102,11 @@ class MergeJoin(AbstractJoin):
             self._get_matching_records(right_table, self.right_table_referenced_column_indices,
                                        right_sub_record_start_index, right_table)
 
-        cross_product_record = self._build_cross_product_of_records_aux(left_records, right_records, right_table)
+        cross_product_record = self._build_cross_product_of_records_aux(left_records, right_records)
 
         return cross_product_record, left_record_end_index, right_record_end_index
 
-    def _build_cross_product_of_records_aux(self, left_records, right_records, right_table):
+    def _build_cross_product_of_records_aux(self, left_records, right_records):
         """
         Builds the cross product of the matching records.
         In case of a natural join, the right table is needed to eliminate join columns.
@@ -163,16 +161,16 @@ class MergeJoin(AbstractJoin):
         Two records get compared to know if the records can be merged or not.
         Returns 0 if records are matching, 1 if left record is smaller, -1 if right record is smaller.
         """
-        match = 0
+        match = "matching"
 
         for column_index1, column_index2 in zip(self.left_table_referenced_column_indices,
                                                 self.right_table_referenced_column_indices):
             if tuple1[column_index1] == tuple2[column_index2]:
                 continue
             elif tuple1[column_index1] < tuple2[column_index2]:
-                match = 1
+                match = "right is bigger"
             else:
-                match = -1
+                match = "left is bigger"
 
         return match
 
@@ -211,33 +209,56 @@ class MergeJoin(AbstractJoin):
             raise TableNotSortedException("Tables are not sorted!")
 
         if len(self.left_node.column_list) != len(self.right_node.column_list):
-            raise TableNotSortedException("Tables are not sorted the same!1")
+            raise TableNotSortedException("Tables are not sorted the same!")
 
         condition_list = []
         if isinstance(self.condition, ConjunctiveExpression):
             condition_list = deepcopy(self.condition.conditions)
 
-        condition_found = False
+        self._check_columns_sorting(condition_list)
 
+    def _check_columns_sorting(self, condition_list):
+        """
+        Checks if the columns are sorted the way they are supposed to be according to the join condition.
+        e.g. the join condition is "voraussetzen.Nachfolger = vorlesungen.VorlNr" these columns have to be sorted
+        in the corresponding table with the same priority, so they both have to be the first column after which the
+        table is sorted or both have to be the second column after which the table is sorted.
+        """
         for left, right in zip(self.left_node.column_list, self.right_node.column_list):
 
             if isinstance(self.condition, ComparativeExpression):
-                if not self.aux(left, right, self.condition):
-                    raise TableNotSortedException("Tables are not sorted the same!2")
-
+                self._check_columns_sorting_comparative_condition(left, right)
             else:
+                self._check_columns_sorting_conjunctive_condition(left, right, condition_list)
 
-                for condition in condition_list:
-                    condition_found = self.aux(left, right, condition)
-                    if condition_found:
-                        condition_list.remove(condition)
-                        break
+    def _check_columns_sorting_comparative_condition(self, left, right):
+        """
+        Checks if the columns are sorted the way they are supposed to be according to the join condition,
+        in case the join condition is a simple comparative condition.
+        """
+        if not self._check_columns_in_condition(left, right, self.condition):
+            raise TableNotSortedException("Tables are not sorted the same!")
 
-                if not condition_found:
-                    raise TableNotSortedException("Tables are not sorted same!3")
+    def _check_columns_sorting_conjunctive_condition(self, left, right, condition_list):
+        """
+        Checks if the columns are sorted the way they are supposed to be according to the join condition,
+        in case the join condition is a simple conjunctive condition.
+        """
+        condition_found = False
 
-    def aux(self, left, right, condition):
+        for condition in condition_list:
+            condition_found = self._check_columns_in_condition(left, right, condition)
+            if condition_found:
+                condition_list.remove(condition)
+                break
 
+        if not condition_found:
+            raise TableNotSortedException("Tables are not sorted same!")
+
+    def _check_columns_in_condition(self, left, right, condition):
+        """
+        Checks if the columns of two tables occur each in one side of the join condition.
+        """
         right_name = self.right_schema.get_fully_qualified_column_name(right.value) \
             if "." in condition.right.value \
             else right.value
@@ -252,7 +273,9 @@ class MergeJoin(AbstractJoin):
     def __str__(self):
         schema = self.get_schema()
 
-        return f"MergeJoin({self.join_type.value}, natural={self.is_natural}, condition={get_string_representation(self.condition, schema)})"
+        return f"MergeJoin({self.join_type.value}, " \
+               f"natural={self.is_natural}, " \
+               f"condition={get_string_representation(self.condition, schema)})"
 
 
 class TableNotSortedException(CompilerException):
