@@ -159,7 +159,7 @@ class MergeJoin(AbstractJoin):
     def _compare_records(self, tuple1, tuple2):
         """
         Two records get compared to know if the records can be merged or not.
-        Returns 0 if records are matching, 1 if left record is smaller, -1 if right record is smaller.
+        Returns "matching" if records are matching, "right is bigger" or "left is bigger" if they are not matching.
         """
         match = "matching"
 
@@ -207,9 +207,6 @@ class MergeJoin(AbstractJoin):
         """
         if not isinstance(self.left_node, Ordering) or not isinstance(self.right_node, Ordering):
             raise TableNotSortedException("Tables are not sorted!")
-
-        if len(self.left_node.column_list) != len(self.right_node.column_list):
-            raise TableNotSortedException("Tables are not sorted the same!")
 
         condition_list = []
         if isinstance(self.condition, ConjunctiveExpression):
@@ -285,8 +282,8 @@ class MergeJoin(AbstractJoin):
             if "." in condition.right.value \
             else left.value
 
-        return (left_name == condition.left.value and right_name == condition.right.value or
-                left_name == condition.right.value and right_name == condition.left.value)
+        return ((left_name == condition.left.value and right_name == condition.right.value) or
+                (left_name == condition.right.value and right_name == condition.left.value))
 
     def __str__(self):
         schema = self.get_schema()
