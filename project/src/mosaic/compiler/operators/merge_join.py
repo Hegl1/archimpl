@@ -224,22 +224,40 @@ class MergeJoin(AbstractJoin):
         in the corresponding table with the same priority, so they both have to be the first column after which the
         table is sorted or both have to be the second column after which the table is sorted.
         """
-        for left, right in zip(self.left_node.column_list, self.right_node.column_list):
+        left_column_list, right_column_list = self._normalize_column_lists()
+
+        for left_column, right_column in zip(left_column_list, right_column_list):
 
             if isinstance(self.condition, ComparativeExpression):
-                self._check_columns_sorting_comparative_condition(left, right)
+                self._check_columns_sorting_comparative_condition(left_column, right_column)
             else:
-                self._check_columns_sorting_conjunctive_condition(left, right, condition_list)
+                self._check_columns_sorting_conjunctive_condition(left_column, right_column, condition_list)
 
-    def _check_columns_sorting_comparative_condition(self, left, right):
+    def _normalize_column_lists(self):
+        """
+        Cuts column lists to same length in order to get zipped properly in _check_columns_sorting method.
+        """
+        left_column_list = self.left_node.column_list
+        right_column_list = self.right_node.column_list
+
+        if len(left_column_list) == len(right_column_list):
+            pass
+        elif len(left_column_list) < len(right_column_list):
+            right_column_list = right_column_list[:len(left_column_list)]
+        else:
+            left_column_list = left_column_list[:len(right_column_list)]
+
+        return left_column_list, right_column_list
+
+    def _check_columns_sorting_comparative_condition(self, left_column, right_column):
         """
         Checks if the columns are sorted the way they are supposed to be according to the join condition,
         in case the join condition is a simple comparative condition.
         """
-        if not self._check_columns_in_condition(left, right, self.condition):
+        if not self._check_columns_in_condition(left_column, right_column, self.condition):
             raise TableNotSortedException("Tables are not sorted the same!")
 
-    def _check_columns_sorting_conjunctive_condition(self, left, right, condition_list):
+    def _check_columns_sorting_conjunctive_condition(self, left_column, right_column, condition_list):
         """
         Checks if the columns are sorted the way they are supposed to be according to the join condition,
         in case the join condition is a simple conjunctive condition.
@@ -247,7 +265,7 @@ class MergeJoin(AbstractJoin):
         condition_found = False
 
         for condition in condition_list:
-            condition_found = self._check_columns_in_condition(left, right, condition)
+            condition_found = self._check_columns_in_condition(left_column, right_column, condition)
             if condition_found:
                 condition_list.remove(condition)
                 break
