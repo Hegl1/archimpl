@@ -27,7 +27,6 @@ from mosaic.compiler.operators.hash_aggregate import AggregateFunction
 from mosaic.compiler.operators.hash_aggregate import HashAggregate
 
 
-
 ###########################################################
 # Visitor for traversing the AST.
 ###########################################################
@@ -95,13 +94,13 @@ class ASTVisitor(NodeVisitor):
             for operator, right in visited_children[1]:
                 if operator == '*':
                     left = ArithmeticExpression(left,
-                                                         ArithmeticOperator.TIMES,
-                                                         right)
+                                                ArithmeticOperator.TIMES,
+                                                right)
                     break
                 elif operator == '/':
                     left = ArithmeticExpression(left,
-                                                         ArithmeticOperator.DIVIDE,
-                                                         right)
+                                                ArithmeticOperator.DIVIDE,
+                                                right)
                     break
 
             return left
@@ -122,13 +121,13 @@ class ASTVisitor(NodeVisitor):
             for operator, right in visited_children[1]:
                 if operator == '+':
                     left = ArithmeticExpression(left,
-                                                         ArithmeticOperator.ADD,
-                                                         right)
+                                                ArithmeticOperator.ADD,
+                                                right)
                     break
                 elif operator == '-':
                     left = ArithmeticExpression(left,
-                                                         ArithmeticOperator.SUBTRACT,
-                                                         right)
+                                                ArithmeticOperator.SUBTRACT,
+                                                right)
                     break
 
             return left
@@ -149,33 +148,33 @@ class ASTVisitor(NodeVisitor):
             for operator, right in visited_children[1]:
                 if operator == '=':
                     left = ComparativeExpression(left,
-                                                          ComparativeOperator.EQUAL,
-                                                          right)
+                                                 ComparativeOperator.EQUAL,
+                                                 right)
                     break
                 elif operator == '!=':
                     left = ComparativeExpression(left,
-                                                          ComparativeOperator.NOT_EQUAL,
-                                                          right)
+                                                 ComparativeOperator.NOT_EQUAL,
+                                                 right)
                     break
                 elif operator == '<':
                     left = ComparativeExpression(left,
-                                                          ComparativeOperator.SMALLER,
-                                                          right)
+                                                 ComparativeOperator.SMALLER,
+                                                 right)
                     break
                 elif operator == '<=':
                     left = ComparativeExpression(left,
-                                                          ComparativeOperator.SMALLER_EQUAL,
-                                                          right)
+                                                 ComparativeOperator.SMALLER_EQUAL,
+                                                 right)
                     break
                 elif operator == '>':
                     left = ComparativeExpression(left,
-                                                          ComparativeOperator.GREATER,
-                                                          right)
+                                                 ComparativeOperator.GREATER,
+                                                 right)
                     break
                 elif operator == '>=':
                     left = ComparativeExpression(left,
-                                                          ComparativeOperator.GREATER_EQUAL,
-                                                          right)
+                                                 ComparativeOperator.GREATER_EQUAL,
+                                                 right)
                     break
 
             return left
@@ -373,10 +372,10 @@ class ASTVisitor(NodeVisitor):
 
             for join_type, condition, right in visited_children[1]:
                 left = NestedLoopsJoin(left,
-                                right,
-                                join_type,
-                                condition=condition,
-                                is_natural=(condition is None))
+                                       right,
+                                       join_type,
+                                       condition=condition,
+                                       is_natural=(condition is None))
 
             return left
         else:

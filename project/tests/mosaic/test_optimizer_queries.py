@@ -9,7 +9,7 @@ def refresh_loaded_tables():
     table_service.load_tables_from_directory("./data/kemper")
 
 
-def _execute_query(query, optimization = True):
+def _execute_query(query, optimization=True):
     results = query_executor.execute_query(query, optimization)
     assert len(results) == 1
     return results[0][0]
@@ -69,15 +69,17 @@ def test_optimizer_selection_do_not_push_down_projection():
 
 def test_optimizer_selection_push_down_complex():
     query = "sigma MatrNr > 26120 and n = \"Sokrates\" and Raum != \"10\" and test = \"test\"" \
-                "(tau MatrNr (pi MatrNr, n as Name, vnr as VorlNr, Raum, test as \"test\" (hoeren cross join professoren)));"
+            "(tau MatrNr (pi MatrNr, n as Name, vnr as VorlNr, Raum, test as \"test\" (hoeren cross join professoren)));"
     result = _execute_query(f"explain {query}")
     assert result[0][0] == "-->OrderBy(key=[hoeren.MatrNr])"
     assert result[1][0] == "---->Selection(condition=(test = \"test\"))"
-    assert result[2][0] == "------>Projection(columns=[hoeren.MatrNr=hoeren.MatrNr, n=professoren.Name, vnr=hoeren.VorlNr, professoren.Raum=professoren.Raum, test=\"test\"])"
+    assert result[2][
+               0] == "------>Projection(columns=[hoeren.MatrNr=hoeren.MatrNr, n=professoren.Name, vnr=hoeren.VorlNr, professoren.Raum=professoren.Raum, test=\"test\"])"
     assert result[3][0] == "-------->NestedLoopsJoin(cross, natural=True, condition=None)"
     assert result[4][0] == "---------->Selection(condition=(hoeren.MatrNr > 26120))"
     assert result[5][0] == "------------>TableScan(hoeren)"
-    assert result[6][0] == "---------->Selection(condition=((professoren.Raum != \"10\") AND (professoren.Name = \"Sokrates\")))"
+    assert result[6][
+               0] == "---------->Selection(condition=((professoren.Raum != \"10\") AND (professoren.Name = \"Sokrates\")))"
     assert result[7][0] == "------------>TableScan(professoren)"
 
     _check_query_result_same_optimization(query)
@@ -87,7 +89,8 @@ def test_optimizer_selection_push_through_projection_fqn():
     query = 'sigma Name > "K" (pi professoren.Name (pi professoren.Name, professoren.Rang (professoren cross join assistenten)));'
     result = _execute_query(f"explain {query}")
     assert result[0][0] == "-->Projection(columns=[professoren.Name=professoren.Name])"
-    assert result[1][0] == "---->Projection(columns=[professoren.Name=professoren.Name, professoren.Rang=professoren.Rang])"
+    assert result[1][
+               0] == "---->Projection(columns=[professoren.Name=professoren.Name, professoren.Rang=professoren.Rang])"
     assert result[2][0] == "------>NestedLoopsJoin(cross, natural=True, condition=None)"
     assert result[3][0] == '-------->Selection(condition=(professoren.Name > "K"))'
     assert result[4][0] == "---------->TableScan(professoren)"
@@ -102,6 +105,7 @@ def test_optimizer_replaces_nested_loop_join_with_hash_join():
     assert result[2][0] == "---->TableScan(studenten)"
 
     _check_query_result_same_optimization(query)
+
 
 def test_optimizer_hash_join_replace_not_allowed():
     query = "studenten join Semester < SWS vorlesungen;"

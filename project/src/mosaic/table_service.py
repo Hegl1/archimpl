@@ -50,7 +50,7 @@ class Schema:
         """
 
         found_columns = list(filter(lambda column: column.endswith(f".{column_name}") or
-                                    column == column_name, self.column_names))
+                                                   column == column_name, self.column_names))
 
         if len(found_columns) > 1:
             raise AmbiguousColumnException(
@@ -244,7 +244,7 @@ def _create_indices(table_name, schema: Schema, index_start, index_lines):
             schema.get_column_index(line)
         except TableIndexException:
             raise TableParsingException(
-                f'Column "{line}" in line {i + 2+ index_start} does not exist in schema')
+                f'Column "{line}" in line {i + 2 + index_start} does not exist in schema')
 
         _indices[table_name][line] = dict()
 
@@ -386,7 +386,7 @@ def _create_tables_table():
     table_names = [[item] for item in list(
         _tables.keys())] + [["#tables"]] + [["#columns"]]
     schema = Schema(table_name, [f"{table_name}.table_name"], [
-                    _convert_schema_type_string("varchar")])
+        _convert_schema_type_string("varchar")])
     _tables[table_name] = Table(schema, table_names)
 
 

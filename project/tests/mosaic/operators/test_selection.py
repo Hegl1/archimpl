@@ -22,6 +22,6 @@ def test_selection_with_column_name():
 
     result, _ = execute_query("sigma ordinal_position #columns;")[0]
     assert len(result) < len(table)
-    
+
     for i in range(len(result)):
         assert result[i, "ordinal_position"]

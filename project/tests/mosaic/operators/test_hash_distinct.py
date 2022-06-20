@@ -12,7 +12,7 @@ def test_distinct_one_column():
     hash_distinct = HashDistinct(projection)
     result = hash_distinct.get_result()
 
-    result_column = result[:,"table_name"]
+    result_column = result[:, "table_name"]
 
     for index in reversed(range(len(result_column))):
         assert result_column.index(result_column[index]) == index

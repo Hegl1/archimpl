@@ -58,7 +58,6 @@ def optimize(execution_plan: AbstractOperator):
 
 
 def _select_optimal_join(join: AbstractJoin):
-
     optimal_join = join
 
     try:
@@ -153,6 +152,7 @@ def _selection_push_down(pushed_down_selections=set()):
     Helper function that returns the effective selection-push-down function to be able
     to keep track of the pushed-down selections (argument)
     """
+
     def func(selection: Selection):
         if selection in pushed_down_selections:
             # ignore pushed down selections
@@ -285,7 +285,8 @@ def _selection_push_through_projection(selection: Selection, projection: Project
     return projection
 
 
-def _selection_push_through_join_operator(selection: Selection, join_operator: AbstractJoin, pushed_down_selections=set()):
+def _selection_push_through_join_operator(selection: Selection, join_operator: AbstractJoin,
+                                          pushed_down_selections=set()):
     """
     Pushes the selection through the given join-operator by checking that the referenced columns
     are fully-covered in only one side of the join and pushing it through there (see rules on slides).
@@ -356,7 +357,8 @@ def _selection_push_through_join_operator(selection: Selection, join_operator: A
     return node
 
 
-def _selection_push_through_set_operator(selection: Selection, set_operator: AbstractSetOperator, pushed_down_selections=set()):
+def _selection_push_through_set_operator(selection: Selection, set_operator: AbstractSetOperator,
+                                         pushed_down_selections=set()):
     """
     Pushes the selection through the given set-operator by pushing it through the left relation
     and renaming the columns and pushing it through the right relation.
@@ -520,8 +522,10 @@ def _is_condition_suitable_for_index_seek(condition):
     Checks whether the condition is a simple comparative that checks the equality between a column and a literal.
     """
     if isinstance(condition, ComparativeExpression) and condition.operator == ComparativeOperator.EQUAL:
-        column_eq_literal = isinstance(condition.left, ColumnExpression) and isinstance(condition.right, LiteralExpression)
-        literal_eq_column = isinstance(condition.left, LiteralExpression) and isinstance(condition.right, ColumnExpression)
+        column_eq_literal = isinstance(condition.left, ColumnExpression) and isinstance(condition.right,
+                                                                                        LiteralExpression)
+        literal_eq_column = isinstance(condition.left, LiteralExpression) and isinstance(condition.right,
+                                                                                         ColumnExpression)
         return column_eq_literal or literal_eq_column
     return False
 
@@ -551,7 +555,8 @@ def _get_best_index_seek_for_candidates(candidate_selections, target_table):
 
     for candidate in candidate_selections:
 
-        index = IndexSeek(target_table.table_name, _get_simple_column_name_from_condition_for_index_seek(candidate[0].condition),
+        index = IndexSeek(target_table.table_name,
+                          _get_simple_column_name_from_condition_for_index_seek(candidate[0].condition),
                           candidate[0].condition, target_table.alias)
         num_entries = index.get_num_records()
         if num_entries <= min_entries:

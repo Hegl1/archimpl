@@ -563,14 +563,15 @@ def test_optimizer_apply_index_seek_multiple_selections_over_table_scan_choose_m
 
 
 def test_choose_optimal_index_seek():
-    target_condition = ComparativeExpression(LiteralExpression(26120), ComparativeOperator.EQUAL, ColumnExpression("MatrNr"))
+    target_condition = ComparativeExpression(LiteralExpression(26120), ComparativeOperator.EQUAL,
+                                             ColumnExpression("MatrNr"))
     node = Selection(
-            Selection(
-                TableScan("correctIndex"),
-                ComparativeExpression(LiteralExpression(27550), ComparativeOperator.EQUAL, ColumnExpression("MatrNr"))
-            ),
-            target_condition
-        )
+        Selection(
+            TableScan("correctIndex"),
+            ComparativeExpression(LiteralExpression(27550), ComparativeOperator.EQUAL, ColumnExpression("MatrNr"))
+        ),
+        target_condition
+    )
     node = optimizer._node_access_helper(
         node, optimizer._apply_index_seek, Selection)
     assert isinstance(node, Selection)
@@ -579,6 +580,7 @@ def test_choose_optimal_index_seek():
     assert len(index_seek.get_result()) == 1
     assert len(index_seek.get_result()) < len(table_service.retrieve_index("correctIndex", "MatrNr")[27550])
     assert index_seek.condition == target_condition
+
 
 def test_choose_optimal_index_seek_mirror():
     target_condition = ComparativeExpression(LiteralExpression(26120), ComparativeOperator.EQUAL,
@@ -598,4 +600,3 @@ def test_choose_optimal_index_seek_mirror():
     assert len(index_seek.get_result()) == 1
     assert len(index_seek.get_result()) < len(table_service.retrieve_index("correctIndex", "MatrNr")[27550])
     assert index_seek.condition == target_condition
-

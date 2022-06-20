@@ -83,7 +83,7 @@ def test_select_non_existent_column():
 def test_select_string_concat():
     table_scan = TableScan("#columns")
     arithmetic_operation = ArithmeticExpression(LiteralExpression("Position: "), ArithmeticOperator.ADD,
-                                                         ColumnExpression("ordinal_position"))
+                                                ColumnExpression("ordinal_position"))
 
     projection = Projection(table_scan, [("FullOrdinal", arithmetic_operation)])
 
@@ -97,7 +97,7 @@ def test_select_string_concat():
 def test_select_int_subtract():
     table_scan = TableScan("#columns")
     arithmetic_operation = ArithmeticExpression(ColumnExpression("ordinal_position"),
-                                                         ArithmeticOperator.SUBTRACT, LiteralExpression(1))
+                                                ArithmeticOperator.SUBTRACT, LiteralExpression(1))
 
     table = table_service.retrieve_table("#columns")
 
@@ -116,7 +116,7 @@ def test_select_int_subtract():
 def test_select_float_multiply():
     table_scan = TableScan("#columns")
     arithmetic_operation = ArithmeticExpression(ColumnExpression("ordinal_position"),
-                                                         ArithmeticOperator.TIMES, LiteralExpression(1.5))
+                                                ArithmeticOperator.TIMES, LiteralExpression(1.5))
 
     table = table_service.retrieve_table("#columns")
 
@@ -135,7 +135,7 @@ def test_select_float_multiply():
 def test_select_float_divide():
     table_scan = TableScan("#columns")
     arithmetic_operation = ArithmeticExpression(ColumnExpression("ordinal_position"),
-                                                         ArithmeticOperator.DIVIDE, LiteralExpression(2))
+                                                ArithmeticOperator.DIVIDE, LiteralExpression(2))
 
     table = table_service.retrieve_table("#columns")
 
@@ -172,7 +172,7 @@ def test_select_literal_only():
 def test_select_concat_columns():
     table_scan = TableScan("#columns")
     arithmetic_operation = ArithmeticExpression(ColumnExpression("ordinal_position"), ArithmeticOperator.ADD,
-                                                         ColumnExpression("data_type"))
+                                                ColumnExpression("data_type"))
 
     table = table_service.retrieve_table("#columns")
 
@@ -191,9 +191,9 @@ def test_select_concat_columns():
 def test_select_nested_arithmetic():
     table_scan = TableScan("#columns")
     inner_arithmetic_operation = ArithmeticExpression(LiteralExpression(10), ArithmeticOperator.ADD,
-                                                               LiteralExpression(5))
+                                                      LiteralExpression(5))
     arithmetic_operation = ArithmeticExpression(LiteralExpression(10), ArithmeticOperator.ADD,
-                                                         inner_arithmetic_operation)
+                                                inner_arithmetic_operation)
 
     table = table_service.retrieve_table("#columns")
 
@@ -212,7 +212,7 @@ def test_select_nested_arithmetic():
 def test_select_bad_string_operation():
     table_scan = TableScan("#columns")
     arithmetic_operation = ArithmeticExpression(ColumnExpression("ordinal_position"),
-                                                         ArithmeticOperator.SUBTRACT, LiteralExpression("test"))
+                                                ArithmeticOperator.SUBTRACT, LiteralExpression("test"))
 
     projection = Projection(table_scan, [("t", arithmetic_operation)])
 

@@ -16,11 +16,10 @@ def test_simple_disjunction():
     disjunctive = DisjunctiveExpression(
         [comparative_operation, comparative_operation_two])
     sum, _ = comparative_helper.evaluate(disjunctive)
-    assert(sum == 2)
+    assert (sum == 2)
 
 
 def test_nested_disjunction():
-
     comparison_string = "Aristoxenos"
     comparative_operation = ComparativeExpression(ColumnExpression(
         "Name"), ComparativeOperator.EQUAL, LiteralExpression(comparison_string))
@@ -44,7 +43,7 @@ def test_nested_disjunction():
     nested_disjunction = DisjunctiveExpression([disjunction, conjunction])
 
     sum, _ = comparative_helper.evaluate(nested_disjunction)
-    assert(sum == 3)
+    assert (sum == 3)
 
 
 def test_explain():

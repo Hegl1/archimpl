@@ -47,7 +47,7 @@ def test_simplify_arithmetic():
     expression = expression.simplify()
 
     assert isinstance(expression, ArithmeticExpression)
-    assert isinstance(expression.left, LiteralExpression) 
+    assert isinstance(expression.left, LiteralExpression)
     assert expression.left.get_result() == 6
     assert expression.operator == ArithmeticOperator.ADD
     assert isinstance(expression.right, ColumnExpression)
@@ -72,7 +72,7 @@ def test_simplify_comparative():
     expression = expression.simplify()
 
     assert isinstance(expression, ComparativeExpression)
-    assert isinstance(expression.left, ComparativeExpression) 
+    assert isinstance(expression.left, ComparativeExpression)
     assert expression.operator == ComparativeOperator.EQUAL
     assert isinstance(expression.right, LiteralExpression)
     assert expression.right.get_result() == 1
@@ -95,12 +95,14 @@ def test_simplify_conjunctive_to_literal():
 
 
 def test_simplify_conjunctive_to_comparative():
-    expression = ConjunctiveExpression([LiteralExpression(1), ComparativeExpression(LiteralExpression(123), ComparativeOperator.EQUAL, ColumnExpression("MatrNr"))])
+    expression = ConjunctiveExpression([LiteralExpression(1),
+                                        ComparativeExpression(LiteralExpression(123), ComparativeOperator.EQUAL,
+                                                              ColumnExpression("MatrNr"))])
 
     expression = expression.simplify()
 
     assert isinstance(expression, ComparativeExpression)
-    assert isinstance(expression.left, LiteralExpression) 
+    assert isinstance(expression.left, LiteralExpression)
     assert expression.left.get_result() == 123
     assert expression.operator == ComparativeOperator.EQUAL
     assert isinstance(expression.right, ColumnExpression)
@@ -152,12 +154,14 @@ def test_simplify_disjunctive_to_literal():
 
 
 def test_simplify_disjunctive_to_comparative():
-    expression = DisjunctiveExpression([LiteralExpression(0), ComparativeExpression(LiteralExpression(123), ComparativeOperator.EQUAL, ColumnExpression("MatrNr"))])
+    expression = DisjunctiveExpression([LiteralExpression(0),
+                                        ComparativeExpression(LiteralExpression(123), ComparativeOperator.EQUAL,
+                                                              ColumnExpression("MatrNr"))])
 
     expression = expression.simplify()
 
     assert isinstance(expression, ComparativeExpression)
-    assert isinstance(expression.left, LiteralExpression) 
+    assert isinstance(expression.left, LiteralExpression)
     assert expression.left.get_result() == 123
     assert expression.operator == ComparativeOperator.EQUAL
     assert isinstance(expression.right, ColumnExpression)
@@ -208,7 +212,8 @@ def test_simplify_ordering():
 
 
 def test_simplify_selection_to_table():
-    selection = Selection(TableScan("hoeren"), ComparativeExpression(LiteralExpression(1), ComparativeOperator.EQUAL, LiteralExpression(1)))
+    selection = Selection(TableScan("hoeren"),
+                          ComparativeExpression(LiteralExpression(1), ComparativeOperator.EQUAL, LiteralExpression(1)))
 
     selection = selection.simplify()
 
@@ -253,8 +258,8 @@ def test_simplify_nested_loops_join():
     table1 = TableScan("vorlesungen")
     table2 = TableScan("voraussetzen")
     comparative = ComparativeExpression(ColumnExpression("vorlesungen.VorlNr"),
-                                                  ComparativeOperator.EQUAL,
-                                                  ColumnExpression("voraussetzen.Vorgaenger"))
+                                        ComparativeOperator.EQUAL,
+                                        ColumnExpression("voraussetzen.Vorgaenger"))
     conjunctive = ConjunctiveExpression([comparative, LiteralExpression(1)])
     join = NestedLoopsJoin(table1, table2, JoinType.INNER, conjunctive, False)
 

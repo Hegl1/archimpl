@@ -17,7 +17,8 @@ def test_sum_aggregation():
 
 def test_no_group_aggregation():
     result, _ = execute_query(
-        "gamma aggregate AvgSemester as avg(Semester), MinSemester as min(Semester), MaxSemester as max(Semester) studenten;")[0]
+        "gamma aggregate AvgSemester as avg(Semester), MinSemester as min(Semester), MaxSemester as max(Semester) studenten;")[
+        0]
     assert result.schema.column_names == [
         "AvgSemester", "MinSemester", "MaxSemester"]
     assert result.schema.column_types == [
@@ -40,7 +41,8 @@ def test_valid_varchar_aggregation():
     assert result.schema.column_names == [
         "assistenten.Boss", "MaxName", "MinName", "CountName"]
     assert result.schema.column_types == [
-        table_service.SchemaType.INT, table_service.SchemaType.VARCHAR, table_service.SchemaType.VARCHAR, table_service.SchemaType.INT]
+        table_service.SchemaType.INT, table_service.SchemaType.VARCHAR, table_service.SchemaType.VARCHAR,
+        table_service.SchemaType.INT]
 
 
 def test_literal_addition_aggregation():
@@ -53,6 +55,7 @@ def test_literal_addition_aggregation():
     assert result.records == [["2125hallo", 2], [
         "2126hallo", 1], ["2127hallo", 2], ["2134hallo", 1]]
 
+
 def test_literal_aggregation():
     result, _ = execute_query(
         'gamma test as "hallo" aggregate Anzahl as count(PersNr) assistenten;')[0]
@@ -60,7 +63,8 @@ def test_literal_aggregation():
         "test", "Anzahl"]
     assert result.schema.column_types == [
         table_service.SchemaType.VARCHAR, table_service.SchemaType.INT]
-    assert result.records == [["hallo",6]]
+    assert result.records == [["hallo", 6]]
+
 
 def test_int_subtraction_aggregation():
     result, _ = execute_query(
@@ -69,5 +73,5 @@ def test_int_subtraction_aggregation():
         "sub", "TitleCount"]
     assert result.schema.column_types == [
         table_service.SchemaType.INT, table_service.SchemaType.INT]
-    assert result.records == [[4997,2],[5037,1],[5040,1],[5047,1],[4048,1],[5049,1],[5214,1],[5257,1],[5020,1],[4626,1]]
-   
+    assert result.records == [[4997, 2], [5037, 1], [5040, 1], [5047, 1], [4048, 1], [5049, 1], [5214, 1], [5257, 1],
+                              [5020, 1], [4626, 1]]

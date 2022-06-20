@@ -123,6 +123,6 @@ def is_comparative_condition_supported(condition):
     (i.e. a comparative that checks the equality between columns)
     """
     return isinstance(condition, ComparativeExpression) and \
-        isinstance(condition.right, ColumnExpression) and \
-        isinstance(condition.left, ColumnExpression) and \
-        condition.operator == ComparativeOperator.EQUAL
+           isinstance(condition.right, ColumnExpression) and \
+           isinstance(condition.left, ColumnExpression) and \
+           condition.operator == ComparativeOperator.EQUAL

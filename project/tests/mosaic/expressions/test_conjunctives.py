@@ -15,7 +15,7 @@ def test_simple_conjunction():
     conjunctive = ConjunctiveExpression(
         [comparative_operation, comparative_operation_two])
     sum, entries = comparative_helper.evaluate(conjunctive)
-    assert(sum == (entries - 3))
+    assert (sum == (entries - 3))
 
 
 def test_nested_conjunction():
@@ -32,7 +32,7 @@ def test_nested_conjunction():
         LiteralExpression(name), ComparativeOperator.EQUAL, ColumnExpression("Name"))
     nested = ConjunctiveExpression([comparative_operation_three, conjunctive])
     sum, _ = comparative_helper.evaluate(nested)
-    assert(sum == 1)
+    assert (sum == 1)
 
 
 def test_explain():

@@ -12,9 +12,11 @@ def mock_stdout(func):
     Decorator that redirects stdout to mock_output.
     Output can be checked with mock_output.getvalue()
     """
+
     def wrapper():
-        with patch('sys.stdout', new = StringIO()) as mock_output:
+        with patch('sys.stdout', new=StringIO()) as mock_output:
             func(mock_output)
+
     return wrapper
 
 
@@ -23,12 +25,15 @@ def mock_prompt_input(input_list):
     Decorator that mocks input functionality in mosaic.cli.
     param input_list: a list of strings, representing the commands/queries to execute
     """
+
     def decorator(func):
         def wrapper(*args, **kwargs):
             with patch("mosaic.cli._get_prompt_session", return_value=None):
                 with patch("mosaic.cli._get_prompt_input", side_effect=input_list):
                     return func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -123,7 +128,8 @@ def test_main_no_query_file():
 
 def test_main_query_file():
     runner = CliRunner()
-    result = runner.invoke(cli.main, ["--data-directory", "./tests/testdata/", "--query-file", "./tests/mosaic/testqueries/valid_query.mql"])
+    result = runner.invoke(cli.main, ["--data-directory", "./tests/testdata/", "--query-file",
+                                      "./tests/mosaic/testqueries/valid_query.mql"])
     assert "MatrNr" in result.output
     assert "studenten" in result.output
 

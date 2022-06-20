@@ -162,7 +162,7 @@ def _execute_initial_query_file(query_file_path):
               help="Directory which contains all tables to load at startup")
 @click.option("--query-file", default=None, type=click.Path(exists=True),
               help="Path to an optional query file to execute")
-@click.option("--optimize", is_flag = True, help="Enables the optimizer")
+@click.option("--optimize", is_flag=True, help="Enables the optimizer")
 def main(data_directory, query_file, optimize):
     """
     Function that executes on program startup. Loads initial data and optionally executes a query file.

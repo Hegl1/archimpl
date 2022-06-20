@@ -1,6 +1,7 @@
 import pytest
 from mosaic import table_service
-from mosaic.compiler.operators.abstract_join import JoinType, JoinTypeNotSupportedException, JoinConditionNotSupportedException, ErrorInJoinConditionException
+from mosaic.compiler.operators.abstract_join import JoinType, JoinTypeNotSupportedException, \
+    JoinConditionNotSupportedException, ErrorInJoinConditionException
 from mosaic.compiler.operators.hash_join import HashJoin
 from mosaic.compiler.operators.table_scan import TableScan
 from mosaic.compiler.operators.projection import Projection
@@ -22,8 +23,8 @@ def test_hashjoin_comparative():
     table1 = TableScan("vorlesungen")
     table2 = TableScan("voraussetzen")
     comparative = ComparativeExpression(ColumnExpression("vorlesungen.VorlNr"),
-                                                 ComparativeOperator.EQUAL,
-                                                 ColumnExpression("voraussetzen.Vorgaenger"))
+                                        ComparativeOperator.EQUAL,
+                                        ColumnExpression("voraussetzen.Vorgaenger"))
     join = HashJoin(table1, table2, JoinType.INNER, comparative, False)
     result = join.get_result()
     assert len(result) == 10
@@ -40,11 +41,11 @@ def test_hashjoin_conjunctive():
     table1 = TableScan("vorlesungen")
     table2 = TableScan("voraussetzen")
     comparative1 = ComparativeExpression(ColumnExpression("vorlesungen.VorlNr"),
-                                                  ComparativeOperator.EQUAL,
-                                                  ColumnExpression("voraussetzen.Vorgaenger"))
+                                         ComparativeOperator.EQUAL,
+                                         ColumnExpression("voraussetzen.Vorgaenger"))
     comparative2 = ComparativeExpression(ColumnExpression("vorlesungen.gelesenVon"),
-                                                  ComparativeOperator.EQUAL,
-                                                  ColumnExpression("voraussetzen.Nachfolger"))
+                                         ComparativeOperator.EQUAL,
+                                         ColumnExpression("voraussetzen.Nachfolger"))
     conjunctive = ConjunctiveExpression([comparative1, comparative2])
     join = HashJoin(table1, table2, JoinType.INNER, conjunctive, False)
     result = join.get_result()
@@ -57,8 +58,8 @@ def test_hashjoin_left_comparative():
     table1 = TableScan("vorlesungen")
     table2 = TableScan("voraussetzen")
     comparative = ComparativeExpression(ColumnExpression("vorlesungen.VorlNr"),
-                                                 ComparativeOperator.EQUAL,
-                                                 ColumnExpression("voraussetzen.Vorgaenger"))
+                                        ComparativeOperator.EQUAL,
+                                        ColumnExpression("voraussetzen.Vorgaenger"))
     join = HashJoin(table1, table2, JoinType.LEFT_OUTER, comparative, False)
     result = join.get_result()
     assert len(result) == 16
@@ -71,11 +72,11 @@ def test_hashjoin_left_conjunctive():
     table1 = TableScan("vorlesungen")
     table2 = TableScan("voraussetzen")
     comparative1 = ComparativeExpression(ColumnExpression("vorlesungen.VorlNr"),
-                                                  ComparativeOperator.EQUAL,
-                                                  ColumnExpression("voraussetzen.Vorgaenger"))
+                                         ComparativeOperator.EQUAL,
+                                         ColumnExpression("voraussetzen.Vorgaenger"))
     comparative2 = ComparativeExpression(ColumnExpression("vorlesungen.gelesenVon"),
-                                                  ComparativeOperator.EQUAL,
-                                                  ColumnExpression("voraussetzen.Nachfolger"))
+                                         ComparativeOperator.EQUAL,
+                                         ColumnExpression("voraussetzen.Nachfolger"))
     conjunctive = ConjunctiveExpression([comparative1, comparative2])
     join = HashJoin(table1, table2, JoinType.LEFT_OUTER, conjunctive, False)
     result = join.get_result()
@@ -88,8 +89,8 @@ def test_hashjoin_simple_column_name():
     table1 = TableScan("vorlesungen")
     table2 = TableScan("voraussetzen")
     comparative = ComparativeExpression(ColumnExpression("VorlNr"),
-                                                 ComparativeOperator.EQUAL,
-                                                 ColumnExpression("Vorgaenger"))
+                                        ComparativeOperator.EQUAL,
+                                        ColumnExpression("Vorgaenger"))
     join = HashJoin(table1, table2, JoinType.INNER, comparative, False)
     result = join.get_result()
     assert len(result) == 10
@@ -116,7 +117,7 @@ def test_hashjoin_natural():
 
 def test_hashjoin_left_natural():
     table1 = TableScan("studenten")
-    table2 =  TableScan("assistenten")
+    table2 = TableScan("assistenten")
     join = HashJoin(table1, table2, JoinType.LEFT_OUTER, None, True)
     result = join.get_result()
     assert len(result) == 8
@@ -128,8 +129,8 @@ def test_hashjoin_wrong_condition_type():
     table1 = TableScan("vorlesungen")
     table2 = TableScan("voraussetzen")
     comparative_literal = ComparativeExpression(LiteralExpression("vorlesungen.VorlNr"),
-                                                 ComparativeOperator.EQUAL,
-                                                 ColumnExpression("voraussetzen.Vorgaenger"))
+                                                ComparativeOperator.EQUAL,
+                                                ColumnExpression("voraussetzen.Vorgaenger"))
     disjunctive = DisjunctiveExpression(None)
     with pytest.raises(JoinConditionNotSupportedException):
         HashJoin(table1, table2, JoinType.INNER, comparative_literal, False)
@@ -154,8 +155,8 @@ def test_hashjoin_double_reference_in_condition():
     table1 = TableScan("voraussetzen")
     table2 = TableScan("vorlesungen")
     comparative = ComparativeExpression(ColumnExpression("Vorgaenger"),
-                                                 ComparativeOperator.EQUAL,
-                                                 ColumnExpression("Nachfolger"))
+                                        ComparativeOperator.EQUAL,
+                                        ColumnExpression("Nachfolger"))
 
     with pytest.raises(ErrorInJoinConditionException):
         HashJoin(table1, table2, JoinType.INNER, comparative, False)
@@ -165,8 +166,8 @@ def test_hashjoin_no_reference_in_condition():
     table1 = TableScan("vorlesungen")
     table2 = TableScan("voraussetzen")
     comparative = ComparativeExpression(ColumnExpression("voraussetzen.Vorgaengerer"),
-                                                 ComparativeOperator.EQUAL,
-                                                 ColumnExpression("voraussetzen.Vorgaengerer"))
+                                        ComparativeOperator.EQUAL,
+                                        ColumnExpression("voraussetzen.Vorgaengerer"))
 
     with pytest.raises(ErrorInJoinConditionException):
         HashJoin(table1, table2, JoinType.INNER, comparative, False)
@@ -178,20 +179,20 @@ def test_hashjoin_not_equal_in_condition():
     col1 = ColumnExpression("vorlesungen.VorlNr")
     col2 = ColumnExpression("voraussetzen.Vorgaenger")
     comparative_smaller = ComparativeExpression(col1,
-                                                         ComparativeOperator.SMALLER,
-                                                         col2)
+                                                ComparativeOperator.SMALLER,
+                                                col2)
     comparative_smaller_equal = ComparativeExpression(col1,
-                                                               ComparativeOperator.SMALLER_EQUAL,
-                                                               col2)
+                                                      ComparativeOperator.SMALLER_EQUAL,
+                                                      col2)
     comparative_greater = ComparativeExpression(col1,
-                                                         ComparativeOperator.GREATER,
-                                                         col2)
+                                                ComparativeOperator.GREATER,
+                                                col2)
     comparative_greater_equal = ComparativeExpression(col1,
-                                                         ComparativeOperator.GREATER_EQUAL,
-                                                         col2)
+                                                      ComparativeOperator.GREATER_EQUAL,
+                                                      col2)
     comperative_not_equal = ComparativeExpression(col1,
-                                                               ComparativeOperator.NOT_EQUAL,
-                                                               col2)
+                                                  ComparativeOperator.NOT_EQUAL,
+                                                  col2)
     with pytest.raises(JoinConditionNotSupportedException):
         HashJoin(table1, table2, JoinType.INNER, comparative_smaller_equal, False)
         HashJoin(table1, table2, JoinType.INNER, comparative_smaller, False)

@@ -2,7 +2,6 @@ from mosaic import table_service
 
 
 def evaluate(comparative_operation):
-
     table = retrieve_table("studenten")
     sum = 0
     entries = len(table)

@@ -106,10 +106,12 @@ def test_join_condition_smaller():
     for record in result.records:
         assert record[0] < record[3]
 
+
 def test_join_condition_conjunctive():
     result, _ = execute_query("studenten join studenten.MatrNr < hoeren.MatrNr and studenten.MatrNr > hoeren.MatrNr "
                               "hoeren;")[0]
     assert len(result) == 0
+
 
 def test_join_condition_disjunctive():
     result, _ = execute_query("studenten join studenten.MatrNr < hoeren.MatrNr or studenten.MatrNr > hoeren.MatrNr "

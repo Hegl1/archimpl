@@ -25,7 +25,8 @@ def aggregate_schema_type(aggregation_function, current_schema):
     Depending on the aggregation function it returns a different schema type.
     Return schema of column.
     """
-    if current_schema == SchemaType.VARCHAR and (aggregation_function == AggregateFunction.AVG or aggregation_function == AggregateFunction.SUM):
+    if current_schema == SchemaType.VARCHAR and (
+            aggregation_function == AggregateFunction.AVG or aggregation_function == AggregateFunction.SUM):
         raise VarcharAggregateException(
             "Varchar can only be aggregated with count, min and max")
 
@@ -70,7 +71,7 @@ def extract(aggregations):
     """
     clean_aggregations = []
     aggregation = aggregations
-    while(isinstance(aggregation, list)):
+    while (isinstance(aggregation, list)):
         if (isinstance(aggregation[0], list)):
             aggregation = aggregation[0]
             continue
@@ -189,7 +190,8 @@ class HashAggregate(AbstractOperator, ABC):
 
         column_names += [aggregation[0]
                          for aggregation in self.aggregations]
-        column_types += [aggregate_schema_type(aggregation[1], old_schema.column_types[old_table.get_column_index(aggregation[2].value)])
+        column_types += [aggregate_schema_type(aggregation[1], old_schema.column_types[
+            old_table.get_column_index(aggregation[2].value)])
                          for aggregation in self.aggregations]
 
         return Schema(old_schema.table_name, column_names, column_types)

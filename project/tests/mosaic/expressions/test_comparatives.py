@@ -1,6 +1,7 @@
 from mosaic.compiler.expressions.column_expression import ColumnExpression
 from mosaic.compiler.expressions.literal_expression import LiteralExpression
-from mosaic.compiler.expressions.comparative_expression import ComparativeExpression, ComparativeOperator, IncompatibleOperandTypesException
+from mosaic.compiler.expressions.comparative_expression import ComparativeExpression, ComparativeOperator, \
+    IncompatibleOperandTypesException
 import pytest
 import comparative_helper
 
@@ -27,7 +28,7 @@ def test_smaller_numbers():
     comparative_operation = ComparativeExpression(LiteralExpression(
         comparison_number), ComparativeOperator.SMALLER, ColumnExpression("MatrNr"))
     sum, entries = comparative_helper.evaluate(comparative_operation)
-    assert(sum == (entries - 2))
+    assert (sum == (entries - 2))
 
 
 def test_smaller_equal_numbers():
@@ -35,7 +36,7 @@ def test_smaller_equal_numbers():
     comparative_operation = ComparativeExpression(LiteralExpression(
         comparison_number), ComparativeOperator.SMALLER_EQUAL, ColumnExpression("MatrNr"))
     sum, entries = comparative_helper.evaluate(comparative_operation)
-    assert(sum == (entries - 1))
+    assert (sum == (entries - 1))
 
 
 def test_greater_equal_numbers():
@@ -43,7 +44,7 @@ def test_greater_equal_numbers():
     comparative_operation = ComparativeExpression(LiteralExpression(
         comparison_number), ComparativeOperator.GREATER_EQUAL, ColumnExpression("MatrNr"))
     sum, __annotations__ = comparative_helper.evaluate(comparative_operation)
-    assert(sum == 3)
+    assert (sum == 3)
 
 
 def test_greater_numbers():
@@ -51,7 +52,7 @@ def test_greater_numbers():
     comparative_operation = ComparativeExpression(LiteralExpression(
         comparison_number), ComparativeOperator.GREATER, ColumnExpression("MatrNr"))
     sum, _ = comparative_helper.evaluate(comparative_operation)
-    assert(sum == 2)
+    assert (sum == 2)
 
 
 def test_equal_numbers():
@@ -59,7 +60,7 @@ def test_equal_numbers():
     comparative_operation = ComparativeExpression(LiteralExpression(
         comparison_number), ComparativeOperator.EQUAL, ColumnExpression("MatrNr"))
     sum, _ = comparative_helper.evaluate(comparative_operation)
-    assert(sum == 1)
+    assert (sum == 1)
 
 
 def test_not_equal_numbers():
@@ -67,7 +68,7 @@ def test_not_equal_numbers():
     comparative_operation = ComparativeExpression(LiteralExpression(
         comparison_number), ComparativeOperator.NOT_EQUAL, ColumnExpression("MatrNr"))
     sum, entries = comparative_helper.evaluate(comparative_operation)
-    assert(sum == (entries - 1))
+    assert (sum == (entries - 1))
 
 
 def test_wrong_type_comparison():
@@ -83,7 +84,7 @@ def test_none_literal_comparison():
     comparative_operation = ComparativeExpression(
         LiteralExpression(None), ComparativeOperator.GREATER, ColumnExpression("Name"))
     sum, _ = comparative_helper.evaluate(comparative_operation)
-    assert(sum == 0)
+    assert (sum == 0)
 
 
 def test_explain():

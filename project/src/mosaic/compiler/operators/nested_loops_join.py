@@ -23,7 +23,8 @@ class NestedLoopsJoin(AbstractJoin):
             remaining_column_indices = self.get_remaining_column_indices(self.right_schema)
 
         joined_table_records = []
-        aux_schema = Schema(f"{self.left_schema.table_name}_join_{self.right_schema.table_name}", self.left_schema.column_names + self.right_schema.column_names,
+        aux_schema = Schema(f"{self.left_schema.table_name}_join_{self.right_schema.table_name}",
+                            self.left_schema.column_names + self.right_schema.column_names,
                             self.left_schema.column_types + self.right_schema.column_types)
         aux_table = Table(aux_schema, [])
 

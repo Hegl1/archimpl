@@ -5,6 +5,7 @@ from mosaic.compiler.alias_schema_builder import build_schema
 from mosaic.table_service import Table, Schema
 from .abstract_operator import AbstractOperator
 
+
 class Projection(AbstractOperator):
     """
     Class that represents a projection operation.
@@ -31,8 +32,7 @@ class Projection(AbstractOperator):
         return Schema(old_schema.table_name, column_names, column_types)
 
     def _build_schema(self, old_schema):
-        return build_schema(self.column_references,old_schema)
-        
+        return build_schema(self.column_references, old_schema)
 
     def _build_data(self, table, columns):
         """
@@ -65,7 +65,8 @@ class Projection(AbstractOperator):
         old_schema = self.node.get_schema()
         column_name_strings = []
         for i, (_, column_ref) in enumerate(self.column_references):
-            column_name_strings.append(f"{new_schema.column_names[i]}={get_string_representation(column_ref, old_schema)}")
+            column_name_strings.append(
+                f"{new_schema.column_names[i]}={get_string_representation(column_ref, old_schema)}")
 
         return f"Projection(columns=[{', '.join(column_name_strings)}])"
 

@@ -7,7 +7,7 @@ from mosaic.table_service import TableNotFoundException
 from mosaic.compiler import optimizer
 
 
-def execute_query(user_in, optimize = False):
+def execute_query(user_in, optimize=False):
     """
     Function that executes queries. Multiple queries per line are also possible.
     Returns a list containing all results as tuples: (result, execution_time)
@@ -52,7 +52,7 @@ def execute_query(user_in, optimize = False):
     return results
 
 
-def execute_query_file(file_path, optimize = False):
+def execute_query_file(file_path, optimize=False):
     """
     Function that executes queries found in a .mql file.
     Returns a list containing all results

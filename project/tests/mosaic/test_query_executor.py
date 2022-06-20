@@ -11,7 +11,7 @@ def refresh_loaded_tables():
 
 @pytest.mark.parametrize(
     'optimized',
-    [False,True],
+    [False, True],
 )
 def test_execute_query(optimized):
     try:
@@ -26,20 +26,20 @@ def test_execute_query(optimized):
     except Exception:
         assert False, "Exception raised despite valid input"
     with pytest.raises(cli.CliErrorMessageException):
-       query_executor.execute_query("tableNotFound;", optimized)
+        query_executor.execute_query("tableNotFound;", optimized)
     with pytest.raises(cli.CliErrorMessageException):
         query_executor.execute_query("this is no valid query;", optimized)
 
 
 @pytest.mark.parametrize(
     'optimized',
-    [False,True],
+    [False, True],
 )
 def test_execute_query_file(optimized):
     try:
-       assert len(query_executor.execute_query_file("./tests/mosaic/testqueries/valid_query.mql", optimized)) == 2
+        assert len(query_executor.execute_query_file("./tests/mosaic/testqueries/valid_query.mql", optimized)) == 2
     except Exception as e:
-       assert False, f"Exception raised despite valid query file: {e}"
+        assert False, f"Exception raised despite valid query file: {e}"
 
 
 @pytest.mark.parametrize(
