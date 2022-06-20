@@ -30,7 +30,8 @@ def test_explain_table_scan_rename_projection():  # tests get_schema in table_sc
 def test_explain_projection():
     result, _ = execute_query("explain pi MatrNr, Name studenten;")[0]
     assert len(result) == 2
-    assert result.records[0][0] == "-->Projection(columns=[studenten.MatrNr=studenten.MatrNr, studenten.Name=studenten.Name])"
+    assert result.records[0][
+               0] == "-->Projection(columns=[studenten.MatrNr=studenten.MatrNr, studenten.Name=studenten.Name])"
     assert result.records[1][0] == "---->TableScan(studenten)"
 
 
@@ -65,7 +66,8 @@ def test_explain_union():
 
 
 def test_explain_union_projection():  # tests get_schema of union
-    result, _ = execute_query("explain pi VorlNr (pi VorlNr as Vorgaenger voraussetzen union pi VorlNr vorlesungen);")[0]
+    result, _ = execute_query("explain pi VorlNr (pi VorlNr as Vorgaenger voraussetzen union pi VorlNr vorlesungen);")[
+        0]
     assert len(result) == 6
     assert result.records[0][0] == "-->Projection(columns=[VorlNr=VorlNr])"
     assert result.records[1][0] == "---->Union"
@@ -86,7 +88,8 @@ def test_explain_intersect():
 
 
 def test_explain_intersect_projection():  # tests get_schema of intersect
-    result, _ = execute_query("explain pi VorlNr (pi VorlNr vorlesungen intersect pi VorlNr as Vorgaenger voraussetzen);")[0]
+    result, _ = \
+    execute_query("explain pi VorlNr (pi VorlNr vorlesungen intersect pi VorlNr as Vorgaenger voraussetzen);")[0]
     assert len(result) == 6
     assert result.records[0][0] == "-->Projection(columns=[vorlesungen.VorlNr=vorlesungen.VorlNr])"
     assert result.records[1][0] == "---->Intersect"
@@ -107,7 +110,8 @@ def test_explain_difference():
 
 
 def test_explain_difference_projection():  # tests get_schema of difference
-    result, _ = execute_query("explain pi VorlNr (pi VorlNr as Vorgaenger voraussetzen except pi VorlNr vorlesungen);")[0]
+    result, _ = execute_query("explain pi VorlNr (pi VorlNr as Vorgaenger voraussetzen except pi VorlNr vorlesungen);")[
+        0]
     assert len(result) == 6
     assert result.records[0][0] == "-->Projection(columns=[VorlNr=VorlNr])"
     assert result.records[1][0] == "---->Except"
@@ -116,13 +120,16 @@ def test_explain_difference_projection():  # tests get_schema of difference
     assert result.records[4][0] == "------>Projection(columns=[vorlesungen.VorlNr=vorlesungen.VorlNr])"
     assert result.records[5][0] == "-------->TableScan(vorlesungen)"
 
+
 def test_explain_cross_join():
     result, _ = execute_query("explain pi PersNr, Name professoren cross join pi PersNr, Name, Boss assistenten;")[0]
     assert len(result) == 5
     assert result.records[0][0] == "-->NestedLoopsJoin(cross, natural=True, condition=None)"
-    assert result.records[1][0] == "---->Projection(columns=[professoren.PersNr=professoren.PersNr, professoren.Name=professoren.Name])"
+    assert result.records[1][
+               0] == "---->Projection(columns=[professoren.PersNr=professoren.PersNr, professoren.Name=professoren.Name])"
     assert result.records[2][0] == "------>TableScan(professoren)"
-    assert result.records[3][0] == "---->Projection(columns=[assistenten.PersNr=assistenten.PersNr, assistenten.Name=assistenten.Name, assistenten.Boss=assistenten.Boss])"
+    assert result.records[3][
+               0] == "---->Projection(columns=[assistenten.PersNr=assistenten.PersNr, assistenten.Name=assistenten.Name, assistenten.Boss=assistenten.Boss])"
     assert result.records[4][0] == "------>TableScan(assistenten)"
 
 
@@ -153,8 +160,10 @@ def test_explain_disjunctive():
     assert result[0][0] == '-->Selection(condition=((professoren.Rang > "C3") OR (professoren.PersNr > 10)))'
     assert result[1][0] == "---->TableScan(professoren)"
 
+
 def test_explain_aggregate():
-    result,_ = execute_query('explain gamma Rang aggregate Anzahl as count(PersNr) professoren;')[0]
+    result, _ = execute_query('explain gamma Rang aggregate Anzahl as count(PersNr) professoren;')[0]
     assert len(result) == 2
-    assert result[0][0] == "-->Aggregation(groups=[professoren.Rang=Rang],aggregates=[COUNT(professoren.PersNr) -> Anzahl])"
+    assert result[0][
+               0] == "-->Aggregation(groups=[professoren.Rang=Rang],aggregates=[COUNT(professoren.PersNr) -> Anzahl])"
     assert result[1][0] == "---->TableScan(professoren)"

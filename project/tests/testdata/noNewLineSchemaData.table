@@ -1,7 +1,6 @@
 [Schema]
 MatrNr: int
 VorlNr: int
-
 [Data]
 26120;5001
 27550;5001
@@ -13,4 +12,3 @@ VorlNr: int
 29120;5001
 29120;5041
 29120;5049
-

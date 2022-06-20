@@ -1,4 +1,4 @@
-from mosaic.compiler.operators.table_scan_operator import TableScan
+from mosaic.compiler.operators.table_scan import TableScan
 from mosaic.table_service import Table
 from mosaic import table_service
 from mosaic.table_service import TableNotFoundException
@@ -22,7 +22,7 @@ def test_retrieve_alias_table():
     assert result.table_name == "test"
     assert result.schema.column_names == ["test.table_name"]
 
-    assert table_service.retrieve("#tables").table_name == "#tables"
+    assert table_service.retrieve_table("#tables").table_name == "#tables"
 
 
 def test_retrieve_non_existent_table():

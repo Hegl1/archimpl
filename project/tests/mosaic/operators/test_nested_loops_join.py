@@ -1,16 +1,16 @@
 import pytest
 
 from mosaic import table_service
-from mosaic.compiler.operators.nested_loops_join_operators import SelfJoinWithoutRenamingException, NestedLoopsJoin, \
+from mosaic.compiler.operators.nested_loops_join import SelfJoinWithoutRenamingException, NestedLoopsJoin, \
     JoinType
-from mosaic.compiler.operators.table_scan_operator import TableScan
+from mosaic.compiler.operators.table_scan import TableScan
 from mosaic.query_executor import execute_query
 
 
 def test_cross_join():
     result, _ = execute_query("pi Rang, Name professoren cross join pi Name assistenten;")[0]
-    table1 = table_service.retrieve("professoren", makeCopy=False)
-    table2 = table_service.retrieve("assistenten", makeCopy=False)
+    table1 = table_service.retrieve_table("professoren", makeCopy=False)
+    table2 = table_service.retrieve_table("assistenten", makeCopy=False)
 
     assert len(result) == len(table1) * len(table2)
     assert len(result.schema.column_names) == 3
@@ -41,8 +41,8 @@ def test_table_self_join_with_renaming():
 
 def test_inner_join():
     result, _ = execute_query("studenten join studenten.MatrNr = hoeren.MatrNr hoeren;")[0]
-    table1 = table_service.retrieve("studenten", makeCopy=False)
-    table2 = table_service.retrieve("hoeren", makeCopy=False)
+    table1 = table_service.retrieve_table("studenten", makeCopy=False)
+    table2 = table_service.retrieve_table("hoeren", makeCopy=False)
 
     assert len(result) == 10
     assert len(result.schema.column_names) == len(table1.schema.column_names) + len(table2.schema.column_names)
@@ -54,8 +54,8 @@ def test_inner_join():
 
 def test_left_outer_join():
     result, _ = execute_query("studenten left join studenten.MatrNr = hoeren.MatrNr hoeren;")[0]
-    table1 = table_service.retrieve("studenten", makeCopy=False)
-    table2 = table_service.retrieve("hoeren", makeCopy=False)
+    table1 = table_service.retrieve_table("studenten", makeCopy=False)
+    table2 = table_service.retrieve_table("hoeren", makeCopy=False)
 
     assert len(result) == 14
     assert len(result.schema.column_names) == len(table1.schema.column_names) + len(table2.schema.column_names)
@@ -67,8 +67,8 @@ def test_left_outer_join():
 
 def test_natural_inner_join():
     result, _ = execute_query("studenten natural join hoeren;")[0]
-    table1 = table_service.retrieve("studenten", makeCopy=False)
-    table2 = table_service.retrieve("hoeren", makeCopy=False)
+    table1 = table_service.retrieve_table("studenten", makeCopy=False)
+    table2 = table_service.retrieve_table("hoeren", makeCopy=False)
 
     assert len(result) == 10
     assert len(result.schema.column_names) == len(table1.schema.column_names) + len(table2.schema.column_names) - 1
@@ -78,8 +78,8 @@ def test_natural_inner_join():
 
 def test_natural_left_outer_join():
     result, _ = execute_query("studenten natural left join hoeren;")[0]
-    table1 = table_service.retrieve("studenten", makeCopy=False)
-    table2 = table_service.retrieve("hoeren", makeCopy=False)
+    table1 = table_service.retrieve_table("studenten", makeCopy=False)
+    table2 = table_service.retrieve_table("hoeren", makeCopy=False)
 
     assert len(result) == 14
     assert len(result.schema.column_names) == len(table1.schema.column_names) + len(table2.schema.column_names) - 1
@@ -106,10 +106,12 @@ def test_join_condition_smaller():
     for record in result.records:
         assert record[0] < record[3]
 
+
 def test_join_condition_conjunctive():
     result, _ = execute_query("studenten join studenten.MatrNr < hoeren.MatrNr and studenten.MatrNr > hoeren.MatrNr "
                               "hoeren;")[0]
     assert len(result) == 0
+
 
 def test_join_condition_disjunctive():
     result, _ = execute_query("studenten join studenten.MatrNr < hoeren.MatrNr or studenten.MatrNr > hoeren.MatrNr "
@@ -124,3 +126,7 @@ def test_natural_join_alias_projection():
     assert len(result) == 10
     assert result.schema.column_names == ["PersNr", "professoren.Name", "professoren.Rang", "professoren.Raum"]
 
+
+def test_natural_join_to_cross():
+    join = NestedLoopsJoin(TableScan("voraussetzen"), TableScan("vorlesungen"), JoinType.INNER, None, True)
+    assert join.join_type == JoinType.CROSS

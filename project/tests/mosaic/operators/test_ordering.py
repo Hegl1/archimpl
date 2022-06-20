@@ -8,7 +8,8 @@ from mosaic.query_executor import execute_query
     [
         ("tau Rang professoren;", ["C3", "C3", "C3", "C4", "C4", "C4", "C4"], 2),
         ("tau assistenten.Boss assistenten;", [2125, 2125, 2126, 2127, 2127, 2134], 3),
-        ("tau Name pi PersNr, Name assistenten;", ["Aristoteles", "Newton", "Platon", "Rhetikus", "Spinoza", "Wittgenstein"], 1)
+        ("tau Name pi PersNr, Name assistenten;",
+         ["Aristoteles", "Newton", "Platon", "Rhetikus", "Spinoza", "Wittgenstein"], 1)
     ],
 )
 def test_ordering_single_key(query, correctly_sorted_fields, column_index):

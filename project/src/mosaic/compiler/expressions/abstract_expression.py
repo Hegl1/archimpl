@@ -17,9 +17,11 @@ class AbstractExpression(AbstractCompileNode):
         pass
 
     @abstractmethod
-    def replace_all_column_names_by_fqn(self, schema: Schema):  # pragma: no cover
+    def get_string_representation(self, schema: Schema = None):  # pragma: no cover
         """
-        Recursively replaces all occurrences of column names in the expression by the respective fully qualified
-        column names based on the given schema of a table.
+        Generates the string-representation of this expression
         """
         pass
+
+    def __str__(self):
+        return self.get_string_representation()

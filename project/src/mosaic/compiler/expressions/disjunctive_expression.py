@@ -1,3 +1,4 @@
+from mosaic.compiler.get_string_representation import get_string_representation
 from mosaic.table_service import Schema
 from .abstract_computation_expression import AbstractComputationExpression
 from .literal_expression import LiteralExpression
@@ -50,13 +51,5 @@ class DisjunctiveExpression(AbstractComputationExpression):
 
         return self
 
-    def replace_all_column_names_by_fqn(self, schema: Schema):
-        """
-        Recursively replaces all occurrences of column names in the expression by the respective fully qualified
-        column names based on the given schema of a table.
-        """
-        for condition in self.conditions:
-            condition.replace_all_column_names_by_fqn(schema)
-
-    def __str__(self):
-        return "(" + " OR ".join([str(comparative) for comparative in self.conditions]) + ")"
+    def get_string_representation(self, schema: Schema = None):
+        return "(" + " OR ".join([get_string_representation(condition, schema) for condition in self.conditions]) + ")"

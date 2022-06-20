@@ -1,15 +1,15 @@
-from mosaic.compiler.operators.table_scan_operator import TableScan
+from mosaic.compiler.operators.table_scan import TableScan
 from mosaic.compiler.expressions.column_expression import ColumnExpression
-from mosaic.compiler.operators.projection_operator import Projection
+from mosaic.compiler.operators.projection import Projection
 from mosaic import table_service
 from mosaic.compiler.alias_schema_builder import InvalidAliasException
 from mosaic.table_service import Table
 from mosaic.table_service import TableIndexException
-from mosaic.compiler.expressions.arithmetic_operation_expression import ArithmeticOperationExpression, ArithmeticOperator, \
+from mosaic.compiler.expressions.arithmetic_expression import ArithmeticExpression, ArithmeticOperator, \
     IncompatibleOperationException
 from mosaic.compiler.expressions.literal_expression import LiteralExpression
 from mosaic.table_service import SchemaType
-from mosaic.compiler.expressions.comparative_operation_expression import ComparativeOperationExpression, ComparativeOperator
+from mosaic.compiler.expressions.comparative_expression import ComparativeExpression, ComparativeOperator
 import pytest
 
 
@@ -25,9 +25,9 @@ import pytest
 def test_select_one_column(column_name):
     table_scan = TableScan("#columns")
     column_expression = ColumnExpression(column_name)
-    projection = Projection([(None, column_expression)], table_scan)
+    projection = Projection(table_scan, [(None, column_expression)])
 
-    table = table_service.retrieve("#columns")
+    table = table_service.retrieve_table("#columns")
 
     result = projection.get_result()
 
@@ -56,9 +56,9 @@ def test_select_multiple_columns(column_names):
     for column_name in column_names:
         column_expressions.append((None, ColumnExpression(column_name)))
 
-    projection = Projection(column_expressions, table_scan)
+    projection = Projection(table_scan, column_expressions)
 
-    table = table_service.retrieve("#columns")
+    table = table_service.retrieve_table("#columns")
 
     result = projection.get_result()
 
@@ -74,7 +74,7 @@ def test_select_non_existent_column():
     table_scan = TableScan("#columns")
     column_expression = ColumnExpression("non_existent")
 
-    projection = Projection([(None, column_expression)], table_scan)
+    projection = Projection(table_scan, [(None, column_expression)])
 
     with pytest.raises(TableIndexException):
         projection.get_result()
@@ -82,10 +82,10 @@ def test_select_non_existent_column():
 
 def test_select_string_concat():
     table_scan = TableScan("#columns")
-    arithmetic_operation = ArithmeticOperationExpression(LiteralExpression("Position: "), ArithmeticOperator.ADD,
-                                                         ColumnExpression("ordinal_position"))
+    arithmetic_operation = ArithmeticExpression(LiteralExpression("Position: "), ArithmeticOperator.ADD,
+                                                ColumnExpression("ordinal_position"))
 
-    projection = Projection([("FullOrdinal", arithmetic_operation)], table_scan)
+    projection = Projection(table_scan, [("FullOrdinal", arithmetic_operation)])
 
     result = projection.get_result()
 
@@ -96,12 +96,12 @@ def test_select_string_concat():
 
 def test_select_int_subtract():
     table_scan = TableScan("#columns")
-    arithmetic_operation = ArithmeticOperationExpression(ColumnExpression("ordinal_position"),
-                                                         ArithmeticOperator.SUBTRACT, LiteralExpression(1))
+    arithmetic_operation = ArithmeticExpression(ColumnExpression("ordinal_position"),
+                                                ArithmeticOperator.SUBTRACT, LiteralExpression(1))
 
-    table = table_service.retrieve("#columns")
+    table = table_service.retrieve_table("#columns")
 
-    projection = Projection([("t", arithmetic_operation)], table_scan)
+    projection = Projection(table_scan, [("t", arithmetic_operation)])
 
     result = projection.get_result()
 
@@ -115,12 +115,12 @@ def test_select_int_subtract():
 
 def test_select_float_multiply():
     table_scan = TableScan("#columns")
-    arithmetic_operation = ArithmeticOperationExpression(ColumnExpression("ordinal_position"),
-                                                         ArithmeticOperator.TIMES, LiteralExpression(1.5))
+    arithmetic_operation = ArithmeticExpression(ColumnExpression("ordinal_position"),
+                                                ArithmeticOperator.TIMES, LiteralExpression(1.5))
 
-    table = table_service.retrieve("#columns")
+    table = table_service.retrieve_table("#columns")
 
-    projection = Projection([("t", arithmetic_operation)], table_scan)
+    projection = Projection(table_scan, [("t", arithmetic_operation)])
 
     result = projection.get_result()
 
@@ -134,12 +134,12 @@ def test_select_float_multiply():
 
 def test_select_float_divide():
     table_scan = TableScan("#columns")
-    arithmetic_operation = ArithmeticOperationExpression(ColumnExpression("ordinal_position"),
-                                                         ArithmeticOperator.DIVIDE, LiteralExpression(2))
+    arithmetic_operation = ArithmeticExpression(ColumnExpression("ordinal_position"),
+                                                ArithmeticOperator.DIVIDE, LiteralExpression(2))
 
-    table = table_service.retrieve("#columns")
+    table = table_service.retrieve_table("#columns")
 
-    projection = Projection([("t", arithmetic_operation)], table_scan)
+    projection = Projection(table_scan, [("t", arithmetic_operation)])
 
     result = projection.get_result()
 
@@ -155,9 +155,9 @@ def test_select_literal_only():
     table_scan = TableScan("#columns")
     literal = LiteralExpression(0)
 
-    table = table_service.retrieve("#columns")
+    table = table_service.retrieve_table("#columns")
 
-    projection = Projection([("zero", literal)], table_scan)
+    projection = Projection(table_scan, [("zero", literal)])
 
     result = projection.get_result()
 
@@ -171,12 +171,12 @@ def test_select_literal_only():
 
 def test_select_concat_columns():
     table_scan = TableScan("#columns")
-    arithmetic_operation = ArithmeticOperationExpression(ColumnExpression("ordinal_position"), ArithmeticOperator.ADD,
-                                                         ColumnExpression("data_type"))
+    arithmetic_operation = ArithmeticExpression(ColumnExpression("ordinal_position"), ArithmeticOperator.ADD,
+                                                ColumnExpression("data_type"))
 
-    table = table_service.retrieve("#columns")
+    table = table_service.retrieve_table("#columns")
 
-    projection = Projection([("t", arithmetic_operation)], table_scan)
+    projection = Projection(table_scan, [("t", arithmetic_operation)])
 
     result = projection.get_result()
 
@@ -190,14 +190,14 @@ def test_select_concat_columns():
 
 def test_select_nested_arithmetic():
     table_scan = TableScan("#columns")
-    inner_arithmetic_operation = ArithmeticOperationExpression(LiteralExpression(10), ArithmeticOperator.ADD,
-                                                               LiteralExpression(5))
-    arithmetic_operation = ArithmeticOperationExpression(LiteralExpression(10), ArithmeticOperator.ADD,
-                                                         inner_arithmetic_operation)
+    inner_arithmetic_operation = ArithmeticExpression(LiteralExpression(10), ArithmeticOperator.ADD,
+                                                      LiteralExpression(5))
+    arithmetic_operation = ArithmeticExpression(LiteralExpression(10), ArithmeticOperator.ADD,
+                                                inner_arithmetic_operation)
 
-    table = table_service.retrieve("#columns")
+    table = table_service.retrieve_table("#columns")
 
-    projection = Projection([("t", arithmetic_operation)], table_scan)
+    projection = Projection(table_scan, [("t", arithmetic_operation)])
 
     result = projection.get_result()
 
@@ -211,10 +211,10 @@ def test_select_nested_arithmetic():
 
 def test_select_bad_string_operation():
     table_scan = TableScan("#columns")
-    arithmetic_operation = ArithmeticOperationExpression(ColumnExpression("ordinal_position"),
-                                                         ArithmeticOperator.SUBTRACT, LiteralExpression("test"))
+    arithmetic_operation = ArithmeticExpression(ColumnExpression("ordinal_position"),
+                                                ArithmeticOperator.SUBTRACT, LiteralExpression("test"))
 
-    projection = Projection([("t", arithmetic_operation)], table_scan)
+    projection = Projection(table_scan, [("t", arithmetic_operation)])
 
     with pytest.raises(IncompatibleOperationException):
         projection.get_result()
@@ -223,7 +223,7 @@ def test_select_bad_string_operation():
 def test_select_null():
     table_scan = TableScan("#tables")
 
-    projection = Projection([("t", LiteralExpression(None))], table_scan)
+    projection = Projection(table_scan, [("t", LiteralExpression(None))])
 
     result = projection.get_result()
 
@@ -234,7 +234,7 @@ def test_select_null():
 def test_select_bad_alias():
     table_scan = TableScan("#tables")
 
-    projection = Projection([("test.test", LiteralExpression("test"))], table_scan)
+    projection = Projection(table_scan, [("test.test", LiteralExpression("test"))])
 
     with pytest.raises(InvalidAliasException):
         projection.get_result()
@@ -242,9 +242,9 @@ def test_select_bad_alias():
 
 def test_select_comparative():
     table_scan = TableScan("#columns")
-    comparative_operation = ComparativeOperationExpression(LiteralExpression(2), ComparativeOperator.EQUAL, LiteralExpression(2))
+    comparative_operation = ComparativeExpression(LiteralExpression(2), ComparativeOperator.EQUAL, LiteralExpression(2))
 
-    projection = Projection([("test", comparative_operation)], table_scan)
+    projection = Projection(table_scan, [("test", comparative_operation)])
 
     result = projection.get_result()
 

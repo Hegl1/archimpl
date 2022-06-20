@@ -1,0 +1,8 @@
+[Schema]
+1MatrNr: int
+2VorlNr: int
+
+[Data]
+26120;5001
+27550;5001
+27550;4052

@@ -10,9 +10,9 @@ class Explain(AbstractOperator, ABC):
     It is used to explain the execution plan of a query.
     """
 
-    def __init__(self, execution_plan: AbstractOperator):
+    def __init__(self, node: AbstractOperator):
         super().__init__()
-        self.execution_plan = execution_plan
+        self.node = node
 
     def get_schema(self):
         pass
@@ -24,7 +24,7 @@ class Explain(AbstractOperator, ABC):
         return Table(schema, rows)
 
     def simplify(self):
-        self.execution_plan = self.execution_plan.simplify()
+        self.node = self.node.simplify()
 
         return self
 
@@ -32,4 +32,4 @@ class Explain(AbstractOperator, ABC):
         return "Explain"
 
     def explain(self, rows, indent):
-        self.execution_plan.explain(rows, indent + 2)
+        self.node.explain(rows, indent + 2)
