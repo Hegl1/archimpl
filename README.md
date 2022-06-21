@@ -1,7 +1,6 @@
 # VU Architektur und Implementierung von Datenbanksystemen
 
-[![pipeline status](https://git.uibk.ac.at/csaw5351/archimpl-team3/badges/main/pipeline.svg)](https://git.uibk.ac.at/csaw5351/archimpl-team3/-/commits/main)&nbsp;
-[![coverage report](https://git.uibk.ac.at/csaw5351/archimpl-team3/badges/main/coverage.svg)](https://git.uibk.ac.at/csaw5351/archimpl-team3/-/commits/main)
+This is a mirror from the original project on uibks gitlab instance. 
 
 ## Team
 - Gründlinger Diana
